@@ -1,0 +1,90 @@
+<?php
+
+// $id:$
+
+class DayHourTest extends DrupalTestCase {
+  function get_info() {
+    return array(
+      'name' => 'Day and hour',
+      'desc' => 'Test the day and hour functions.',
+      'group' => 'Station tests'
+    );
+  }
+
+  function testGetDayName_Null() {
+    $result = station_day_name();
+    $this->assertEqual(7, count($result));
+    $this->assertEqual('Sunday', $result[1]);
+    $this->assertEqual('Monday', $result[2]);
+    $this->assertEqual('Tuesday', $result[3]);
+    $this->assertEqual('Wednesday', $result[4]);
+    $this->assertEqual('Thursday', $result[5]);
+    $this->assertEqual('Friday', $result[6]);
+    $this->assertEqual('Saturday', $result[7]);
+  }
+
+  function testGetDayName_Index() {
+    $this->assertEqual('Sunday', station_day_name(1));
+    $this->assertEqual('Monday', station_day_name(2));
+    $this->assertEqual('Tuesday', station_day_name(3));
+    $this->assertEqual('Wednesday', station_day_name(4));
+    $this->assertEqual('Thursday', station_day_name(5));
+    $this->assertEqual('Friday', station_day_name(6));
+    $this->assertEqual('Saturday', station_day_name(7));
+  }
+
+
+  function testGetHourName() {
+    $this->assertEqual('12am', station_hour_name(0));
+    $this->assertEqual('1am', station_hour_name(1));
+    $this->assertEqual('6am', station_hour_name(6));
+    $this->assertEqual('12pm', station_hour_name(12));
+    $this->assertEqual('7pm', station_hour_name(19));
+    $this->assertEqual('11pm', station_hour_name(23));
+
+  }
+
+
+  function testGetValidHour_Numbers() {
+    $this->assertEqual(23, _station_valid_hour(-1));
+    $this->assertEqual(0, _station_valid_hour(0));
+    $this->assertEqual(1, _station_valid_hour(1));
+    $this->assertEqual(23, _station_valid_hour(23));
+    $this->assertEqual(0, _station_valid_hour(24));
+    $this->assertEqual(1, _station_valid_hour(25));
+  }
+  function testGetValidHour_Strings() {
+    $this->assertEqual(0, _station_valid_hour('12 AM'), '12am');
+    $this->assertEqual(0, _station_valid_hour('midnight'), 'midnight');
+    $this->assertEqual(1, _station_valid_hour('1am'), '1am');
+    $this->assertEqual(10, _station_valid_hour('10am'), '10am');
+    $this->assertEqual(12, _station_valid_hour('12 Pm'), '12pm');
+    $this->assertEqual(12, _station_valid_hour('noon'), 'noon');
+    $this->assertEqual(18, _station_valid_hour('6pm'), '6pm');
+    $this->assertEqual(23, _station_valid_hour('11 pM'), '11pm');
+  }
+
+  function testGetValidDate_FromNumber() {
+    $this->assertEqual(6, _station_valid_day(-1));
+    $this->assertEqual(7, _station_valid_day(0));
+    $this->assertEqual(1, _station_valid_day(1));
+    $this->assertEqual(4, _station_valid_day(4));
+    $this->assertEqual(7, _station_valid_day(7));
+    $this->assertEqual(1, _station_valid_day(8));
+    $this->assertEqual(2, _station_valid_day(9));
+  }
+
+  function testGetValidDate_FromString() {
+    $this->assertEqual(1, _station_valid_day('random day'), 'invalid day');
+    $this->assertEqual(1, _station_valid_day(''), 'empty string');
+    $this->assertEqual(1, _station_valid_day(null), 'null value');
+
+    $this->assertEqual(1, _station_valid_day('sunday'), 'sunday');
+    $this->assertEqual(2, _station_valid_day('monday'), 'monday');
+    $this->assertEqual(3, _station_valid_day('tuesday'), 'tuesday');
+    $this->assertEqual(4, _station_valid_day('wednesday'), 'wednesday');
+    $this->assertEqual(5, _station_valid_day('thursday'), 'thursday');
+    $this->assertEqual(6, _station_valid_day('friday'), 'friday');
+    $this->assertEqual(7, _station_valid_day('saturday'), 'saturday');
+  }
+}

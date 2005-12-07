@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * Theme the schedule table
+ *
+ * @param array $cols
+ * @param array $rows
+ * @return string HTML table.
+ */
+function theme_station_schedule_table($cols, $rows) {
+    return theme('table', $cols, $rows, array('class'=>'station-schedule'));
+}
+
+/**
+ * Theme the schedule block
+ *
+ * @param string $content
+ * @return string HTML
+ */
+function theme_station_schedule_day($content) {
+    return '<div class="node">' . $content . '</div>';
+}
+
+/**
+ * Format the RSS link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_rss_link($path, $short = true) {
+  $text = t('Podcast this!');
+  $title = t('Grab this show with your podcast software');
+  $img = drupal_get_path('module', 'station') . '/images/rss_tiny.gif';
+  $url = 'http://archive.kpsu.org:8080/rss/' . $path;
+  if ($short) {
+      return l("<img src='$img' alt='$text' />", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+  } else {
+      return l("<img src='$img' alt='$text' /> $text", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+  }
+}
+
+/**
+ * Format the listen link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_listen_link($path, $short = true) {
+  $text = t('Listen!');
+  $title = t('Listen to previous broadcasts of this show');
+  $img = drupal_get_path('module', 'station') . '/images/listen_tiny.gif';
+  $url = 'http://archive.kpsu.org:8080/last/' . $path;
+  if ($short) {
+      return l("<img src='$img' alt='$text' />", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+  } else {
+      return l("<img src='$img' alt='$text' /> $text", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+  }
+}
+
+?>

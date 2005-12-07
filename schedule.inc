@@ -183,7 +183,7 @@ function station_schedule_admin_list() {
         }
         $disp .= '<br />';
       }
-      $disp .= l(t('[edit]'), 'admin/schedule/'. $hourid);
+      $disp .= l(t('[edit]'), 'admin/schedule/edit/'. $sch->sid);
       if ($hourid < 12) {
         $amrows[$hourid][$dayid] = $disp;
       } else {

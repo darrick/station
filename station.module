@@ -44,7 +44,7 @@ function station_menu($may_cache) {
       'callback' => 'station_schedule_admin_form',
       'type' => MENU_CALLBACK
     );
-    
+
     $items[] = array(
       'path' => 'node/add/program',
       'title' => t('program'),
@@ -152,8 +152,6 @@ function station_settings() {
   $form['station_stream'] = array(
     '#type' => 'fieldset',
     '#title' => t('Webstream settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
   );
   $form['station_stream']['station_stream_high_url'] = array(
     '#type' => 'textfield',
@@ -221,6 +219,24 @@ function station_xmlrpc() {
       t('Fetch info on the current program')
     ),
   );
+}
+
+
+/**
+ * Convert an array to a comma separates list with an add between the last terms.
+ *
+ * @param $array array of items
+ */
+function _station_anded_list($array) {
+  switch (count($array)) {
+    case 0:
+      return '';
+    case 1:
+      return $array[0];
+    default:
+      $last = array_pop($array);
+      return implode(', ', $array) . t(' and ') . $last;
+  }
 }
 
 /**

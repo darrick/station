@@ -115,7 +115,7 @@ function station_schedule_admin_form($sid) {
   $form['program_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Program'),
-    '#description' => 'Type the name of the program played during this hour.',
+    '#description' => t("Type the name of this hour's program, or if nothing is scheduled, leave it blank."),
     '#default_value' => $program_title,
     '#maxlength' => 128,
     '#autocomplete_path' => 'program/autocomplete'
@@ -123,7 +123,7 @@ function station_schedule_admin_form($sid) {
   $form['onam'] = array(
     '#type' => 'checkbox',
     '#title' => t('On AM'),
-    '#description' => 'Is this program broadcast on KBPS?',
+    '#description' => t('Is this program broadcast on KBPS?'),
     '#default_value' => $sch->onam,
     '#return_value' => 1,
   );
@@ -135,19 +135,17 @@ function station_schedule_admin_form($sid) {
 }
 
 function station_schedule_admin_form_validate($form_id, $form_values) {
-  if (isset($form_values['program_title']) && $form_values['program_title'] != '') {
+  if ($form_values['program_title']) {
     // convert the programs title into a node id
-    $prog = node_load(array('type' => 'program',
-      'title' => $form_values['program_title']));
+    $prog = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
     if (!$prog) {
-      form_set_error('program_title', t('You have to specify a valid program name.'));
+      form_set_error('program_title', t('You need to specify a valid program name.'));
     }
   }
 }
 
 function station_schedule_admin_form_submit($form_id, $form_values) {
-  $prog = node_load(array('type' => 'program',
-    'title' => $form_values['program_title']));
+  $prog = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
   db_query("UPDATE {station_schedule} SET program_nid = %d, onam = %d WHERE sid = %d",
     $prog->nid, $form_values['onam'], $form_values['sid']);
   drupal_goto('admin/schedule#' . $form_values['dayname']);
@@ -173,17 +171,9 @@ function station_schedule_admin_list() {
       $disp = '';
       if ($sch->program_nid) {
         $prog = node_load(array('type'=>'program', 'nid'=>$sch->program_nid));
-        $disp = l($prog->title, 'node/'. $sch->program_nid);
-        if ($prog->djs) {
-          $disp .= '<br /><em>';
-          foreach ($prog->djs as $uid => $name) {
-            $disp .= l($name, 'user/'. $uid);
-          }
-          $disp .= '</em>';
-        }
-        $disp .= '<br />';
+        $disp = l($prog->title, 'node/'. $sch->program_nid) .'<br />';
       }
-      $disp .= l(t('[edit]'), 'admin/schedule/edit/'. $sch->sid);
+      $disp .= '<small>' . l(t('edit'), 'admin/schedule/edit/'. $sch->sid) . '</small>';
       if ($hourid < 12) {
         $amrows[$hourid][$dayid] = $disp;
       } else {

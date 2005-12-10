@@ -28,7 +28,7 @@ function theme_station_schedule_day($content) {
  * @param boolean $short Short version?
  */
 function theme_station_rss_link($path, $short = true) {
-  $text = t('Podcast this!');
+  $text = t('Podcast it!');
   $title = t('Grab this show with your podcast software');
   $img = drupal_get_path('module', 'station') . '/images/rss_tiny.gif';
   $url = 'http://archive.kpsu.org:8080/rss/' . $path;

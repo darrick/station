@@ -170,7 +170,7 @@ function station_schedule_admin_list() {
     foreach ($hour as $hourid => $sch) {
       $disp = '';
       if ($sch->program_nid) {
-        $prog = node_load(array('type'=>'program', 'nid'=>$sch->program_nid));
+        $prog = node_load($sch->program_nid);
         $disp = l($prog->title, 'node/'. $sch->program_nid) .'<br />';
       }
       $disp .= '<small>' . l(t('edit'), 'admin/schedule/edit/'. $sch->sid) . '</small>';
@@ -308,23 +308,10 @@ function _station_schedule_view_day($day) {
  * @param object $schedule schedule data object
  */
 function _station_schedule_view_hour($schedule) {
-  $page .= '<h2>Program</h2>';
   if ($schedule->program_nid) {
     $program = node_load($schedule->program_nid);
 
-    $page .= l($program->title, 'node/' . $schedule->program_nid);
-    $page .= check_markup("<div><string>Genre:</strong> {$program->genre}</div>");
-
-    if ($program->body) {
-      $page .= check_markup("<div>{$program->body}</div>");
-    }
-    if ($program->djs) {
-      $page .= '<h4>DJs</h4>';
-      foreach ($program->djs as $uid => $name) {
-        $list[] = l($name, 'user/' . $uid);
-      }
-      $page .= theme('item_list', $list);
-    }
+    $page .= node_view($program, false, false, true);
   } else {
     $page .= '<div>No program is scheduled.</div>';
   }

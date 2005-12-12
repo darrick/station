@@ -27,7 +27,7 @@ function station_program_access($op, $node) {
  */
 function station_program_autocomplete($string = '') {
   $matches = array();
-  $result = db_query_range('SELECT title FROM {node} WHERE type = \'program\' AND LOWER(title) LIKE LOWER("%%%s%%") ORDER BY title', $string, 0, 10);
+  $result = db_query_range('SELECT title FROM {node} WHERE type = \'program\' AND LOWER(title) LIKE LOWER("%%%s%%") AND status = 1 ORDER BY title', $string, 0, 10);
   while ($program = db_fetch_object($result)) {
     $matches[$program->title] = check_plain($program->title);
   }
@@ -149,7 +149,7 @@ function station_program_validate(&$node) {
  */
 function station_program_listen_links($program_nid, $short = false)  {
   $links = array();
-  $node = node_load(array('type' => 'program', 'nid' => $program_nid));
+  $node = node_load($program_nid);
   if ($node->nid) {
     // listen links
     if ($node->times) {
@@ -251,26 +251,38 @@ function station_program_page($nid = null) {
   if ($nid) {
     $page = node_view(node_load($nid), false, true);
   } else {
-    $query = "SELECT {node}.*, {station_program}.genre, {station_program}.url ";
-    $query .= "FROM {node} LEFT JOIN {station_program} ON {node}.nid = {station_program}.nid  ";
-    $query .= "WHERE {node}.type = 'program' ORDER BY {node}.title";
+    $query = "SELECT n.*, p.genre, p.url ";
+    $query .= "FROM {node} n LEFT JOIN {station_program} p ON n.nid = p.nid ";
+    $query .= "WHERE n.type = 'program' ORDER BY n.title";
     $queryResult = db_query($query);
 
     $cols = array('Program', 'Genre', 'DJs');
     $rows = array();
+    $rowsOld = array();
     while ($prog = db_fetch_object($queryResult)) {
       $djs = array();
       foreach (_station_program_load_djs($prog->nid) as $uid => $name) {
         $djs[] = l($name, 'user/' . $uid);
       }
 
-      $rows[] = array(
+      $row = array(
         array('data' => l($prog->title, 'node/' . $prog->nid), 'width' => 240),
         array('data' => $prog->genre, 'width' => 240),
         array('data' => implode(',', $djs), 'width' => 240)
       );
+      if ($prog->status == 1) {
+        $rows[] = $row;
+      } else {
+        $rowsOld[] = $row;
+      }
     }
     $page = theme('table', $cols, $rows);
+
+    if (user_access('administer schedule')) {
+      $page .= "<h2>Unpublished shows</h2>\n";
+      $page .= "<p>These are shows that have been marked as unpublished.</p>";
+      $page .= theme('table', $cols, $rowsOld);
+    }
   }
   return $page;
 }

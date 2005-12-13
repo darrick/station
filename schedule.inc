@@ -226,13 +226,6 @@ function station_schedule_page($day = null, $hour = null, $op = 'view') {
       // one day schedule
       drupal_set_title(t('Schedule for %dayname', array('%dayname' => $dayname)));
 
-      // output the links to other days
-      $output .= '<div class="schedule-hournav">';
-      foreach (station_day_name() as $dayname) {
-          $output .=  l($dayname, 'schedule/' . strtolower($dayname)) . ' ';
-      }
-      $output .= "</div>\n";
-
       $schedule = station_schedule_load(array('day' => $day), false);
       $output .= _station_schedule_view_day($schedule);
 

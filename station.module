@@ -22,7 +22,7 @@ function station_help($section='') {
     case 'admin/settings/station':
       return t('Configure the station\'s schedule.');
     case 'schedule':
-      return t('The listen link %listen_img will take you to the list of archived copies of a show. The rss link %rss_img is an RSS feed of the archived copies suitable for podcasting.',
+      return t('The %listen_img listen link will take you to the list of archived copies of a show. The %rss_img link will take you to an RSS feed of the archived copies suitable for podcasting.',
         array(
           '%listen_img' => '<img src="' . drupal_get_path('module', 'station') . '/images/listen_tiny.gif" />',
           '%rss_img' => '<img src="' . drupal_get_path('module', 'station') . '/images/rss_tiny.gif" />',
@@ -70,34 +70,25 @@ function station_menu($may_cache) {
       'callback' => 'station_schedule_page',
       'access' => user_access('access content')
     );
+    $items[] = array(
+      'path' => 'schedule/weekly',
+      'title' => t('Full week'),
+      'callback' => 'station_schedule_page',
+      'access' => user_access('access content'),
+      'type' => MENU_DEFAULT_LOCAL_TASK
+    );
     foreach (station_day_name() as $i => $dayname) {
       $items[] = array(
         'path' => 'schedule/' . strtolower($dayname),
         'title' => t($dayname),
         'weight' => $i,
-        'access' => user_access('access content')
+        'access' => user_access('access content'),
+        'type' => MENU_LOCAL_TASK
       );
     }
-
-    $items[] = array('path' => 'test', 'title' => t('testing'),
-      'callback' => 'station_test',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
   }
 
   return $items;
-}
-
-function station_test() {
-  $server = 'kpsu.org';
-  $result = xmlrpc('http://'. $server .'/xmlrpc.php', 'station.program.current');
-
-  if (xmlrpc_errno()) {
-    drupal_set_message(t('Error %code : %message', array('%code' => theme('placeholder', xmlrpc_errno()), '%message' =>  theme('placeholder', xmlrpc_error_msg()))), 'error');
-  } else {
-    var_dump($result);
-  }
 }
 
 /**

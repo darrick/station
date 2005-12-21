@@ -184,9 +184,16 @@ function station_program_load($node) {
   // load the program's schedule times users under the times.
   $schs = station_schedule_load(array('program_nid' => $node->nid), false);
   foreach ($schs as $sch) {
+      $dayname = station_day_name($sch->day);
+      $hourname = station_hour_name($sch->hour);
+
     $extras->times[$sch->sid] = array(
       'day' => $sch->day,
       'hour' => $sch->hour,
+      'formatted' => t('%dayname at %hourname', array(
+        '%dayname' => station_day_name($sch->day),
+        '%hourname' => station_hour_name($sch->hour))
+      ),
     );
   }
 
@@ -311,9 +318,7 @@ function station_program_view(&$node, $teaser = false, $page = false) {
   $times = array();
   if ($node->times) {
     foreach ($node->times as $nid => $time) {
-      $dayname = station_day_name($time['day']);
-      $hourname = station_hour_name($time['hour']);
-      $times[] = l(t("%dayname at %hourname", array('%dayname' => $dayname, '%hourname' => $hourname)), strtolower("schedule/$dayname/$hourname"));
+      $times[] = l($time['formatted'], strtolower("schedule/$dayname/$hourname"));
     }
   }
 
@@ -382,14 +387,32 @@ function station_program_block() {
   return $output;
 }
 
-
+/**
+ * Get the program playing at the current time.
+ *
+ * @return
+ *   program node
+ */
 function station_program_current() {
-  // this is -1 hour because portland is one hour behind the timezone telana's
-  // server in montana.
-  $date = getdate(time() - variable_get('station_tzoffset', 60 * 60 * 1));
+  // compute a GMT time
+  $gmt_ts = (time() - date('Z')) + variable_get('date_default_timezone', 0);
+  // grab the program at this time
+  return station_program_get_at($gmt_ts);
+}
+
+/**
+ * Get the program playing at a certain time. If no time is provide, use the
+ * current time.
+ *
+ * @param $timestamp
+ *   a gmt timestamp used to specify a day of the week an hour.
+ * @return
+ *   program node or FALSE if nothing is scheduled or there's an error
+ */
+function station_program_get_at($ts) {
   // getdate returns the day with a 0-offset, we need an offset of 1.
-  $day = _station_valid_day($date['wday'] + 1);
-  $hour = _station_valid_hour($date['hours']);
+  $day = date('w', $ts) + 1;
+  $hour = date('G', $ts);
 
   // load the schedule
   $schedules = station_schedule_load(array('day' => $day, 'hour' => $hour), false);
@@ -397,11 +420,15 @@ function station_program_current() {
 
   // if there's an associated program, load it
   if ($schedule->program_nid) {
-    return node_load($schedule->program_nid);
-  } else {
-    return array();
+    $node = node_load($schedule->program_nid);
+    // set this so that if the show is scheduled for multiple times the caller
+    // can easily figure out which one.
+    $node->current_time = $schedule->sid;
+    return $node;
   }
+  return FALSE;
 }
+
 /**
  * Implements hook_user() to associate programs with the users.
  */

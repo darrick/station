@@ -222,10 +222,16 @@ function station_dj_autocomplete($string = '') {
 function station_xmlrpc() {
   return array(
     array(
-      'station.program.current',
+      'station.program.get.current',
       'station_program_current',
-      array(),
-      t('Fetch info on the current program')
+      array('array'),
+      t('Fetch info on the current program.')
+    ),
+    array(
+      'station.program.get.at',
+      'station_program_get_at',
+      array('array', 'int'),
+      t('Fetch info on the program playing at a day/hour of a given timestamp.')
     ),
   );
 }
@@ -241,7 +247,7 @@ function _station_anded_list($array) {
     case 0:
       return '';
     case 1:
-      return $array[0];
+      return array_pop($array);
     default:
       $last = array_pop($array);
       return implode(', ', $array) . t(' and ') . $last;

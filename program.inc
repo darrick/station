@@ -394,10 +394,8 @@ function station_program_block() {
  *   program node
  */
 function station_program_current() {
-  // compute a GMT time
-  $gmt_ts = (time() - date('Z')) + variable_get('date_default_timezone', 0);
   // grab the program at this time
-  return station_program_get_at($gmt_ts);
+  return station_program_get_at(time());
 }
 
 /**
@@ -410,8 +408,10 @@ function station_program_current() {
  *   program node or FALSE if nothing is scheduled or there's an error
  */
 function station_program_get_at($ts) {
-  // getdate returns the day with a 0-offset, we need an offset of 1.
-  $day = date('w', $ts) + 1;
+  // compute a GMT time
+  $ts = ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
+
+  $day = date('w', $ts) + 1; // this returns a 0-offset, we need 1-offset.
   $hour = date('G', $ts);
 
   // load the schedule

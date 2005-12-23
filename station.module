@@ -97,7 +97,7 @@ function station_menu($may_cache) {
  * @param integer delta offset
  * @returns array
  */
-function station_block($op = 'list', $delta = 0) {
+function station_block($op = 'list', $delta = 0, $edit = array()) {
   // The $op parameter determines what piece of information is being requested.
   if ($op == 'list') {
     // If $op is "list", we just need to return a list of block descriptions.
@@ -178,7 +178,7 @@ function station_link($type, $node = NULL, $teaser = FALSE) {
           $links[] = l(t('edit this program'), "node/$node->nid/edit");
         }
         if ($node->url) {
-          $links[] = l(t('program homepage'), $node->url);
+          $links[] = '<a href="'. check_url($node->url) .'">'. t('program homepage') .'</a>';
         }
         $links = array_merge($links, station_program_listen_links($node->nid));
         break;

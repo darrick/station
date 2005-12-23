@@ -366,10 +366,11 @@ function station_program_block() {
 
   // current program
   if ($program) {
-    $output = l($program->title, 'node/' .$program->nid) . '<br />';
+    $output = l($program->title, 'node/' .$program->nid);
   } else {
-    $output = t("We're on auto pilot") . '<br />';
+    $output = t("We're on auto pilot");
   }
+  $output .= '<br />';
 
   // webstream links
   $high = variable_get('station_stream_high_url', '');
@@ -377,10 +378,10 @@ function station_program_block() {
   if ($high || $low) {
     $output .= t('Tune in:');
     if ($high) {
-      $output .= ' ' . l(t('High'), $high);
+      $output .= ' <a href="'. check_url($high) .'">'. t('High') .'</a>';
     }
     if ($low) {
-      $output .= ' ' . l(t('Low'), $low);
+      $output .= ' <a href="'. check_url($low) .'">'. t('Low') .'</a>';
     }
   }
 

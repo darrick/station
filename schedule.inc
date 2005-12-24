@@ -204,7 +204,8 @@ function station_schedule_page($day = null, $hour = null, $op = 'view') {
     foreach (station_schedule_load() as $d => $day) {
       $todayname = strtolower($daynames[$d]);
 
-      $output = l('<h2>' . ucfirst($todayname) . '</h2>', "schedule/{$todayname}", array('id'=>$todayname, 'name'=>$todayname), null, null, false, true);
+      $output = l('', '', array('id'=>$todayname, 'name'=>$todayname), null, null, false, true);
+      $output .= '<h2>' . ucfirst($todayname) . '</h2>';
 
       // output the links to other days
       $output .= '<div class="schedule-hournav">';
@@ -282,7 +283,7 @@ function _station_schedule_view_day($day) {
           'width' => 240
         ),
         array(
-          'data' => $program->genre,
+          'data' => check_plain($program->genre),
           'width' => 240
         ),
         array(

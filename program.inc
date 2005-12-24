@@ -274,7 +274,7 @@ function station_program_page($nid = null) {
 
       $row = array(
         array('data' => l($prog->title, 'node/' . $prog->nid), 'width' => 240),
-        array('data' => $prog->genre, 'width' => 240),
+        array('data' => check_plain($prog->genre), 'width' => 240),
         array('data' => implode(',', $djs), 'width' => 240)
       );
       if ($prog->status == 1) {
@@ -345,7 +345,7 @@ function station_program_view(&$node, $teaser = false, $page = false) {
       $time_info = 'This program is currently unscheduled';
     }
 
-    $body = '<p><strong>Genre:</strong> ' . check_markup($node->genre) . '</p>';
+    $body = '<p><strong>Genre:</strong> ' . check_plain($node->genre) . '</p>';
     if ($node->body) {
       $body .= '<div>' . check_markup($node->body) . '</div>';
     }

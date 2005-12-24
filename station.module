@@ -24,8 +24,8 @@ function station_help($section='') {
     case 'schedule':
       return t('The %listen_img listen link will take you to the list of archived copies of a show. The %rss_img link will take you to an RSS feed of the archived copies suitable for podcasting.',
         array(
-          '%listen_img' => '<img src="' . drupal_get_path('module', 'station') . '/images/listen_tiny.gif" />',
-          '%rss_img' => '<img src="' . drupal_get_path('module', 'station') . '/images/rss_tiny.gif" />',
+          '%listen_img' => '<img src="' . drupal_get_path('module', 'station') . '/images/listen_tiny.gif" alt="listen" />',
+          '%rss_img' => '<img src="' . drupal_get_path('module', 'station') . '/images/rss_tiny.gif" alt="podcast" />',
         )
       );
     default:

@@ -27,15 +27,14 @@ function theme_station_schedule_day($content) {
  * @param string $path
  * @param boolean $short Short version?
  */
-function theme_station_rss_link($path, $short = true) {
+function theme_station_rss_link($url, $short = true) {
   $text = t('Podcast it!');
   $title = t('Grab this show with your podcast software');
   $img = drupal_get_path('module', 'station') . '/images/rss_tiny.gif';
-  $url = 'http://archive.kpsu.org:8080/rss/' . $path;
   if ($short) {
-      return l("<img src='$img' alt='$text' />", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+    return "<a href='$url' title='$title'><img src='$img' alt='$text' /></a>";
   } else {
-      return l("<img src='$img' alt='$text' /> $text", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+      return "<a href='$url' title='$title'><img src='$img' alt='$text' /> $text</a>";
   }
 }
 
@@ -45,15 +44,14 @@ function theme_station_rss_link($path, $short = true) {
  * @param string $path
  * @param boolean $short Short version?
  */
-function theme_station_listen_link($path, $short = true) {
+function theme_station_listen_link($url, $short = true) {
   $text = t('Listen!');
   $title = t('Listen to previous broadcasts of this show');
   $img = drupal_get_path('module', 'station') . '/images/listen_tiny.gif';
-  $url = 'http://archive.kpsu.org:8080/last/' . $path;
   if ($short) {
-      return l("<img src='$img' alt='$text' />", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+    return "<a href='$url' title='$title'><img src='$img' alt='$text' /></a>";
   } else {
-      return l("<img src='$img' alt='$text' /> $text", $url, array('title' => $title), NULL, NULL, FALSE, TRUE);
+      return "<a href='$url' title='$title'><img src='$img' alt='$text' /> $text</a>";
   }
 }
 

@@ -67,23 +67,28 @@ function station_menu($may_cache) {
     $items[] = array(
       'path' => 'schedule',
       'title' => t('schedule'),
-      'callback' => 'station_schedule_page',
-      'access' => user_access('access content')
+      'type' => MENU_NORMAL_ITEM,
+      'callback' => 'station_schedule_today_page',
+      'access' => user_access('access content'),
     );
     $items[] = array(
-      'path' => 'schedule/weekly',
+      'path' => 'schedule/week',
       'title' => t('Full week'),
-      'callback' => 'station_schedule_page',
-      'access' => user_access('access content'),
-      'type' => MENU_DEFAULT_LOCAL_TASK
+      'callback' => 'station_schedule_week_page',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
     );
-    foreach (station_day_name() as $i => $dayname) {
+  }
+  else {
+    $today = _station_today();
+    foreach (station_day_name() as $day => $dayname) {
       $items[] = array(
         'path' => 'schedule/' . strtolower($dayname),
         'title' => t($dayname),
-        'weight' => $i,
-        'access' => user_access('access content'),
-        'type' => MENU_LOCAL_TASK
+        'callback' => 'station_schedule_day_page',
+        'callback arguments' => array($day),
+        'type' => ($today == $day) ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
+        'weight' => $day,
       );
     }
   }
@@ -252,6 +257,21 @@ function _station_anded_list($array) {
       $last = array_pop($array);
       return implode(', ', $array) . t(' and ') . $last;
   }
+}
+
+/**
+ * Return a timezone corrected timestamp.
+ */
+function _station_local_ts($ts = FALSE) {
+  $ts = ($ts === FALSE) ? time() : $ts;
+  return ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
+}
+
+/**
+ * Return the timezone corrected day of the week (1-7).
+ */
+function _station_today() {
+  return date('w', _station_local_ts()) + 1; // this returns a 0-offset, we need 1-offset.
 }
 
 /**

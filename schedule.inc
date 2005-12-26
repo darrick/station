@@ -191,59 +191,79 @@ function station_schedule_admin_list() {
   return $output;
 }
 
-function station_schedule_page($day = null, $hour = null, $op = 'view') {
+/**
+ * Print a week's schedule page
+ */
+function station_schedule_week_page() {
   $daynames = station_day_name();
 
   $breadcrumb = array();
   $breadcrumb[] = array('path' => 'schedule', 'title' => t('Schedule'));
+  menu_set_location($breadcrumb);
 
-  if ($day === null) {
-    // full week schedule
-    drupal_set_title(t('Weekly Schedule'));
+  // full week schedule
+  drupal_set_title(t('Weekly Schedule'));
 
-    foreach (station_schedule_load() as $d => $day) {
-      $todayname = strtolower($daynames[$d]);
+  foreach (station_schedule_load() as $d => $day) {
+    $todayname = strtolower($daynames[$d]);
 
-      $output = l('', '', array('id'=>$todayname, 'name'=>$todayname), null, null, false, true);
-      $output .= '<h2>' . ucfirst($todayname) . '</h2>';
+    $output = l('', '', array('id' => $todayname, 'name' => $todayname), null, null, false, true);
+    $output .= '<h2>' . ucfirst($todayname) . '</h2>';
 
-      // output the links to other days
-      $output .= '<div class="schedule-hournav">';
-      foreach ($daynames as $dayname) {
-          $output .= l($dayname, 'schedule', null, null, strtolower($dayname), false, true) . ' ';
-      }
-      $output .= "</div>\n";
-      // output the
-      $output .= _station_schedule_view_day($day);
-
-      $page .= theme('station_schedule_day', $output);
+    // output the links to other days
+    $output .= '<div class="schedule-hournav">';
+    foreach ($daynames as $dayname) {
+      $output .= l($dayname, 'schedule/week', null, null, strtolower($dayname), false, true) . ' ';
     }
-  } else {
-    $day = _station_valid_day($day);
-    $dayname = station_day_name($day);
-    $breadcrumb[] = array('path' => 'schedule/' .strtolower($dayname) , 'title' => t($dayname));
+    $output .= "</div>\n";
+    // output the
+    $output .= _station_schedule_view_day($day);
 
-    if ($hour === null) {
-      // one day schedule
-      drupal_set_title(t('Schedule for %dayname', array('%dayname' => $dayname)));
-
-      $schedule = station_schedule_load(array('day' => $day), false);
-      $output .= _station_schedule_view_day($schedule);
-
-      $page = theme('station_schedule_day', $output);
-    } else {
-      $hour = _station_valid_hour($hour);
-      $hourname = station_hour_name($hour);
-
-      // single hour
-      drupal_set_title(t('Schedule for %dayname %hourname', array('%dayname' => $dayname, '%hourname' => $hourname)));
-      drupal_set_title(t($dayname . ' ' . $hourname . ' Schedule'));
-      $breadcrumb[] = array('path' => 'schedule/' . strtolower($dayname) . '/' . $hourname, 'title' => t($hourname));
-
-      $schedules = station_schedule_load(array('day' => $day, 'hour' => $hour), false);
-      $page = _station_schedule_view_hour($schedules[0]);
-    }
+    $page .= theme('station_schedule_day', $output);
   }
+
+  return $page;
+}
+
+/**
+ * Today's schedule. This is just a short cut for the menu system.
+ */
+function station_schedule_today_page($hour = null) {
+  return station_schedule_day_page(_station_today(), $hour);
+}
+
+/**
+ * Print a day (or hour)'s schedule page.
+ */
+function station_schedule_day_page($day, $hour = null) {
+  $day = _station_valid_day($day);
+
+  $breadcrumb = array();
+  $breadcrumb[] = array('path' => 'schedule', 'title' => t('Schedule'));
+
+  $daynames = station_day_name();
+  $dayname = $daynames[$day];
+
+  if ($hour === null) {
+    // one day schedule
+    drupal_set_title(t('Schedule for %dayname', array('%dayname' => $dayname)));
+
+    $schedule = station_schedule_load(array('day' => $day), false);
+    $output .= _station_schedule_view_day($schedule);
+
+    $page = theme('station_schedule_day', $output);
+  } else {
+    $hour = _station_valid_hour($hour);
+    $hourname = station_hour_name($hour);
+
+    // single hour
+    drupal_set_title(t('Schedule for %dayname %hourname', array('%dayname' => $dayname, '%hourname' => $hourname)));
+    $breadcrumb[] = array('path' => 'schedule/' . strtolower($dayname) . '/' . $hourname, 'title' => t($hourname));
+
+    $schedules = station_schedule_load(array('day' => $day, 'hour' => $hour), false);
+    $page = _station_schedule_view_hour($schedules[0]);
+  }
+
   menu_set_location($breadcrumb);
 
   return $page;
@@ -272,24 +292,19 @@ function _station_schedule_view_day($day) {
       $rows[] = array(
         array(
           'data' => l($hour->hourname, 'schedule/' . strtolower($hour->dayname) . '/' . strtolower($hour->hourname)),
-          'width' => 20
-        ),
+          'width' => 20),
         array(
           'data' => $links['listen'] . ' ' . $links['rss'],
-          'width' => 40
-         ),
+          'width' => 40),
         array(
           'data' => l($program->title, 'node/' . $hour->program_nid),
-          'width' => 240
-        ),
+          'width' => 240),
         array(
           'data' => check_plain($program->genre),
-          'width' => 240
-        ),
+          'width' => 240),
         array(
           'data' => implode(',', $djs),
-          'width' => 200
-        ),
+          'width' => 200),
       );
     }
   }
@@ -297,7 +312,7 @@ function _station_schedule_view_day($day) {
 }
 
 /**
- * Enter description here...
+ * Print a page view for a scheduled hour
  *
  * @param object $schedule schedule data object
  */

@@ -165,8 +165,11 @@ function station_program_listen_links($program_nid, $short = false)  {
         $time = array_pop($node->times);
         $hour = station_day_name($time['day']) . '/' . station_hour_name($time['hour']);
       }
-      $links['listen'] = theme('station_listen_link', $hour, $short);
-      $links['rss'] = theme('station_rss_link', $hour, $short);
+      // TODO; load this from a variable
+      $archive_url = 'http://archive.kpsu.org:8080/';
+
+      $links['listen'] = theme('station_listen_link', $archive_url .'last/'. $hour, $short);
+      $links['rss'] = theme('station_rss_link', $archive_url .'rss/'. $hour, $short);
     }
   }
   return $links;
@@ -254,6 +257,10 @@ function _station_program_load_djs($program_nid) {
   return $djs;
 }
 
+/**
+ * Print a list of programs. Display a list of un-published programs at the
+ * bottom for schedule admins.
+ */
 function station_program_page($nid = null) {
   if ($nid) {
     $page = node_view(node_load($nid), false, true);
@@ -286,8 +293,8 @@ function station_program_page($nid = null) {
     $page = theme('table', $cols, $rows);
 
     if (user_access('administer schedule')) {
-      $page .= "<h2>Unpublished shows</h2>\n";
-      $page .= "<p>These are shows that have been marked as unpublished.</p>";
+      $page .= '<h2>'. t('Unpublished shows') .'</h2>';
+      $page .= t('<p>These are shows that have been marked as unpublished.</p>');
       $page .= theme('table', $cols, $rowsOld);
     }
   }
@@ -336,13 +343,13 @@ function station_program_view(&$node, $teaser = false, $page = false) {
     if ($djs) {
       $dj_info = '<ul><li>' . implode('</li><li>', $djs) . '</li></ul>';
     } else {
-      $dj_info = 'This program has no DJs';
+      $dj_info = t('This program has no DJs');
     }
 
     if ($times) {
       $time_info = '<ul><li>' . implode('</li><li>', $times) . '</li></ul>';
     } else {
-      $time_info = 'This program is currently unscheduled';
+      $time_info = t('This program is currently unscheduled');
     }
 
     $body = '<p><strong>Genre:</strong> ' . check_plain($node->genre) . '</p>';
@@ -403,14 +410,13 @@ function station_program_current() {
  * Get the program playing at a certain time. If no time is provide, use the
  * current time.
  *
- * @param $timestamp
- *   a gmt timestamp used to specify a day of the week an hour.
+ * @param $gmt_timestamp
+ *   a timestamp used to specify a day of the week an hour.
  * @return
  *   program node or FALSE if nothing is scheduled or there's an error
  */
-function station_program_get_at($ts) {
-  // compute a GMT time
-  $ts = ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
+function station_program_get_at($gmt_timestamp) {
+  $ts = _station_local_ts($gmt_timestamp);
 
   $day = date('w', $ts) + 1; // this returns a 0-offset, we need 1-offset.
   $hour = date('G', $ts);

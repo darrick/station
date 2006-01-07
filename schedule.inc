@@ -236,7 +236,7 @@ function station_schedule_today_page($hour = null) {
  * Print a day (or hour)'s schedule page.
  */
 function station_schedule_day_page($day, $hour = null) {
-  $day = _station_valid_day($day);
+  $day = station_valid_day($day);
 
   $breadcrumb = array();
   $breadcrumb[] = array('path' => 'schedule', 'title' => t('Schedule'));
@@ -253,7 +253,7 @@ function station_schedule_day_page($day, $hour = null) {
 
     $page = theme('station_schedule_day', $output);
   } else {
-    $hour = _station_valid_hour($hour);
+    $hour = station_valid_hour($hour);
     $hourname = station_hour_name($hour);
 
     // single hour

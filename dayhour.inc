@@ -1,5 +1,5 @@
 <?php
-// $id:$
+// $Id$
 
 /**
  * Turn an mixed into a valid hour.
@@ -7,14 +7,14 @@
  * @param   mixed   we try our hardest to convert any thing
  * @return  integer between 0 and 23.
  */
-function _station_valid_hour($hour) {
+function station_valid_hour($hour) {
   if (!is_numeric($hour)) {
     $hour = strtolower(trim($hour));
 
     // take care of a couple of handy strings
-    if ($hour == 'midnight') {
+    if ($hour == t('midnight')) {
       return 0;
-    } else if ($hour == 'noon') {
+    } else if ($hour == t('noon')) {
       return 12;
     }
 
@@ -45,7 +45,7 @@ function _station_valid_hour($hour) {
  * @param   mixed integer from 1-7, or a, case in-sensitive, english day name.
  * @return  integer between 1 and 7 (sunday, monday, ... ,saturday)
  */
-function _station_valid_day($day) {
+function station_valid_day($day) {
   if (is_numeric($day)) {
     if ($day < 1) {
       return ((integer) $day % 7) + 7;
@@ -88,7 +88,7 @@ function station_day_name($day = null) {
  * Return a formated hour string.
  *
  * @param integer $hour between 0 and 23.
- * @see _station_valid_hour() to sanitize hour input.
+ * @see station_valid_hour() to sanitize hour input.
  * @return string
  */
 function station_hour_name($hour = 0) {

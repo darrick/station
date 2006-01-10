@@ -48,6 +48,26 @@ function station_program_form(&$node) {
     '#maxlength' =>  128,
     '#description' => t('The name of the program. You should avoid making major changes to this without telling the programming director.'),
   );
+  $form['genre'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Text genre'),
+    '#description' => t('A free-form description of the musical genres played on the program.'),
+    '#default_value' => $node->genre,
+    '#required' =>  true,
+    '#size' =>  60,
+    '#maxlength' =>  200,
+    '#weight' => -2,
+  );
+  $form['url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Homepage URL'),
+    '#description' => t("Link to the program's website."),
+    '#default_value' => $node->url,
+    '#required' =>  false,
+    '#size' =>  60,
+    '#maxlength' =>  255,
+    '#weight' => -1,
+  );
   $form['body'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
@@ -57,21 +77,13 @@ function station_program_form(&$node) {
     '#rows' => 5,
     '#description' => t('Freeform description of the program.'),
   );
-  $form['genre'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Text genre'),
-    '#description' => t('A free-form description of the musical genres played on the program.'),
-    '#default_value' => $node->genre,
-    '#required' =>  true,
-    '#size' =>  60,
-    '#maxlength' =>  200,
-    '#weight' => -15,
-  );
+  $form['format'] = filter_form($node->format);
+
   if (user_access('administer schedule')) {
     $form['users'] = array(
      '#type' => 'fieldset',
      '#title' => t('DJs'),
-     '#weight' => -14,
+     '#weight' => 1,
    );
    if ($node->djs) {
      $form['users']['dj_old'] = array(
@@ -95,18 +107,8 @@ function station_program_form(&$node) {
      '#autocomplete_path' => 'user/autocomplete'
    );
   }
-  $form['url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('URL'),
-    '#description' => t("Link to the program's website."),
-    '#default_value' => $node->url,
-    '#required' =>  false,
-    '#size' =>  60,
-    '#maxlength' =>  255,
-    '#weight' => -13,
-  );
 
-  return array_merge($form, filter_form($node->format));
+  return $form;
 }
 
 
@@ -149,8 +151,12 @@ function station_program_validate(&$node) {
  */
 function station_program_listen_links($program_nid, $short = false)  {
   $links = array();
+
+  // TODO: remove this old URL
+  $archive_url = url(variable_get('station_archive_url', 'http://archive.kpsu.org:8080/'));
+
   $node = node_load($program_nid);
-  if ($node->nid) {
+  if ($node->nid && $archive_url) {
     // listen links
     if ($node->times) {
       if (count($node->times) > 1) {
@@ -165,8 +171,6 @@ function station_program_listen_links($program_nid, $short = false)  {
         $time = array_pop($node->times);
         $hour = station_day_name($time['day']) . '/' . station_hour_name($time['hour']);
       }
-      // TODO; load this from a variable
-      $archive_url = 'http://archive.kpsu.org:8080/';
 
       $links['listen'] = theme('station_listen_link', $archive_url .'last/'. $hour, $short);
       $links['rss'] = theme('station_rss_link', $archive_url .'rss/'. $hour, $short);
@@ -325,6 +329,8 @@ function station_program_view(&$node, $teaser = false, $page = false) {
   $times = array();
   if ($node->times) {
     foreach ($node->times as $nid => $time) {
+      $dayname = station_day_name($time['day']);
+      $hourname = station_hour_name($time['hour']);
       $times[] = l($time['formatted'], strtolower("schedule/$dayname/$hourname"));
     }
   }
@@ -352,14 +358,9 @@ function station_program_view(&$node, $teaser = false, $page = false) {
       $time_info = t('This program is currently unscheduled');
     }
 
-    $body = '<p><strong>Genre:</strong> ' . check_plain($node->genre) . '</p>';
-    if ($node->body) {
-      $body .= '<div>' . check_markup($node->body) . '</div>';
-    }
-    $body .= "<h4>DJs</h4>\n" . check_markup($dj_info);
-    $body .= "<h4>Times</h4>\n" . check_markup($time_info);
-
-    $node->body = $body;
+    $node->body = '<p><strong>Genre:</strong> ' . check_plain($node->genre) . '</p>'. $node->body;
+    $node->body .= "<h4>DJs</h4>\n" . check_markup($dj_info);
+    $node->body .= "<h4>Times</h4>\n" . check_markup($time_info);
   }
 }
 

@@ -1,5 +1,7 @@
 <?php
 
+// $Id$
+
 require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
 require_once(drupal_get_path('module', 'station') .'/program.inc');
 require_once(drupal_get_path('module', 'station') .'/schedule.inc');
@@ -147,6 +149,12 @@ function station_perm() {
  * the modules settings form
  */
 function station_settings() {
+  $form['station_archive_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Archive URL'),
+    '#default_value' => variable_get('station_archive_url', ''),
+    '#description' => t("The URL of the Drupal server running the station archive module. If this is blank no archive links will be provided. Don't forget the trailing slash: i.e. http://example.com/"),
+  );
   $form['station_stream'] = array(
     '#type' => 'fieldset',
     '#title' => t('Webstream settings'),

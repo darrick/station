@@ -1,5 +1,7 @@
 <?php
 
+// $Id$
+
 function station_schedule_access($op, $sch) {
   // there are a fixed number of schedule slots, only updates are allowed.
   switch ($op) {

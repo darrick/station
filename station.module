@@ -279,7 +279,7 @@ function _station_local_ts($ts = FALSE) {
  * Return the timezone corrected day of the week (1-7).
  */
 function _station_today() {
-  return date('w', _station_local_ts()) + 1; // this returns a 0-offset, we need 1-offset.
+  return date('w', _station_local_ts()); 
 }
 
 /**

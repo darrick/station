@@ -1,4 +1,5 @@
 <?php
+
 // $Id$
 
 /**
@@ -47,16 +48,16 @@ function station_valid_hour($hour) {
  */
 function station_valid_day($day) {
   if (is_numeric($day)) {
-    if ($day < 1) {
+    if ($day < 0) {
       return ((integer) $day % 7) + 7;
-    } else if ($day > 7) {
+    } else if ($day > 6) {
       return ((integer) $day % 7);
     }
     return (integer) $day;
   } else {
     $dayname = station_day_name();
     $ret = array_search(ucfirst($day), $dayname, false);
-    return ($ret === false) ? 1 : $ret;
+    return ($ret === false) ? 0 : $ret;
   }
 }
 
@@ -68,7 +69,7 @@ function station_valid_day($day) {
  */
 function station_day_name($day = null) {
   static $days = array(
-    1 => 'Sunday',
+    0 => 'Sunday',
     'Monday',
     'Tuesday',
     'Wednesday',

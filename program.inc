@@ -1,5 +1,7 @@
 <?php
 
+// $Id$
+
 function station_program_access($op, $node) {
   global $user;
 
@@ -419,7 +421,7 @@ function station_program_current() {
 function station_program_get_at($gmt_timestamp) {
   $ts = _station_local_ts($gmt_timestamp);
 
-  $day = date('w', $ts) + 1; // this returns a 0-offset, we need 1-offset.
+  $day = date('w', $ts);
   $hour = date('G', $ts);
 
   // load the schedule

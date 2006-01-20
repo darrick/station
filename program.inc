@@ -164,7 +164,7 @@ function station_program_listen_links($program_nid, $short = false)  {
       if (count($node->times) > 1) {
         // program has multiple time slots, use the 'hours' url instead so they all appear in the same page.
         foreach ($node->times as $time) {
-          $hour = ($time['day'] -1) * 24 + $time['hour'] + 1;
+          $hour = ($time['day']) * 24 + $time['hour'] + 1;
           $hours[] = $hour;
         }
         $hour = 'hours/' . implode('+', $hours);

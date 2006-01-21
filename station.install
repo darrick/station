@@ -63,3 +63,12 @@ MYSQL_UPDATE
 
   return $ret;
 }
+
+/**
+ * Update the tables to UTF-8
+ */
+function station_update_2() {
+  return _system_update_utf8(array(
+    'station_dj', 'station_program', 'station_schedule',
+  ));
+}

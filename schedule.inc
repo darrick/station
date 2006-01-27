@@ -156,7 +156,7 @@ function station_schedule_admin_form_submit($form_id, $form_values) {
 function station_schedule_admin_list() {
   // create two separate tables, one for am and one for pm...
   // column titles: hour then days of the week
-  $cols = array('Hour') + station_day_name();
+  $cols = array_merge(array('Hour'), station_day_name());
 
   // ...first column in both are hour titles
   foreach (range(0,11) as $hourid) {
@@ -177,9 +177,9 @@ function station_schedule_admin_list() {
       }
       $disp .= '<small>' . l(t('edit'), 'admin/schedule/edit/'. $sch->sid) . '</small>';
       if ($hourid < 12) {
-        $amrows[$hourid][$dayid] = $disp;
+        $amrows[$hourid][$dayid + 1] = $disp;
       } else {
-        $pmrows[$hourid][$dayid] = $disp;
+        $pmrows[$hourid][$dayid + 1] = $disp;
       }
     }
   }

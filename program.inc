@@ -338,15 +338,27 @@ function station_program_view(&$node, $teaser = false, $page = false) {
   }
 
   if ($teaser) {
-    if ($node->genre) {
-      $node->teaser = check_markup($node->genre);
-    }
+    $options = array(
+      '%genre' => $node->genre,
+      '%djs' => _station_anded_list($djs),
+      '%times' => _station_anded_list($times),
+    );
+
     if ($djs) {
-      $node->teaser .= ' with '. _station_anded_list($djs);
+      if ($times) {
+        $node->teaser = t('%genre with %djs on %times.', $options);
+      } else {
+        $node->teaser = t('%genre with %djs, currently unscheduled.', $options);
+      }
     }
-    if ($times) {
-      $node->teaser .= ' on '. _station_anded_list($times);
+    else {
+      if ($times) {
+        $node->teaser = t('%genre, %times.', $options);
+      } else {
+        $node->teaser = t('%genre, currently unscheduled.', $options);
+      }
     }
+    $node->teaser = check_markup($node->teaser);
   } else {
     if ($djs) {
       $dj_info = '<ul><li>' . implode('</li><li>', $djs) . '</li></ul>';
@@ -454,9 +466,19 @@ function station_user($op, &$edit, &$user, $category = NULL) {
     break;
   case 'view':
     if ($user->programs) {
+      foreach($user->programs as $nid => $title) {
+        $node = node_load($nid);
+        station_program_view($node, TRUE);
+        $items[] = array('title' => l($title, 'node/' . $nid),
+          'value' => $node->teaser,
+          'class' => 'program',
+        );
+      }
+      return array(t('Programs') => $items);
+
       $programlist = array();
       foreach($user->programs as $nid => $title) {
-        $programlist['Programs'][] = l($title, 'node/' . $nid) . "<br />\n";
+        $programlist['Programs'][] = l($title, 'node/' . $nid) ."<br />\n";
       }
       return $programlist;
     }

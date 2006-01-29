@@ -86,7 +86,7 @@ function station_menu($may_cache) {
     foreach (station_day_name() as $day => $dayname) {
       $items[] = array(
         'path' => 'schedule/' . strtolower($dayname),
-        'title' => t($dayname),
+        'title' => t(substr($dayname, 0, 3)),
         'callback' => 'station_schedule_day_page',
         'callback arguments' => array($day),
         'type' => ($today == $day) ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
@@ -279,7 +279,7 @@ function _station_local_ts($ts = FALSE) {
  * Return the timezone corrected day of the week (1-7).
  */
 function _station_today() {
-  return date('w', _station_local_ts()); 
+  return date('w', _station_local_ts());
 }
 
 /**

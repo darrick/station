@@ -49,7 +49,7 @@ function theme_station_rss_link($url, $short = true) {
  */
 function theme_station_listen_link($url, $short = true) {
   global $base_url;
-  $img = drupal_get_path('module', 'station') . '/images/listen_tiny.gif';
+  $img = $base_url .'/'. drupal_get_path('module', 'station') . '/images/listen_tiny.gif';
   $text = t('Listen!');
   $title = t('Listen to previous broadcasts of this show');
   if ($short) {

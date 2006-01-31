@@ -1,0 +1,103 @@
+<?php
+
+// $Id$
+
+require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
+
+function station_help($section='') {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Core of station module for running an internet radio station.');
+    case 'admin/settings/station':
+      return t('Configure the core station settings.');
+  }
+  return null;
+}
+
+function station_menu($may_cache) {
+  if ($may_cache) {
+  }
+
+  return $items;
+}
+
+/**
+ * the modules settings form
+ */
+function station_settings() {
+  $form['station_stream'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Webstream settings'),
+  );
+  $form['station_stream']['station_stream_high_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('High-bandwith URL'),
+    '#default_value' => variable_get('station_stream_high_url', ''),
+    '#description' => t('The URL of the station\'s high-bandwith webstream.'),
+  );
+  $form['station_stream']['station_stream_low_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Low-bandwith URL'),
+    '#default_value' => variable_get('station_stream_low_url', ''),
+    '#description' => t('The URL of the station\'s low-bandwith webstream.'),
+  );
+  return $form;
+}
+
+
+/**
+ * Retrieve a pipe delimited string of autocomplete suggestions for users.
+ */
+function station_dj_autocomplete($string = '') {
+  // TODO: match user names or real names
+/*
+  $matches = array();
+  $result = db_query_range('SELECT title FROM {node} WHERE type = \'program\' AND LOWER(title) LIKE LOWER("%%%s%%") AND status = 1 ORDER BY title', $string, 0, 10);
+  while ($program = db_fetch_object($result)) {
+    $matches[$program->title] = check_plain($program->title);
+  }
+  print drupal_implode_autocomplete($matches);
+  exit();
+*/
+}
+
+/**
+ * Convert an array to a comma separates list with an add between the last terms.
+ *
+ * @param $array array of items
+ */
+function station_anded_list($array) {
+  switch (count($array)) {
+    case 0:
+      return '';
+    case 1:
+      return array_pop($array);
+    default:
+      $last = array_pop($array);
+      return implode(', ', $array) . t(' and ') . $last;
+  }
+}
+
+/**
+ * Return a timezone corrected timestamp.
+ */
+function station_local_ts($ts = FALSE) {
+  $ts = ($ts === FALSE) ? time() : $ts;
+  return ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
+}
+
+/**
+ * Return the timezone corrected day of the week (1-7).
+ */
+function station_today() {
+  return date('w', station_local_ts());
+}
+
+/**
+* Implementation of hook_simpletest().
+*/
+function station_simpletest() {
+  $dir = drupal_get_path('module', 'station'). '/tests';
+  $tests = file_scan_directory($dir, '\.test', array('.', '..', 'CVS', '.svn'));
+  return array_keys($tests);
+}

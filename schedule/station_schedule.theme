@@ -1,0 +1,60 @@
+<?php
+
+// $Id$
+
+/**
+ * Theme the schedule table
+ *
+ * @param array $cols
+ * @param array $rows
+ * @return string HTML table.
+ */
+function theme_station_schedule_schedule_table($cols, $rows) {
+    return theme('table', $cols, $rows, array('class'=>'station-schedule'));
+}
+
+/**
+ * Theme the schedule block
+ *
+ * @param string $content
+ * @return string HTML
+ */
+function theme_station_schedule_schedule_day($content) {
+    return '<div class="node">' . $content . '</div>';
+}
+
+/**
+ * Format the RSS link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_schedule_rss_link($url, $short = true) {
+  global $base_url;
+  $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif';
+  $text = t('Podcast it!');
+  $title = t('Grab this show with your podcast software');
+  if ($short) {
+    return "<a href='$url' title='$title'><img src='$img' alt='$text' /></a>";
+  } else {
+      return "<a href='$url' title='$title'><img src='$img' alt='$text' /> $text</a>";
+  }
+}
+
+/**
+ * Format the listen link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_schedule_listen_link($url, $short = true) {
+  global $base_url;
+  $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif';
+  $text = t('Listen!');
+  $title = t('Listen to previous broadcasts of this show');
+  if ($short) {
+    return "<a href='$url' title='$title'><img src='$img' alt='$text' /></a>";
+  } else {
+      return "<a href='$url' title='$title'><img src='$img' alt='$text' /> $text</a>";
+  }
+}

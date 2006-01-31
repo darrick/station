@@ -1,0 +1,220 @@
+<?php
+
+// $Id$
+
+require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
+
+require_once(drupal_get_path('module', 'station_schedule') .'/program.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/schedule.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/station_schedule.theme');
+
+/**
+ * Display help and module information
+ * @param section which section of the site we're displaying help
+ * @return help text for section
+ */
+function station_schedule_help($section='') {
+  global $base_url;
+
+  switch ($section) {
+    case 'admin/schedule':
+      return t('Use this page to make changes to the schedule. You can select which programs air at what time.');
+    case 'admin/modules#description':
+      return t('Module to allow radio station scheduling.');
+    case 'node/add#program':
+      return t('A radio program that you can schedule');
+    case 'admin/settings/station':
+      return t('Configure the station\'s schedule.');
+    case 'schedule':
+      return t('The %listen_img listen link will take you to the list of archived copies of a show. The %rss_img link will take you to an RSS feed of the archived copies suitable for podcasting.',
+        array(
+          '%listen_img' => '<img src="'. $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif" alt="listen" />',
+          '%rss_img' => '<img src="'. $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif" alt="podcast" />',
+        )
+      );
+    default:
+      return null;
+  }
+}
+
+function station_schedule_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array('path' => 'admin/schedule', 'title' => t('schedule'),
+      'callback' => 'station_schedule_schedule_admin_list',
+      'access' => user_access('administer schedule'),
+      'type' => MENU_NORMAL_ITEM
+    );
+    $items[] = array('path' => 'admin/schedule/edit', 'title' => t('configure'),
+      'callback' => 'station_schedule_schedule_admin_form',
+      'type' => MENU_CALLBACK
+    );
+
+    $items[] = array(
+      'path' => 'node/add/program',
+      'title' => t('program'),
+      'access' => user_access('administer schedule')
+    );
+
+    $items[] = array(
+      'path' => 'program',
+      'title' => t('programs'),
+      'callback' => 'station_schedule_program_page',
+      'access' => user_access('access content')
+    );
+    $items[] = array(
+      'path' => 'program/autocomplete',
+      'title' => t('program autocomplete'),
+      'callback' => 'station_schedule_program_autocomplete',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+    $items[] = array(
+      'path' => 'schedule',
+      'title' => t('schedule'),
+      'type' => MENU_NORMAL_ITEM,
+      'callback' => 'station_schedule_schedule_today_page',
+      'access' => user_access('access content'),
+    );
+    $items[] = array(
+      'path' => 'schedule/week',
+      'title' => t('Full week'),
+      'callback' => 'station_schedule_schedule_week_page',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+    );
+  }
+  else {
+    $today = station_today();
+    foreach (station_day_name() as $day => $dayname) {
+      $items[] = array(
+        'path' => 'schedule/' . strtolower($dayname),
+        'title' => t(substr($dayname, 0, 3)),
+        'callback' => 'station_schedule_schedule_day_page',
+        'callback arguments' => array($day),
+        'type' => ($today == $day) ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
+        'weight' => $day,
+      );
+    }
+  }
+
+  return $items;
+}
+
+/**
+ * Generate HTML for the station block
+ * @param string op the operation from the URL
+ * @param integer delta offset
+ * @returns array
+ */
+function station_schedule_block($op = 'list', $delta = 0, $edit = array()) {
+  // The $op parameter determines what piece of information is being requested.
+  if ($op == 'list') {
+    // If $op is "list", we just need to return a list of block descriptions.
+    // This is used to provide a list of possible blocks to the administrator.
+    $blocks[0]['info'] = t('Station: Current Program');
+    return $blocks;
+  } else if ($op == 'view') {
+    // If $op is "view", then we need to generate the block for display
+    // purposes. The $delta parameter tells us which block is being requested.
+    switch ($delta) {
+      case 0:
+        $block['subject'] = t('On Air');
+        $block['content'] = station_schedule_program_block();
+        break;
+    }
+    return $block;
+  }
+}
+
+
+/**
+ * Implementation of hook_node_info().
+ */
+function station_schedule_node_info() {
+  return array(
+    'program' => array('name' => t('program'), 'base' => 'station_schedule_program'),
+  );
+}
+
+/**
+ * Valid permissions for this module
+ * @return array An array of valid permissions for the station module
+ */
+function station_schedule_perm() {
+  return array(
+    'edit own program',
+    'administer schedule',
+  );
+}
+
+/**
+ * the modules settings form
+ */
+function station_schedule_settings() {
+  $form['station_schedule_archive_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Archive URL'),
+    '#default_value' => variable_get('station_schedule_archive_url', ''),
+    '#description' => t("The URL of the Drupal server running the station archive module. If this is blank no archive links will be provided. Don't forget the trailing slash: i.e. http://example.com/"),
+  );
+  return $form;
+}
+
+/**
+ * Implementation of hook_link().
+ *
+ * This is implemented so that an edit link is displayed for users who have
+ * the rights to edit a node.
+ */
+function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
+  $links = array();
+
+  if ($type == 'node') {
+    switch ($node->type) {
+      case 'program':
+        // Don't display a redundant edit link if they are node administrators.
+        if (station_schedule_program_access('update', $node) || user_access('administer nodes')) {
+          $links[] = l(t('edit this program'), "node/$node->nid/edit");
+        }
+        if ($node->url) {
+          $links[] = '<a href="'. check_url($node->url) .'">'. t('program homepage') .'</a>';
+        }
+        $links = array_merge($links, station_schedule_program_listen_links($node->nid));
+        break;
+
+      case 'schedule':
+        // if there's a program load it's links (which may be to several times)
+        if (isset($node->program_nid)) {
+          $links = station_schedule_program_listen_links($node->program_nid);
+        } else {
+          // otherwise, the schedule links are fine.
+          $hour = "{$node->dayname}/{$node->hourname}";
+          $links[] = theme('station_schedule_listen_link', $hour, false);
+          $links[] = theme('station_schedule_rss_link', $hour, false);
+        }
+        break;
+    }
+  }
+  return $links;
+}
+
+
+/**
+ * Implementation of hook_xmlrpc().
+ */
+function station_schedule_xmlrpc() {
+  return array(
+    array(
+      'station.program.get.current',
+      'station_schedule_program_current',
+      array('array'),
+      t('Fetch info on the current program.')
+    ),
+    array(
+      'station.program.get.at',
+      'station_schedule_program_get_at',
+      array('array', 'int'),
+      t('Fetch info on the program playing at a day/hour of a given timestamp.')
+    ),
+  );
+}

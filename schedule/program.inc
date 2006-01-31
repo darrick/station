@@ -174,8 +174,8 @@ function station_schedule_program_listen_links($program_nid, $short = false)  {
         $hour = station_day_name($time['day']) . '/' . station_hour_name($time['hour']);
       }
 
-      $links['listen'] = theme('station_schedule_listen_link', $archive_url .'last/'. $hour, $short);
-      $links['rss'] = theme('station_schedule_rss_link', $archive_url .'rss/'. $hour, $short);
+      $links['listen'] = theme('station_schedule_listen_link', $archive_url .'/last/'. $hour, $short);
+      $links['rss'] = theme('station_schedule_rss_link', $archive_url .'/rss/'. $hour, $short);
     }
   }
   return $links;

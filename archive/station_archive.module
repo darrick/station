@@ -122,8 +122,6 @@ function station_archive_view_hours_html($hour_string) {
   $output .= theme('feed_icon', $rss_url);
 
   return $output;
-
-
 }
 
 function station_archive_view_hours_rss($hour_string) {
@@ -171,23 +169,29 @@ function station_archive_block($op = 'list', $delta = 0, $edit = array()) {
  * @return string
  */
 function _station_archive_program_block() {
-  if ($url = variable_get('station_archive_station_url', '')) {
-    // current program
-    if ($program = _station_archive_get_program_at(time())) {
-      $output = '<a href="'. $program['node_url'] .'">'. $program['title'] .'</a><br />';
-    }
+  $url = variable_get('station_archive_station_url', '');
+  if (!$url) {
+    return;
+  }
 
-    // webstream links
-    $high = variable_get('station_stream_high_url', '');
-    $low = variable_get('station_stream_low_url', '');
-    if ($high || $low) {
-      $output .= t('Tune in:');
-      if ($high) {
-        $output .= ' <a href="'. check_url($high) .'">'. t('High') .'</a>';
-      }
-      if ($low) {
-        $output .= ' <a href="'. check_url($low) .'">'. t('Low') .'</a>';
-      }
+  // current program
+  if ($program = _station_archive_get_program_at(time())) {
+    $output = '<a href="'. $program['node_url'] .'">'. $program['title'] .'</a>';
+  } else {
+    $output = t("We're on auto pilot");
+  }
+  $output .= '<br />';
+
+  // webstream links
+  $high = variable_get('station_stream_high_url', '');
+  $low = variable_get('station_stream_low_url', '');
+  if ($high || $low) {
+    $output .= t('Tune in:');
+    if ($high) {
+      $output .= ' <a href="'. check_url($high) .'">'. t('High') .'</a>';
+    }
+    if ($low) {
+      $output .= ' <a href="'. check_url($low) .'">'. t('Low') .'</a>';
     }
   }
 
@@ -302,7 +306,11 @@ function _station_archive_import_files() {
       // if there's a .cue file, it's still being downloaded, we'll get it on
       // the next cron call.
       if (!file_exists($cuefile)) {
-        _station_archive_add_file($file);
+        $status = _station_archive_add_file($file);
+        // if there was a problem stop the import
+        if (!$status) {
+          return;
+        }
       }
     }
   }
@@ -314,6 +322,7 @@ function _station_archive_import_files() {
  *
  * @param $file
  *   Drupal file object.
+ *   @return boolean indicating success
  */
 function _station_archive_add_file($file) {
   // load timestamp from filename (should be simply timestamp.mp3)
@@ -321,12 +330,19 @@ function _station_archive_add_file($file) {
 
   // connect via XML-RPC to the station module and find program info based on
   // timestamp
-  if ($program = _station_archive_get_program_at($timestamp)) {
+  $program = _station_archive_get_program_at($timestamp);
+  if ($program === FALSE) {
+    // couldn't get the program info, configuation error?
+    watchdog('stationarchive', t("Couldn't load the program's metadata. We'll retry the import on the next cron run."), WATCHDOG_WARNING);
+    return FALSE;
+  }
+
+  if ($program) {
     $audio_tags['title'] = $program['title'] .' ('. date('M jS, Y', $timestamp) .')';
-    // TODO fix this, get it to work with multiple DJs
-    $audio_tags['artist'] = array_pop($program['djs']);
+    $audio_tags['artist'] = station_anded_list($program['djs']);
     $audio_tags['genre'] = $program['genre'];
     $audio_tags['year'] = date('Y', $timestamp);
+    $audio_tags['recording_time'] = gmdate('Y-m-d\TG:i');
   }
   else {
     // if we can't get the metadata, improvise!
@@ -348,6 +364,8 @@ function _station_archive_add_file($file) {
 
   // and make note of the import
   watchdog('stationarchive', t('Imported %title.', array('%title' => theme('placeholder', $node->title))), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
+
+  return TRUE;
 }
 
 /**
@@ -355,16 +373,24 @@ function _station_archive_add_file($file) {
  *
  * @param $timestamp
  *   UNIX timestamp indicating the day an hour of programing to load.
+ * @return
+ *   False if there was an error loading the data or an array of the program
+ *   if everything worked out.
  */
 function _station_archive_get_program_at($timestamp) {
-  if ($url = variable_get('station_archive_station_url', '')) {
-    $result = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp);
+  $url = variable_get('station_archive_station_url', '');
+  if (!$url) {
+    return FALSE;
+  }
 
-    if (xmlrpc_errno()) {
-      watchdog('stationarchive', t('Failed to load program info. Error %code : %message', array('%code' => theme('placeholder', xmlrpc_errno()), '%message' =>  theme('placeholder', xmlrpc_error_msg()))), WATCHDOG_ERROR, l(t('view'), 'node/'. $node->nid));
-      return FALSE;
-    }
-    return $result;
+  $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp);
+
+  if (!xmlrpc_errno()) {
+    return $program;
+  }
+  else {
+    watchdog('stationarchive', t('Failed to load program info. Error %code : %message', array('%code' => theme('placeholder', xmlrpc_errno()), '%message' =>  theme('placeholder', xmlrpc_error_msg()))), WATCHDOG_ERROR, l(t('view'), 'node/'. $node->nid));
+    return FALSE;
   }
 }
 

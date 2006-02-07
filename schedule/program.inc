@@ -269,8 +269,12 @@ function _station_schedule_program_load_djs($program_nid) {
  */
 function station_schedule_program_page($nid = null) {
   if ($nid) {
-    $page = node_view(node_load($nid), false, true);
-  } else {
+    if (is_numeric($nid) && ($node = node_load($nid))) {
+      return node_view($node, false, true);
+    }
+    drupal_not_found();
+  }
+  else {
     $query = "SELECT n.*, p.genre, p.url ";
     $query .= "FROM {node} n LEFT JOIN {station_program} p ON n.nid = p.nid ";
     $query .= "WHERE n.type = 'program' ORDER BY n.title";
@@ -303,8 +307,9 @@ function station_schedule_program_page($nid = null) {
       $page .= t('<p>These are shows that have been marked as unpublished.</p>');
       $page .= theme('table', $cols, $rowsOld);
     }
+    
+    return $page;
   }
-  return $page;
 }
 
 /**
@@ -376,38 +381,6 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
     $node->body .= "<h4>DJs</h4>\n" . check_markup($dj_info);
     $node->body .= "<h4>Times</h4>\n" . check_markup($time_info);
   }
-}
-
-/**
- * Return HTML body of the block listing the current program.
- *
- * @return string
- */
-function station_schedule_program_block() {
-  $program = station_schedule_program_current();
-
-  // current program
-  if ($program) {
-    $output = l($program->title, 'node/' .$program->nid);
-  } else {
-    $output = t("We're on auto pilot");
-  }
-  $output .= '<br />';
-
-  // webstream links
-  $high = variable_get('station_stream_high_url', '');
-  $low = variable_get('station_stream_low_url', '');
-  if ($high || $low) {
-    $output .= t('Tune in:');
-    if ($high) {
-      $output .= ' <a href="'. check_url($high) .'">'. t('High') .'</a>';
-    }
-    if ($low) {
-      $output .= ' <a href="'. check_url($low) .'">'. t('Low') .'</a>';
-    }
-  }
-
-  return $output;
 }
 
 /**

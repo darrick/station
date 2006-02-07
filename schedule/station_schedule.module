@@ -126,6 +126,38 @@ function station_schedule_block($op = 'list', $delta = 0, $edit = array()) {
   }
 }
 
+/**
+ * Return HTML body of the block listing the current program.
+ *
+ * @return string
+ */
+function station_schedule_program_block() {
+  $program = station_schedule_program_current();
+
+  // current program
+  if ($program) {
+    $output = l($program->title, 'node/' .$program->nid);
+  } else {
+    $output = t("We're on auto pilot");
+  }
+  $output .= '<br />';
+
+  // webstream links
+  $high = variable_get('station_stream_high_url', '');
+  $low = variable_get('station_stream_low_url', '');
+  if ($high || $low) {
+    $output .= t('Tune in:');
+    if ($high) {
+      $output .= ' <a href="'. check_url($high) .'">'. t('High') .'</a>';
+    }
+    if ($low) {
+      $output .= ' <a href="'. check_url($low) .'">'. t('Low') .'</a>';
+    }
+  }
+
+  return $output;
+}
+
 
 /**
  * Implementation of hook_node_info().

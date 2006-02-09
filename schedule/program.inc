@@ -401,13 +401,13 @@ function station_schedule_program_current() {
  * @param $gmt_timestamp
  *   a timestamp used to specify a day of the week an hour.
  * @return
- *   program node or FALSE if nothing is scheduled or there's an error
+ *   program node object if one is scheduled, an empty object if nothing is 
+ *   scheduled, or FALSE if there's an error.
  */
 function station_schedule_program_get_at($gmt_timestamp) {
   global $base_url;
 
   $ts = station_local_ts($gmt_timestamp);
-
   $day = date('w', $ts);
   $hour = date('G', $ts);
 
@@ -425,7 +425,7 @@ function station_schedule_program_get_at($gmt_timestamp) {
     $node->node_url = $base_url . url('node/' . $node->nid);
     return $node;
   }
-  return FALSE;
+  return new stdClass;
 }
 
 /**

@@ -3,9 +3,21 @@
 // $Id$
 
 /**
- * Install the initial schema.
+ * Unimplemented. Previously installed schema, see install hook.
  */
-function station_update_1() {
+function station_schedule_update_1() {}
+
+/**
+ * Update the tables to UTF-8
+ */
+function station_schedule_update_2() {
+  return _system_update_utf8(array(
+    'station_dj', 'station_program', 'station_schedule',
+  ));
+}
+
+
+function station_schedule_install() {
   $ret = array();
 
   switch ($GLOBALS['db_type']) {
@@ -23,7 +35,7 @@ function station_update_1() {
           KEY `station_schedule_program` (`program_nid`),
           KEY `station_schedule_day` (`day`),
           KEY `station_schedule_hour` (`hour`)
-        ) COMMENT='Schedule Table';
+        ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;
 MYSQL_UPDATE
       );
       $ret[] = update_sql(
@@ -34,7 +46,7 @@ MYSQL_UPDATE
           `genre` varchar(200) NOT NULL default '' COMMENT 'Format',
           `url` varchar(255) default NULL COMMENT 'URL',
           PRIMARY KEY  (`nid`,`vid`)
-        ) COMMENT='Program Table';
+        ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;
 MYSQL_UPDATE
       );
       $ret[] = update_sql(
@@ -43,7 +55,7 @@ MYSQL_UPDATE
           `uid` int(10) unsigned NOT NULL default '0' COMMENT 'User Id',
           `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program Id',
           PRIMARY KEY  (`uid`,`program_nid`)
-        ) COMMENT='Link a User to a Program';
+        ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;
 MYSQL_UPDATE
       );
       $ret[] = update_sql(
@@ -62,13 +74,4 @@ MYSQL_UPDATE
   }
 
   return $ret;
-}
-
-/**
- * Update the tables to UTF-8
- */
-function station_update_2() {
-  return _system_update_utf8(array(
-    'station_dj', 'station_program', 'station_schedule',
-  ));
 }

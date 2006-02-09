@@ -379,19 +379,18 @@ function _station_archive_add_file($file) {
  */
 function _station_archive_get_program_at($timestamp) {
   $url = variable_get('station_archive_station_url', '');
-  if (!$url) {
-    return FALSE;
+  if ($url) {
+    $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp);
+
+    if (xmlrpc_errno()) {
+      watchdog('stationarchive', t('Failed to load program info. Error %code : %message', array('%code' => theme('placeholder', xmlrpc_errno()), '%message' =>  theme('placeholder', xmlrpc_error_msg()))), WATCHDOG_ERROR, l(t('view'), 'node/'. $node->nid));
+    }
+    else {
+      return $program;
+    }
   }
 
-  $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp);
-
-  if (!xmlrpc_errno()) {
-    return $program;
-  }
-  else {
-    watchdog('stationarchive', t('Failed to load program info. Error %code : %message', array('%code' => theme('placeholder', xmlrpc_errno()), '%message' =>  theme('placeholder', xmlrpc_error_msg()))), WATCHDOG_ERROR, l(t('view'), 'node/'. $node->nid));
-    return FALSE;
-  }
+  return FALSE;
 }
 
 /**

@@ -231,7 +231,7 @@ function _station_archive_settings_check_directory($form_element) {
 }
 
 function station_archive_settings() {
-  $ageoptions = drupal_map_assoc(array(86400, 172800, 259200, 345600, 432000, 518400, 604800, 1209600, 1814400, 2419200, 3024000), 'format_interval');
+  $ageoptions = drupal_map_assoc(array(86400, 172800, 259200, 345600, 432000, 518400, 604800, 1209600, 1814400, 2419200, 3024000, 3628800, 4233600), 'format_interval');
   $form['station_archive_max_age'] = array(
     '#type' => 'select',
     '#title' => t('Age of archive'),
@@ -248,7 +248,6 @@ function station_archive_settings() {
     '#description' => t('The directory where new MP3s are left by the stream ripper script. Drupal will need to have write access to this directory so we can move the file.'),
     '#required' => TRUE,
   );
-
   $form['station_archive_station_url'] = array(
     '#type' => 'textfield',
     '#title' => t('URL of Station module'),
@@ -285,7 +284,7 @@ function _station_archive_delete_old_nodes() {
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
   $db_result = db_query('SELECT n.nid, n.title FROM term_data td INNER JOIN term_node tn ON td.tid = tn.tid INNER JOIN node n ON tn.nid = n.nid WHERE td.vid = %d AND n.created < %d', $vid, $cutoff);
   while ($node = db_fetch_object($db_result)) {
-    watchdog('stationarchive', t('Deleted %title.', array('%title' => theme('placeholder', $node->title))), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
+    watchdog('stationarchive', t('Deleted %title.', array('%title' => theme('placeholder', $node->title))), WATCHDOG_NOTICE);
     node_delete($node->nid);
   }
 
@@ -337,19 +336,27 @@ function _station_archive_add_file($file) {
     return FALSE;
   }
 
+  // assign the metadata
+  $prettydate = date('ga \o\n M jS, Y', $timestamp); 
   if ($program) {
-    $audio_tags['title'] = $program['title'] .' ('. date('M jS, Y', $timestamp) .')';
+    $audio_tags['title'] = $program['title'];
     $audio_tags['artist'] = station_anded_list($program['djs']);
     $audio_tags['genre'] = $program['genre'];
-    $audio_tags['year'] = date('Y', $timestamp);
-    $audio_tags['recording_time'] = gmdate('Y-m-d\TG:i');
+    $audio_tags['url_source'] = $program['node_url'];
+
+    // rename the file to something more readable than a timestamp
+    $newname = str_replace(' ', '_', $program['title'] .' ('. $prettydate .').mp3');
+    file_move($file->filename, $newname, FILE_EXISTS_REPLACE);
   }
   else {
     // if we can't get the metadata, improvise!
-    $audio_tags['title'] = t('DJ Auto mix (%date)', array('%date' => date('M jS, Y', $timestamp)));
+    $audio_tags['title'] = t('DJ Auto mix');
   }
+  $audio_tags['recording_time'] = gmdate('Y-m-d\TG:i', $timestamp);
+  $audio_tags['year'] = date('Y', $timestamp);
+  $audio_tags['comment'] = t('Recorded at %date', array('%date' => $prettydate));
 
-  // create new audio node
+  // then create a new audio node with iT
   $node = audio_api_insert($file->filename, '%title', $audio_tags);
   $node->created = $timestamp;
   $node->audio_fileinfo['downloadable'] = 1;

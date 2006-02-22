@@ -258,8 +258,8 @@ function _station_schedule_schedule_view_day($day) {
           'data' => l($hour->hourname, 'schedule/' . strtolower($hour->dayname) . '/' . strtolower($hour->hourname)),
           'width' => 20),
         array(
-          'data' => $links['listen'] . ' ' . $links['rss'],
-          'width' => 40),
+          'data' => $links['listen'] .' '. $links['rss'],
+          'width' => 50),
         array(
           'data' => l($program->title, 'node/' . $hour->program_nid),
           'width' => 240),

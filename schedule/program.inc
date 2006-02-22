@@ -70,16 +70,15 @@ function station_schedule_program_form(&$node) {
     '#maxlength' =>  255,
     '#weight' => -1,
   );
-  $form['body'] = array(
+  $form['body_filter']['body'] = array(
     '#type' => 'textarea',
-    '#title' => t('Description'),
+    '#title' => t('Body'),
     '#default_value' => $node->body,
-    '#required' => false,
-    '#cols' => 60,
     '#rows' => 5,
-    '#description' => t('Freeform description of the program.'),
+    '#required' => TRUE,
+    '#description' => t("Free form description of the show."),
   );
-  $form['format'] = filter_form($node->format);
+  $form['body_filter']['format'] = filter_form($node->format);
 
   if (user_access('administer schedule')) {
     $form['users'] = array(
@@ -151,33 +150,36 @@ function station_schedule_program_validate(&$node) {
  * @param $program_nid integer node id of a program
  * @param $short bool true for short version of links
  */
-function station_schedule_program_listen_links($program_nid, $short = false)  {
+function station_schedule_program_listen_links($program_nid, $short = FALSE)  {
   $links = array();
 
-  // TODO: remove this old URL
-  $archive_url = url(variable_get('station_schedule_archive_url', 'http://archive.kpsu.org:8080/'));
-
-  $node = node_load($program_nid);
-  if ($node->nid && $archive_url) {
-    // listen links
-    if ($node->times) {
-      if (count($node->times) > 1) {
-        // program has multiple time slots, use the 'hours' url instead so they all appear in the same page.
-        foreach ($node->times as $time) {
-          $hour = ($time['day']) * 24 + $time['hour'] + 1;
-          $hours[] = $hour;
+  $archive_url = variable_get('station_schedule_archive_url', '');
+  if ($archive_url) {
+    $node = node_load($program_nid);
+    if ($node->nid) {
+      if ($node->times) {
+        // programs can have multiple time slots
+        if (count($node->times) > 1) {
+          // use the "hours" url so all shows appear on the same page.
+          foreach ($node->times as $time) {
+            $hour = ($time['day']) * 24 + $time['hour'] + 1;
+            $hours[] = $hour;
+          }
+          $hour = 'hours/' . implode('+', $hours);
         }
-        $hour = 'hours/' . implode('+', $hours);
-      } else {
-        // single
-        $time = array_pop($node->times);
-        $hour = station_day_name($time['day']) . '/' . station_hour_name($time['hour']);
-      }
+        else {
+          // single time slot
+          $time = array_pop($node->times);
+          $hour = strtolower(station_day_name($time['day']) .'/'. station_hour_name($time['hour']));
+        }
 
-      $links['listen'] = theme('station_schedule_listen_link', $archive_url .'/last/'. $hour, $short);
-      $links['rss'] = theme('station_schedule_rss_link', $archive_url .'/rss/'. $hour, $short);
+        $archive_url = url($archive_url, NULL, NULL, TRUE);
+        $links['listen'] = theme('station_schedule_listen_link', $archive_url .'last/'. $hour, $short);
+        $links['rss'] = theme('station_schedule_rss_link', $archive_url .'rss/'. $hour, $short);
+      }
     }
   }
+
   return $links;
 }
 
@@ -199,10 +201,7 @@ function station_schedule_program_load($node) {
     $extras->times[$sch->sid] = array(
       'day' => $sch->day,
       'hour' => $sch->hour,
-      'formatted' => t('%dayname at %hourname', array(
-        '%dayname' => station_day_name($sch->day),
-        '%hourname' => station_hour_name($sch->hour))
-      ),
+      'link' => l($dayname, strtolower("schedule/$dayname")) .' at '. l($hourname, strtolower("schedule/$dayname/$hourname")),
     );
   }
 
@@ -307,7 +306,7 @@ function station_schedule_program_page($nid = null) {
       $page .= t('<p>These are shows that have been marked as unpublished.</p>');
       $page .= theme('table', $cols, $rowsOld);
     }
-    
+
     return $page;
   }
 }
@@ -338,7 +337,7 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
     foreach ($node->times as $nid => $time) {
       $dayname = station_day_name($time['day']);
       $hourname = station_hour_name($time['hour']);
-      $times[] = l($time['formatted'], strtolower("schedule/$dayname/$hourname"));
+      $times[] = $time['link'];
     }
   }
 
@@ -366,13 +365,13 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
     $node->teaser = check_markup($node->teaser);
   } else {
     if ($djs) {
-      $dj_info = '<ul><li>' . implode('</li><li>', $djs) . '</li></ul>';
+      $dj_info = '<ul><li>'. implode('</li><li>', $djs) .'</li></ul>';
     } else {
       $dj_info = t('This program has no DJs');
     }
 
     if ($times) {
-      $time_info = '<ul><li>' . implode('</li><li>', $times) . '</li></ul>';
+      $time_info = '<ul><li>'. implode('</li><li>', $times) .'</li></ul>';
     } else {
       $time_info = t('This program is currently unscheduled');
     }
@@ -401,7 +400,7 @@ function station_schedule_program_current() {
  * @param $gmt_timestamp
  *   a timestamp used to specify a day of the week an hour.
  * @return
- *   program node object if one is scheduled, an empty object if nothing is 
+ *   program node object if one is scheduled, an empty object if nothing is
  *   scheduled, or FALSE if there's an error.
  */
 function station_schedule_program_get_at($gmt_timestamp) {
@@ -426,42 +425,4 @@ function station_schedule_program_get_at($gmt_timestamp) {
     return $node;
   }
   return new stdClass;
-}
-
-/**
- * Implements hook_user() to associate programs with the users.
- */
-function station_schedule_user($op, &$edit, &$user, $category = NULL) {
-  switch ($op) {
-  case 'load':
-    // load the dj's programs.
-    $user->programs = array();
-    $result = db_query('SELECT d.program_nid AS nid, n.title FROM {station_dj} d INNER JOIN {node} n on d.program_nid = n.nid WHERE d.uid = %d ORDER BY n.title', $user->uid);
-    while ($program = db_fetch_object($result)) {
-      $user->programs[$program->nid] = $program->title;
-    }
-    break;
-  case 'view':
-    if ($user->programs) {
-      foreach($user->programs as $nid => $title) {
-        $node = node_load($nid);
-        station_schedule_program_view($node, TRUE);
-        $items[] = array('title' => l($title, 'node/' . $nid),
-          'value' => $node->teaser,
-          'class' => 'program',
-        );
-      }
-      return array(t('Programs') => $items);
-
-      $programlist = array();
-      foreach($user->programs as $nid => $title) {
-        $programlist['Programs'][] = l($title, 'node/' . $nid) ."<br />\n";
-      }
-      return $programlist;
-    }
-    break;
-  case 'delete':
-    db_query('DELETE FROM {station_dj} WHERE uid = %d', $user->uid);
-    break;
-  }
 }

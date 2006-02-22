@@ -44,35 +44,6 @@ function station_schedule_schedule_load($crit = array(), $nested = true)  {
   return $ret;
 }
 
-
-/**
- * Get a schedule node ready for viewing.
- */
-function station_schedule_schedule_view(&$node, $teaser = false, $page = false) {
-  if ($page) {
-    $breadcrumb = array(
-      array('path' => 'schedule', 'title' => t('Schedule')),
-      array('path' => 'schedule/' . strtolower($node->dayname), 'title' => t($node->dayname)),
-      array('path' => 'schedule/' . strtolower($node->dayname) . '/' . $node->hourname, 'title' => t($node->hourname)),
-    );
-    menu_set_location($breadcrumb);
-  }
-
-  if (isset($node->program_nid)) {
-    $p = node_load($node->program_nid);
-    $program = l($p->title, 'node/' . $p->nid);
-  } else {
-    $program = 'No program is scheduled at this time.';
-  }
-
-  if ($teaser) {
-    $node->teaser = check_markup($program);
-  } else {
-    $node->body = check_markup($program);
-  }
-}
-
-
 /**
  * Implementation of hook_form().
  *
@@ -249,7 +220,12 @@ function station_schedule_schedule_day_page($day, $hour = null) {
     $breadcrumb[] = array('path' => 'schedule/' . strtolower($dayname) . '/' . $hourname, 'title' => t($hourname));
 
     $schedules = station_schedule_schedule_load(array('day' => $day, 'hour' => $hour), false);
-    $page = _station_schedule_schedule_view_hour($schedules[0]);
+    if ($schedules[0]->program_nid) {
+      $program = node_load($schedules[0]->program_nid);
+      $page .= node_view($program, false, false, true);
+    } else {
+      $page .= '<div>No program is scheduled.</div>';
+    }
   }
 
   menu_set_location($breadcrumb);
@@ -297,21 +273,4 @@ function _station_schedule_schedule_view_day($day) {
     }
   }
   return theme('station_schedule_schedule_table', $cols, $rows);
-}
-
-/**
- * Print a page view for a scheduled hour
- *
- * @param object $schedule schedule data object
- */
-function _station_schedule_schedule_view_hour($schedule) {
-  if ($schedule->program_nid) {
-    $program = node_load($schedule->program_nid);
-
-    $page .= node_view($program, false, false, true);
-  } else {
-    $page .= '<div>No program is scheduled.</div>';
-  }
-
-  return $page;
 }

@@ -84,6 +84,7 @@ function station_schedule_menu($may_cache) {
     );
   }
   else {
+    // days of the week schedule...
     $today = station_today();
     foreach (station_day_name() as $day => $dayname) {
       $items[] = array(
@@ -201,33 +202,50 @@ function station_schedule_settings() {
 function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
   $links = array();
 
-  if ($type == 'node') {
-    switch ($node->type) {
-      case 'program':
-        // Don't display a redundant edit link if they are node administrators.
-        if (station_schedule_program_access('update', $node) || user_access('administer nodes')) {
-          $links[] = l(t('edit this program'), "node/$node->nid/edit");
-        }
-        if ($node->url) {
-          $links[] = '<a href="'. check_url($node->url) .'">'. t('program homepage') .'</a>';
-        }
-        $links = array_merge($links, station_schedule_program_listen_links($node->nid));
-        break;
-
-      case 'schedule':
-        // if there's a program load it's links (which may be to several times)
-        if (isset($node->program_nid)) {
-          $links = station_schedule_program_listen_links($node->program_nid);
-        } else {
-          // otherwise, the schedule links are fine.
-          $hour = "{$node->dayname}/{$node->hourname}";
-          $links[] = theme('station_schedule_listen_link', $hour, false);
-          $links[] = theme('station_schedule_rss_link', $hour, false);
-        }
-        break;
-    }
+  if ($type == 'node' && $node->type == 'program') {
+    $links = station_schedule_program_listen_links($node->nid);
   }
+
   return $links;
+}
+
+
+/**
+ * Implements hook_user() to associate programs with the users.
+ */
+function station_schedule_user($op, &$edit, &$user, $category = NULL) {
+  switch ($op) {
+  case 'load':
+    // load the dj's programs.
+    $user->programs = array();
+    $result = db_query('SELECT d.program_nid AS nid, n.title FROM {station_dj} d INNER JOIN {node} n on d.program_nid = n.nid WHERE d.uid = %d ORDER BY n.title', $user->uid);
+    while ($program = db_fetch_object($result)) {
+      $user->programs[$program->nid] = $program->title;
+    }
+    break;
+  case 'view':
+    if ($user->programs) {
+      foreach($user->programs as $nid => $title) {
+        $node = node_load($nid);
+        station_schedule_program_view($node, TRUE);
+        $items[] = array('title' => l($title, 'node/' . $nid),
+          'value' => $node->teaser,
+          'class' => 'program',
+        );
+      }
+      return array(t('Programs') => $items);
+
+      $programlist = array();
+      foreach($user->programs as $nid => $title) {
+        $programlist['Programs'][] = l($title, 'node/' . $nid) ."<br />\n";
+      }
+      return $programlist;
+    }
+    break;
+  case 'delete':
+    db_query('DELETE FROM {station_dj} WHERE uid = %d', $user->uid);
+    break;
+  }
 }
 
 

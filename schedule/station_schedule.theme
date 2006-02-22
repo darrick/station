@@ -34,11 +34,7 @@ function theme_station_schedule_rss_link($url, $short = true) {
   $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif';
   $text = t('Podcast it!');
   $title = t('Grab this show with your podcast software');
-  if ($short) {
-    return "<a href='$url' title='$title'><img src='$img' alt='$text' /></a>";
-  } else {
-      return "<a href='$url' title='$title'><img src='$img' alt='$text' /> $text</a>";
-  }
+  return _theme_station_link($short, $url, $title, $text, $img);
 }
 
 /**
@@ -52,9 +48,14 @@ function theme_station_schedule_listen_link($url, $short = true) {
   $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif';
   $text = t('Listen!');
   $title = t('Listen to previous broadcasts of this show');
-  if ($short) {
-    return "<a href='$url' title='$title'><img src='$img' alt='$text' /></a>";
-  } else {
-      return "<a href='$url' title='$title'><img src='$img' alt='$text' /> $text</a>";
+  return _theme_station_link($short, $url, $title, $text, $img);
+}
+
+function _theme_station_link($short, $url, $title, $text, $img) {
+  $a = "a href='$url' title='$title'";
+  $output = "<$a><img src='$img' alt='$text' /></a>";
+  if (!$short) {
+    $output .= " <$a>$text</a>";
   }
+  return $output;
 }

@@ -28,10 +28,9 @@ $STREAMRIPPER = '/usr/local/bin/streamripper';
 $IMPORT_DIR = '/usr/local/www/drupal/modules/station/archive/import';
 
 /**
- * the number of seconds of overlap between hours (assuming you start recording
- * at the top of the hour).
+ * the number of seconds this hour will over lap the next.
  */
-$OVERLAP_SECONDS = 120;
+$OVERLAP_SECONDS = 60;
 
  //////////////////////////////////////////////////////////////////////
 // Y O U   D O N ' T   N E E D   T O   E D I T   B E L O W   H E R E //

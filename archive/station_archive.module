@@ -275,12 +275,22 @@ function station_archive_settings() {
  * Cron task: remove old files, import new ones.
  */
 function station_archive_cron() {
+  // HACK: we overwrite the user so that the cron user can get around the
+  // permissions check and delete old audio nodes.
+  global $user;
+  $olduser = $user;
+  $user = user_load(array('uid'=>1));
+
   if (variable_get('station_archive_cleanup_old', 1) == 1) {
     _station_archive_delete_old_nodes();
   }
   if (variable_get('station_archive_import_new', 1) == 1) {
     _station_archive_import_files();
   }
+
+  // make sure we restore the old user so we don't screw something else up in
+  // the cron run
+  $user = $olduser;
 }
 
 /**
@@ -290,12 +300,6 @@ function station_archive_cron() {
  * search look at nodes included in our taxonomy.
  */
 function _station_archive_delete_old_nodes() {
-  // HACK: we overwrite the user so that the cron user can get around the
-  // permissions check and delete old audio nodes.
-  global $user;
-  $olduser = $user;
-  $user = user_load(array('uid'=>1));
-
   $vid = _station_archive_get_vid();
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
   $db_result = db_query('SELECT n.nid, n.title FROM term_data td INNER JOIN term_node tn ON td.tid = tn.tid INNER JOIN node n ON tn.nid = n.nid WHERE td.vid = %d AND n.created < %d', $vid, $cutoff);
@@ -303,10 +307,6 @@ function _station_archive_delete_old_nodes() {
     watchdog('stationarchive', t('Deleted %title.', array('%title' => theme('placeholder', $node->title))), WATCHDOG_NOTICE);
     node_delete($node->nid);
   }
-
-  // make sure we restore the old user so we don't screw something else up in
-  // the cron run
-  $user = $olduser;
 }
 
 /**

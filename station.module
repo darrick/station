@@ -9,7 +9,7 @@ function station_help($section='') {
     case 'admin/modules#description':
       return t('Core of station module for running an internet radio station.');
     case 'admin/settings/station':
-      return t('Configure the core station settings.');
+      return t('Configure the core station settings. These settings are used by all of the station modules.');
   }
   return null;
 }
@@ -28,6 +28,7 @@ function station_settings() {
   $form['station_stream'] = array(
     '#type' => 'fieldset',
     '#title' => t('Webstream settings'),
+    '#description' => t('The staion module expects .'),
   );
   $form['station_stream']['station_stream_high_url'] = array(
     '#type' => 'textfield',

@@ -278,6 +278,7 @@ function station_schedule_program_page($nid = null) {
     }
     drupal_not_found();
   }
+  else {
     $query = db_rewrite_sql("SELECT n.*, p.genre, p.url FROM {node} n LEFT JOIN {station_program} p ON n.vid = p.vid WHERE n.type = 'program' ORDER BY n.title");
     $queryResult = db_query($query);
 

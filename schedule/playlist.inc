@@ -79,16 +79,16 @@ function station_schedule_playlist_form(&$node) {
       '#required' => TRUE,
     );
     $form['tracks'][$weight]['weight'] = array(
-      '#type' => 'weight', '#value' => $weight,
+      '#type' => 'weight', '#value' => $weight, '#delta' => 20,
     );
     $weight++;
   }
   // add some empty tracks
-  for ($i = 0; $i < 4; $i++) {
+  for ($i = 0; $i < 6; $i++) {
     $form['tracks'][$weight]['artist'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
     $form['tracks'][$weight]['album'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
     $form['tracks'][$weight]['title'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
-    $form['tracks'][$weight]['weight'] = array('#type' => 'weight', '#value' => $weight);
+    $form['tracks'][$weight]['weight'] = array('#type' => 'weight', '#delta' => 20, '#value' => $weight);
     $weight++;
   }
   return $form;
@@ -96,14 +96,14 @@ function station_schedule_playlist_form(&$node) {
 
 function theme_station_schedule_playlist_track_form($form) {
   $output = '';
-  $header = array(t('Artist'), t('Album'), t('Title'), t('Weight'));
+  $header = array(t('Artist'), t('Title'), t('Album'), t('Weight'));
 
   $rows = array();
   foreach (element_children($form) as $key) {
     $row = array();
     $row[] = form_render($form[$key]['artist']);
-    $row[] = form_render($form[$key]['album']);
     $row[] = form_render($form[$key]['title']);
+    $row[] = form_render($form[$key]['album']);
     $row[] = form_render($form[$key]['weight']);
     $rows[] = $row;
   }
@@ -204,7 +204,7 @@ function station_schedule_playlist_update($node) {
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title) VALUES (%d, %d, '%s', '%s')", $node->nid, $track['weight'], $track['artist'], $track['album'], $track['title']);
+      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title) VALUES (%d, %d, '%s', '%s', '%s')", $node->nid, $track['weight'], $track['artist'], $track['album'], $track['title']);
     }
   }
 }
@@ -223,11 +223,11 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
     menu_set_location($breadcrumb);
   }
 
-  $header = array(t('Artist'), t('Album'), t('Title'));
+  $header = array(t('Artist'), t('Title'), t('Album'));
   $rows = array();
   foreach ((array) $node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      $rows[] = array($track['artist'], $track['album'], $track['title']);
+      $rows[] = array($track['artist'], $track['title'], $track['album']);
     }
   }
   if (count($rows) > 0) {

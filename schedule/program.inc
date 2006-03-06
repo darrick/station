@@ -177,6 +177,10 @@ function station_schedule_program_listen_links($program_nid, $short = FALSE)  {
         $links['listen'] = theme('station_schedule_listen_link', $archive_url .'last/'. $hour, $short);
         $links['rss'] = theme('station_schedule_rss_link', $archive_url .'rss/'. $hour, $short);
       }
+
+      if ($playlists = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} WHERE program_nid = %d", $node->nid))) {
+        $links['playlist'] = l("View playlists", 'playlist/program/'. $node->nid);
+      }
     }
   }
 
@@ -274,9 +278,7 @@ function station_schedule_program_page($nid = null) {
     drupal_not_found();
   }
   else {
-    $query = "SELECT n.*, p.genre, p.url ";
-    $query .= "FROM {node} n LEFT JOIN {station_program} p ON n.nid = p.nid ";
-    $query .= "WHERE n.type = 'program' ORDER BY n.title";
+    $query = db_rewrite_sql("SELECT n.*, p.genre, p.url FROM {node} n LEFT JOIN {station_program} p ON n.nid = p.nid WHERE n.type = 'program' ORDER BY n.title");
     $queryResult = db_query($query);
 
     $cols = array('Program', 'Genre', 'DJs');
@@ -327,7 +329,8 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
   $djs = array();
   if ($node->djs) {
     foreach ($node->djs as $uid => $name) {
-      $djs[] = l($name, 'user/' . $uid);
+      $user = user_load(array('uid' => $uid));
+      $djs[] = theme('username', $user);
     }
   }
 
@@ -363,7 +366,8 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
       }
     }
     $node->teaser = check_markup($node->teaser);
-  } else {
+  }
+  else {
     if ($djs) {
       $dj_info = '<ul><li>'. implode('</li><li>', $djs) .'</li></ul>';
     } else {

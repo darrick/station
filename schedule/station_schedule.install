@@ -17,6 +17,44 @@ function station_schedule_update_2() {
 }
 
 /**
+ * Add playlist tables.
+ */
+function station_schedule_update_3() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql(
+<<<MYSQL_UPDATE
+        CREATE TABLE {station_playlist} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program node id',
+          `timestamp` int(11) NOT NULL default '0' COMMENT 'Timestamp of show'
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+MYSQL_UPDATE
+      );
+      $ret[] = update_sql(
+<<<MYSQL_UPDATE
+        CREATE TABLE {station_playlist_track} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `weight` tinyint(4) unsigned NOT NULL default '0' COMMENT 'Ordering weight',
+          `artist` varchar(128) NOT NULL default '',
+          `album` varchar(128) NOT NULL default '',
+          `title` varchar(128) NOT NULL default '',
+          KEY `station_playlist_artist` (`artist`),
+          KEY `station_playlist_nid_weight` (`nid`,`weight`),
+          KEY `station_playlist_title` (`title`),
+          KEY `station_playlist_album` (`title`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+MYSQL_UPDATE
+      );
+      break;
+  }
+  return $ret;
+}
+
+/**
  * Install the initial schema.
  */
 function station_schedule_install() {
@@ -35,7 +73,7 @@ function station_schedule_install() {
           KEY `station_schedule_program` (`program_nid`),
           KEY `station_schedule_day` (`day`),
           KEY `station_schedule_hour` (`hour`)
-        ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
 MYSQL_UPDATE
       );
       db_query(
@@ -46,7 +84,7 @@ MYSQL_UPDATE
           `genre` varchar(200) NOT NULL default '' COMMENT 'Format',
           `url` varchar(255) default NULL COMMENT 'URL',
           PRIMARY KEY  (`nid`,`vid`)
-        ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
 MYSQL_UPDATE
       );
       db_query(
@@ -55,7 +93,31 @@ MYSQL_UPDATE
           `uid` int(10) unsigned NOT NULL default '0' COMMENT 'User Id',
           `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program Id',
           PRIMARY KEY  (`uid`,`program_nid`)
-        ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+MYSQL_UPDATE
+      );
+      db_query(
+<<<MYSQL_UPDATE
+        CREATE TABLE {station_playlist} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program node id',
+          `timestamp` int(11) NOT NULL default '0' COMMENT 'Timestamp of show'
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+MYSQL_UPDATE
+      );
+      db_query(
+<<<MYSQL_UPDATE
+        CREATE TABLE {station_playlist_track} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `weight` tinyint(4) unsigned NOT NULL default '0' COMMENT 'Ordering weight',
+          `artist` varchar(128) NOT NULL default '',
+          `album` varchar(128) NOT NULL default '',
+          `title` varchar(128) NOT NULL default '',
+          KEY `station_playlist_artist` (`artist`),
+          KEY `station_playlist_nid_weight` (`nid`,`weight`),
+          KEY `station_playlist_title` (`title`),
+          KEY `station_playlist_album` (`title`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
 MYSQL_UPDATE
       );
       db_query(

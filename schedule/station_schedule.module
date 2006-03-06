@@ -4,8 +4,9 @@
 
 require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
 
-require_once(drupal_get_path('module', 'station_schedule') .'/program.inc');
 require_once(drupal_get_path('module', 'station_schedule') .'/schedule.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/program.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/playlist.inc');
 require_once(drupal_get_path('module', 'station_schedule') .'/station_schedule.theme');
 
 /**
@@ -23,6 +24,8 @@ function station_schedule_help($section='') {
       return t('Module to allow radio station scheduling.');
     case 'node/add#program':
       return t('A radio program that you can schedule');
+    case 'node/add#program_playlist':
+      return t('A playlist for a program');
     case 'admin/settings/station':
       return t('Configure the station\'s schedule.');
     case 'schedule':
@@ -54,6 +57,31 @@ function station_schedule_menu($may_cache) {
       'title' => t('program'),
       'access' => user_access('administer schedule')
     );
+    $items[] = array(
+      'path' => 'node/add/program_playlist',
+      'title' => t('program playlist'),
+      'access' => user_access('administer schedule')
+    );
+
+
+    $items[] = array(
+      'path' => 'playlist',
+      'title' => t('playlists'),
+      'callback' => 'station_schedule_playlist_page',
+      'access' => user_access('access content')
+    );
+    $items[] = array(
+      'path' => 'playlist/program',
+      'title' => t("program's"),
+      'callback' => 'station_schedule_playlist_program_page',
+      'access' => user_access('access content')
+    );
+    $items[] = array(
+      'path' => 'playlist/user',
+      'title' => t("user's"),
+      'callback' => 'station_schedule_playlist_user_page',
+      'access' => user_access('access content')
+    );
 
     $items[] = array(
       'path' => 'program',
@@ -68,6 +96,7 @@ function station_schedule_menu($may_cache) {
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK,
     );
+
     $items[] = array(
       'path' => 'schedule',
       'title' => t('schedule'),
@@ -100,6 +129,43 @@ function station_schedule_menu($may_cache) {
 
   return $items;
 }
+
+/**
+ * Implementation of hook_node_info().
+ */
+function station_schedule_node_info() {
+  return array(
+    'program' => array('name' => t('program'), 'base' => 'station_schedule_program'),
+    'program_playlist' => array('name' => t('program playlist'), 'base' => 'station_schedule_playlist'),
+  );
+}
+
+/**
+ * Valid permissions for this module
+ * @return array An array of valid permissions for the station module
+ */
+function station_schedule_perm() {
+  return array(
+    'create playlists',
+    'edit own playlists',
+    'edit own program',
+    'administer schedule',
+  );
+}
+
+/**
+ * the modules settings form
+ */
+function station_schedule_settings() {
+  $form['station_schedule_archive_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Archive URL'),
+    '#default_value' => variable_get('station_schedule_archive_url', ''),
+    '#description' => t("The URL of the Drupal server running the station archive module. If this is blank no archive links will be provided. Don't forget the trailing slash: i.e. http://example.com/"),
+  );
+  return $form;
+}
+
 
 /**
  * Generate HTML for the station block
@@ -157,40 +223,6 @@ function station_schedule_program_block() {
   }
 
   return $output;
-}
-
-
-/**
- * Implementation of hook_node_info().
- */
-function station_schedule_node_info() {
-  return array(
-    'program' => array('name' => t('program'), 'base' => 'station_schedule_program'),
-  );
-}
-
-/**
- * Valid permissions for this module
- * @return array An array of valid permissions for the station module
- */
-function station_schedule_perm() {
-  return array(
-    'edit own program',
-    'administer schedule',
-  );
-}
-
-/**
- * the modules settings form
- */
-function station_schedule_settings() {
-  $form['station_schedule_archive_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Archive URL'),
-    '#default_value' => variable_get('station_schedule_archive_url', ''),
-    '#description' => t("The URL of the Drupal server running the station archive module. If this is blank no archive links will be provided. Don't forget the trailing slash: i.e. http://example.com/"),
-  );
-  return $form;
 }
 
 /**

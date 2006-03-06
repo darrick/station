@@ -5,10 +5,11 @@
 function station_schedule_program_access($op, $node) {
   global $user;
 
-  if (user_access('administer schedule')) {
-    return true;
-  }
   switch ($op) {
+    case 'view':
+      return user_access('access content');
+      break;
+   
     case 'update':
       $djs =_station_schedule_program_load_djs($node->nid);
       // if they're a DJ, check they should be able to do it.
@@ -17,11 +18,11 @@ function station_schedule_program_access($op, $node) {
       }
       break;
 
-    case 'view':
-      return user_access('access content');
-      break;
+    case 'delete': 
+    case 'create':
+    default:
+      return user_access('administer schedule');
   }
-  return false;
 }
 
 /**
@@ -277,8 +278,7 @@ function station_schedule_program_page($nid = null) {
     }
     drupal_not_found();
   }
-  else {
-    $query = db_rewrite_sql("SELECT n.*, p.genre, p.url FROM {node} n LEFT JOIN {station_program} p ON n.nid = p.nid WHERE n.type = 'program' ORDER BY n.title");
+    $query = db_rewrite_sql("SELECT n.*, p.genre, p.url FROM {node} n LEFT JOIN {station_program} p ON n.vid = p.vid WHERE n.type = 'program' ORDER BY n.title");
     $queryResult = db_query($query);
 
     $cols = array('Program', 'Genre', 'DJs');

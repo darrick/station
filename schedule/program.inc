@@ -9,7 +9,7 @@ function station_schedule_program_access($op, $node) {
     case 'view':
       return user_access('access content');
       break;
-   
+
     case 'update':
       $djs =_station_schedule_program_load_djs($node->nid);
       // if they're a DJ, check they should be able to do it.
@@ -18,7 +18,7 @@ function station_schedule_program_access($op, $node) {
       }
       break;
 
-    case 'delete': 
+    case 'delete':
     case 'create':
     default:
       return user_access('administer schedule');
@@ -356,14 +356,14 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
       if ($times) {
         $node->teaser = t('%genre with %djs on %times.', $options);
       } else {
-        $node->teaser = t('%genre with %djs, currently unscheduled.', $options);
+        $node->teaser = t('%genre with %djs, which is currently unscheduled.', $options);
       }
     }
     else {
       if ($times) {
         $node->teaser = t('%genre, %times.', $options);
       } else {
-        $node->teaser = t('%genre, currently unscheduled.', $options);
+        $node->teaser = t('%genre, which is currently unscheduled.', $options);
       }
     }
     $node->teaser = check_markup($node->teaser);

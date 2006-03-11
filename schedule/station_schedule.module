@@ -23,9 +23,9 @@ function station_schedule_help($section='') {
     case 'admin/modules#description':
       return t('Module to allow radio station scheduling.');
     case 'node/add#program':
-      return t('A radio program that you can schedule');
+      return t('A radio program that you can schedule.');
     case 'node/add#program_playlist':
-      return t('A playlist for a program');
+      return t("A playlist lets your listeners see a list of all the music played during a program. It also allows the music director to easily chart what's being played.");
     case 'admin/settings/station':
       return t('Configure the station\'s schedule.');
     case 'schedule':
@@ -60,7 +60,7 @@ function station_schedule_menu($may_cache) {
     $items[] = array(
       'path' => 'node/add/program_playlist',
       'title' => t('program playlist'),
-      'access' => user_access('administer schedule')
+      'access' => user_access('create playlists')
     );
 
 

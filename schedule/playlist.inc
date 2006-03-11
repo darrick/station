@@ -5,17 +5,27 @@
 function station_schedule_playlist_access($op, $node) {
   global $user;
 
-  if ($op == 'create') {
-    return user_access('create playlists');
+  if (user_access('administer schedule')) {
+    return TRUE;
   }
 
-  if ($op == 'update' || $op == 'delete') {
-    if (user_access('edit own playlists') && ($user->uid == $node->uid)) {
-      return TRUE;
-    }
-  }
+  switch ($op) {
+    case 'view':
+      return user_access('access content');
+      break;
 
-  return true;
+    case 'create':
+      return user_access('create playlists');
+      break;
+
+    case 'update':
+    case 'delete':
+      if (user_access('edit own playlists') && ($user->uid == $node->uid)) {
+        return TRUE;
+      }
+      break;
+  }
+  return FALSE;
 }
 
 /**
@@ -50,7 +60,7 @@ function station_schedule_playlist_form(&$node) {
     '#title' => t('Description'),
     '#default_value' => $node->body,
     '#rows' => 5,
-    '#required' => FALSE,
+    '#required' => TRUE,
   );
   $form['body_filter']['format'] = filter_form($node->format);
 
@@ -58,7 +68,7 @@ function station_schedule_playlist_form(&$node) {
     '#type' => 'fieldset', '#title' => t('Tracks'),
     '#tree' => TRUE, '#collapsible' => FALSE, '#weight'=>1,
     '#theme' => 'station_schedule_playlist_track_form',
-    '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes.'),
+    '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
   );
 
   $weight = 0;
@@ -79,16 +89,16 @@ function station_schedule_playlist_form(&$node) {
       '#required' => TRUE,
     );
     $form['tracks'][$weight]['weight'] = array(
-      '#type' => 'weight', '#value' => $weight, '#delta' => 20,
+      '#type' => 'weight', '#value' => $weight, '#delta' => 30,
     );
     $weight++;
   }
   // add some empty tracks
-  for ($i = 0; $i < 6; $i++) {
+  for ($i = 0; $i < 8; $i++) {
     $form['tracks'][$weight]['artist'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
     $form['tracks'][$weight]['album'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
     $form['tracks'][$weight]['title'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
-    $form['tracks'][$weight]['weight'] = array('#type' => 'weight', '#delta' => 20, '#value' => $weight);
+    $form['tracks'][$weight]['weight'] = array('#type' => 'weight', '#delta' => 30, '#value' => $weight);
     $weight++;
   }
   return $form;
@@ -217,21 +227,31 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
     $breadcrumb = array(
       array('path' => 'program', 'title' => t('programs')),
       array('path' => 'node/'. $node->program_nid, 'title' => $node->program_title),
-      array('path' => 'node/'. $node->program_nid .'/playlists', 'title' => t('playlists')),
+      array('path' => 'playlist/program/'. $node->program_nid, 'title' => t('playlists')),
       array('path' => 'node/'. $node->nid, 'title' => t('playlist')),
     );
     menu_set_location($breadcrumb);
   }
 
-  $header = array(t('Artist'), t('Title'), t('Album'));
-  $rows = array();
-  foreach ((array) $node->tracks as $track) {
-    if ($track['artist'] || $track['title']) {
-      $rows[] = array($track['artist'], $track['title'], $track['album']);
+  if ($teaser) {
+    if (!$node->body) {
+      $node->teaser = t('%trackcount tracks', array('%trackcount' => count($node->tracks)));
     }
-  }
-  if (count($rows) > 0) {
-    $node->body .= theme('table', $header, $rows);
+  } else {
+    $header = array(t('Artist'), t('Title'), t('Album'));
+    $rows = array();
+    foreach ((array) $node->tracks as $track) {
+      if ($track['artist'] || $track['title']) {
+        $row = array('&nbsp', '&nbsp', '&nbsp');
+        $row[0] = $track['artist'];
+        $row[1] = $track['title'];
+        $row[2] = $track['album'];
+        $rows[] = $row;
+      }
+    }
+    if (count($rows) > 0) {
+      $node->body .= theme('table', $header, $rows);
+    }
   }
 }
 
@@ -244,43 +264,66 @@ function station_schedule_playlist_page() {
   }
   $output .= theme('pager', NULL, variable_get('default_nodes_main', 10));
 
-  print theme('page', $output);
+  return $output;
 }
 
 // list a program's playlists
 function station_schedule_playlist_program_page($nid = 0) {
   $node = node_load(array('nid' => $nid, 'type' => 'program'));
-  if (!$node->nid) {
-    drupal_not_found();
+  if ($node->nid) {
+    $breadcrumb = array(
+      array('path' => 'program', 'title' => t('programs')),
+      array('path' => 'node/'. $node->nid, 'title' => $node->title),
+      array(
+        'path' => 'playlist/program/'. $node->nid,
+        'title' => t("%program's playlists", array('%program' => $node->title))),
+    );
+    menu_set_location($breadcrumb);
+
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.nid WHERE p.program_nid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $node->nid);
+    $output = '';
+    while ($node = db_fetch_object($result)) {
+      $output .= node_view(node_load($node->nid), 1);
+    }
   }
+  else {
+    drupal_set_title(t("programs with playlists"));
 
-  drupal_set_title(t("%program's playlists", array('%program' => $node->title)));
-
-  $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.nid WHERE p.program_nid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $node->nid);
-  $output = '';
-  while ($node = db_fetch_object($result)) {
-    $output .= node_view(node_load($node->nid), 1);
+    // list of programs with playlists posted.
+    $result = pager_query(db_rewrite_sql("SELECT DISTINCT n.nid, n.title FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.program_nid WHERE n.type = 'program' AND n.status = 1 ORDER BY n.title"), variable_get('default_nodes_main', 10));
+    $items = array();
+    while ($node = db_fetch_object($result)) {
+      $items[] = l($node->title, 'playlist/program/'. $node->nid);
+    }
+    $output = theme('item_list', $items);
   }
   $output .= theme('pager', NULL, variable_get('default_nodes_main', 10));
-
-  print theme('page', $output);
+  return $output;
 }
 
 // list a user's playlists
 function station_schedule_playlist_user_page($uid = 0) {
   $user = user_load(array('uid' => $uid));
-  if (!$user->uid) {
-    drupal_not_found();
+  if ($user->uid) {
+    drupal_set_title(t("%username's playlists", array('%username' => $user->name)));
+
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.uid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $user->uid);
+    $output = '';
+    while ($node = db_fetch_object($result)) {
+      $output .= node_view(node_load($node->nid), 1);
+    }
   }
+  else {
+    drupal_set_title(t("users with playlists"));
 
-  drupal_set_title(t("%username's playlists", array('%username' => $user->name)));
-
-  $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.uid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $user->uid);
-  $output = '';
-  while ($node = db_fetch_object($result)) {
-    $output .= node_view(node_load($node->nid), 1);
+    // list of users with playlists posted.
+    $result = pager_query(db_rewrite_sql("SELECT DISTINCT n.uid, u.name FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.type = 'program_playlist' AND n.status = 1 ORDER BY u.name"), variable_get('default_nodes_main', 10));
+    $items = array();
+    while ($user = db_fetch_object($result)) {
+      $items[] = l($user->name, 'playlist/user/'. $user->uid);
+    }
+    $output = theme('item_list', $items);
   }
   $output .= theme('pager', NULL, variable_get('default_nodes_main', 10));
-
-  print theme('page', $output);
+  return $output;
 }

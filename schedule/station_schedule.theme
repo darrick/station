@@ -32,7 +32,7 @@ function theme_station_schedule_schedule_day($content) {
 function theme_station_schedule_rss_link($url, $short = true) {
   global $base_url;
   $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif';
-  $text = t('Podcast it');
+  $text = t('subscribe to the podcast');
   $title = t('Grab this show with your podcast software');
   return _theme_station_link($short, $url, $title, $text, $img);
 }
@@ -46,7 +46,7 @@ function theme_station_schedule_rss_link($url, $short = true) {
 function theme_station_schedule_listen_link($url, $short = true) {
   global $base_url;
   $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif';
-  $text = t('Listen in');
+  $text = t('listen to the program');
   $title = t('Listen to previous broadcasts of this show');
   return _theme_station_link($short, $url, $title, $text, $img);
 }

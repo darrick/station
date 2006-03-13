@@ -163,6 +163,7 @@ function station_schedule_schedule_week_page() {
   // full week schedule
   drupal_set_title(t('Weekly Schedule'));
 
+  $page = '';
   foreach (station_schedule_schedule_load() as $d => $day) {
     $todayname = strtolower($daynames[$d]);
 
@@ -203,6 +204,7 @@ function station_schedule_schedule_day_page($day, $hour = null) {
   $daynames = station_day_name();
   $dayname = $daynames[$day];
 
+  $output = '';
   if ($hour === null) {
     // one day schedule
     drupal_set_title(t('Schedule for %dayname', array('%dayname' => $dayname)));

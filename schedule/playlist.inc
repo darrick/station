@@ -55,6 +55,52 @@ function station_schedule_playlist_form(&$node) {
     '#description' => t('The date the program aired.'),
   );
 
+  $form['tracks'] = array(
+    '#type' => 'fieldset', '#title' => t('Tracks'),
+    '#tree' => TRUE, '#collapsible' => FALSE, '#weight'=>1,
+    '#theme' => 'station_schedule_playlist_track_form',
+    '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
+  );
+
+
+  $blanks = 10;
+  $weight = 0;
+  $weights = range(-1, count($node->tracks) + $blanks + 1);
+  $weights = array_combine($weights, $weights);
+
+  // load current tracks
+  foreach ((array)$node->tracks as $key => $track) {
+    $form['tracks'][$weight]['artist'] = array(
+      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
+      '#default_value' => $track['artist'],
+    );
+    $form['tracks'][$weight]['album'] = array(
+      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
+      '#default_value' => $track['album'],
+    );
+    $form['tracks'][$weight]['title'] = array(
+      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
+      '#default_value' => $track['title'],
+    );
+    $form['tracks'][$weight]['label'] = array(
+      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
+      '#default_value' => $track['label'],
+    );
+    $form['tracks'][$weight]['weight'] = array(
+      '#type' => 'select', '#options' => $weights, '#default_value' => $weight,
+    );
+    $weight++;
+  }
+  // add some empty tracks
+  for ($i = 0; $i < $blanks; $i++) {
+    $form['tracks'][$weight]['artist'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 255);
+    $form['tracks'][$weight]['album'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 255);
+    $form['tracks'][$weight]['title'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 255);
+    $form['tracks'][$weight]['label'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 255);
+    $form['tracks'][$weight]['weight'] = array('#type' => 'select', '#options' => $weights, '#default_value' => $weight);
+    $weight++;
+  }
+
   $form['body_filter']['body'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
@@ -64,49 +110,12 @@ function station_schedule_playlist_form(&$node) {
   );
   $form['body_filter']['format'] = filter_form($node->format);
 
-  $form['tracks'] = array(
-    '#type' => 'fieldset', '#title' => t('Tracks'),
-    '#tree' => TRUE, '#collapsible' => FALSE, '#weight'=>1,
-    '#theme' => 'station_schedule_playlist_track_form',
-    '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
-  );
-
-  $weight = 0;
-  // load current tracks
-  foreach ((array)$node->tracks as $key => $track) {
-    $form['tracks'][$weight]['artist'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 128,
-      '#default_value' => $track['artist'],
-      '#required' => TRUE,
-    );
-    $form['tracks'][$weight]['album'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 128,
-      '#default_value' => $track['album'],
-    );
-    $form['tracks'][$weight]['title'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 128,
-      '#default_value' => $track['title'],
-      '#required' => TRUE,
-    );
-    $form['tracks'][$weight]['weight'] = array(
-      '#type' => 'weight', '#value' => $weight, '#delta' => 30,
-    );
-    $weight++;
-  }
-  // add some empty tracks
-  for ($i = 0; $i < 8; $i++) {
-    $form['tracks'][$weight]['artist'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
-    $form['tracks'][$weight]['album'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
-    $form['tracks'][$weight]['title'] = array('#type'=>'textfield', '#size' => 30, '#maxlength' => 128);
-    $form['tracks'][$weight]['weight'] = array('#type' => 'weight', '#delta' => 30, '#value' => $weight);
-    $weight++;
-  }
   return $form;
 }
 
 function theme_station_schedule_playlist_track_form($form) {
   $output = '';
-  $header = array(t('Artist'), t('Title'), t('Album'), t('Weight'));
+  $header = array(t('Artist'), t('Title'), t('Album'), t('Label'), t('Weight'));
 
   $rows = array();
   foreach (element_children($form) as $key) {
@@ -114,6 +123,7 @@ function theme_station_schedule_playlist_track_form($form) {
     $row[] = form_render($form[$key]['artist']);
     $row[] = form_render($form[$key]['title']);
     $row[] = form_render($form[$key]['album']);
+    $row[] = form_render($form[$key]['label']);
     $row[] = form_render($form[$key]['weight']);
     $rows[] = $row;
   }
@@ -140,6 +150,16 @@ function station_schedule_playlist_validate(&$node) {
   }
 
   $node->title = $node->program_title .' playlist for '. implode('-', $node->program_date);
+
+  // check for track errors
+  foreach ($node->tracks as $track) {
+    if (($track['album'] || $track['label']) && !($track['artist'] || $track['title'])) {
+      var_dump('track]['. $track['weight'] . '][artist');
+      form_set_error('tracks]['. $track['weight'] . '][artist', "You've got to provide an artist or a title.");
+      form_set_error('tracks]['. $track['weight'] . '][title');
+    }
+  }
+
 }
 
 function station_schedule_playlist_submit(&$node) {
@@ -162,7 +182,7 @@ function station_schedule_playlist_submit(&$node) {
  */
 function station_schedule_playlist_load($node) {
   // id and time
-  $extras = db_fetch_object(db_query('SELECT p.program_nid, p.timestamp FROM {station_playlist} p WHERE p.nid = %d', $node->nid));
+  $extras = db_fetch_object(db_query('SELECT program_nid, timestamp FROM {station_playlist} WHERE nid = %d', $node->nid));
 
   // program title
   $prog = node_load($extras->program_nid);
@@ -170,14 +190,14 @@ function station_schedule_playlist_load($node) {
 
   // program date
   $extras->program_date = array(
-    'day' => format_date($extras->timestamp, 'custom', 'j'),
-    'month' => format_date($extras->timestamp, 'custom', 'n'),
-    'year' => format_date($extras->timestamp, 'custom', 'Y')
+    'day' => date('j', $extras->timestamp),
+    'month' => date('n', $extras->timestamp),
+    'year' => date('Y', $extras->timestamp)
   );
 
   // tracks
   $extras->tracks = array();
-  $result = db_query('SELECT i.weight, i.album, i.artist, i.title FROM {station_playlist_track} i WHERE i.nid = %d ORDER BY i.weight', $node->nid);
+  $result = db_query('SELECT weight, album, artist, title, label FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
   while ($track = db_fetch_array($result)) {
     $extras->tracks[] = $track;
   }
@@ -192,7 +212,8 @@ function station_schedule_playlist_insert($node) {
   db_query("INSERT INTO {station_playlist} (nid, program_nid, timestamp) VALUES (%d, %d, %d)", $node->nid, $node->program_nid, $node->timestamp);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title) VALUES (%d, %d, '%s', '%s', '%s')", $node->nid, $track['weight'], $track['artist'], $track['album'], $track['title']);
+      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label) VALUES (%d, %d, '%s', '%s', '%s', '%s')",
+        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']));
     }
   }
 }
@@ -214,7 +235,8 @@ function station_schedule_playlist_update($node) {
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title) VALUES (%d, %d, '%s', '%s', '%s')", $node->nid, $track['weight'], $track['artist'], $track['album'], $track['title']);
+      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label) VALUES (%d, %d, '%s', '%s', '%s', '%s')",
+        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']));
     }
   }
 }
@@ -238,18 +260,32 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
       $node->teaser = t('%trackcount tracks', array('%trackcount' => count($node->tracks)));
     }
   } else {
-    $header = array(t('Artist'), t('Title'), t('Album'));
-    $rows = array();
-    foreach ((array) $node->tracks as $track) {
-      if ($track['artist'] || $track['title']) {
-        $row = array('&nbsp', '&nbsp', '&nbsp');
-        $row[0] = $track['artist'];
-        $row[1] = $track['title'];
-        $row[2] = $track['album'];
-        $rows[] = $row;
+    if (count($node->tracks) > 0) {
+      foreach ((array) $node->tracks as $track) {
+        $hasAlbum = ($track['album']) ? TRUE : $hasAlbum;
+        $hasLabel = ($track['label']) ? TRUE : $hasLabel;
       }
-    }
-    if (count($rows) > 0) {
+      $rows = array();
+      foreach ((array) $node->tracks as $track) {
+        if ($track['artist'] || $track['title']) {
+          $row = array($track['artist'], $track['title']);
+          if ($hasAlbum) {
+            $row[] = $track['album'];
+          }
+          if ($hasLabel) {
+            $row[] = $track['label'];
+          }
+          $rows[] = $row;
+        }
+      }
+      $header = array(t('Artist'), t('Title'));
+      if ($hasAlbum) {
+        $header[] = t('Album');
+      }
+      if ($hasLabel) {
+        $header[] = t('Label');
+      }
+
       $node->body .= theme('table', $header, $rows);
     }
   }
@@ -257,7 +293,7 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
 
 // list recent playlists
 function station_schedule_playlist_page() {
-  $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $node->nid);
+  $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL);
   $output = '';
   while ($node = db_fetch_object($result)) {
     $output .= node_view(node_load($node->nid), 1);
@@ -280,7 +316,7 @@ function station_schedule_playlist_program_page($nid = 0) {
     );
     menu_set_location($breadcrumb);
 
-    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.nid WHERE p.program_nid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $node->nid);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.nid WHERE p.program_nid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), 50, 0, NULL, $node->nid);
     $output = '';
     while ($node = db_fetch_object($result)) {
       $output .= node_view(node_load($node->nid), 1);
@@ -290,7 +326,7 @@ function station_schedule_playlist_program_page($nid = 0) {
     drupal_set_title(t("programs with playlists"));
 
     // list of programs with playlists posted.
-    $result = pager_query(db_rewrite_sql("SELECT DISTINCT n.nid, n.title FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.program_nid WHERE n.type = 'program' AND n.status = 1 ORDER BY n.title"), variable_get('default_nodes_main', 10));
+    $result = pager_query(db_rewrite_sql("SELECT DISTINCT n.nid, n.title FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.program_nid WHERE n.type = 'program' AND n.status = 1 ORDER BY n.title"), 50);
     $items = array();
     while ($node = db_fetch_object($result)) {
       $items[] = l($node->title, 'playlist/program/'. $node->nid);
@@ -307,7 +343,7 @@ function station_schedule_playlist_user_page($uid = 0) {
   if ($user->uid) {
     drupal_set_title(t("%username's playlists", array('%username' => $user->name)));
 
-    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.uid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $user->uid);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.uid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), 50, 0, NULL, $user->uid);
     $output = '';
     while ($node = db_fetch_object($result)) {
       $output .= node_view(node_load($node->nid), 1);
@@ -317,7 +353,7 @@ function station_schedule_playlist_user_page($uid = 0) {
     drupal_set_title(t("users with playlists"));
 
     // list of users with playlists posted.
-    $result = pager_query(db_rewrite_sql("SELECT DISTINCT n.uid, u.name FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.type = 'program_playlist' AND n.status = 1 ORDER BY u.name"), variable_get('default_nodes_main', 10));
+    $result = pager_query(db_rewrite_sql("SELECT DISTINCT n.uid, u.name FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.type = 'program_playlist' AND n.status = 1 ORDER BY u.name"), 50);
     $items = array();
     while ($user = db_fetch_object($result)) {
       $items[] = l($user->name, 'playlist/user/'. $user->uid);

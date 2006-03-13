@@ -178,10 +178,6 @@ function station_schedule_program_listen_links($program_nid, $short = FALSE)  {
         $links['listen'] = theme('station_schedule_listen_link', $archive_url .'last/'. $hour, $short);
         $links['rss'] = theme('station_schedule_rss_link', $archive_url .'rss/'. $hour, $short);
       }
-
-      if ($playlists = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} WHERE program_nid = %d", $node->nid))) {
-        $links['playlist'] = l("View playlists", 'playlist/program/'. $node->nid);
-      }
     }
   }
 
@@ -328,8 +324,8 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
 
   // make djs into links
   $djs = array();
-  if ($node->djs) {
-    foreach ($node->djs as $uid => $name) {
+  if (isset($node->djs)) {
+    foreach ((array)$node->djs as $uid => $name) {
       $user = user_load(array('uid' => $uid));
       $djs[] = theme('username', $user);
     }
@@ -337,8 +333,8 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
 
   // make schedule time into links
   $times = array();
-  if ($node->times) {
-    foreach ($node->times as $nid => $time) {
+  if (isset($node->times)) {
+    foreach ((array)$node->times as $nid => $time) {
       $dayname = station_day_name($time['day']);
       $hourname = station_hour_name($time['hour']);
       $times[] = $time['link'];

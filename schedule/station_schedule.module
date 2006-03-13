@@ -234,8 +234,19 @@ function station_schedule_program_block() {
 function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
   $links = array();
 
-  if ($type == 'node' && $node->type == 'program') {
-    $links = station_schedule_program_listen_links($node->nid);
+  if ($type == 'node') {
+    if ($node->type == 'program') {
+      if ($playlists = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} WHERE program_nid = %d", $node->nid))) {
+        $links[] = l("view playlists", 'playlist/program/'. $node->nid);
+      }
+      $links = array_merge($links, station_schedule_program_listen_links($node->nid));
+    }
+    if ($node->type == 'program_playlist') {
+      if (!$teaser) {
+        $links[] = l("view program page", 'node/'. $node->program_nid);
+        $links = array_merge($links, station_schedule_program_listen_links($node->program_nid));
+      }
+    }
   }
 
   return $links;

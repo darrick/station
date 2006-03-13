@@ -316,7 +316,7 @@ function station_schedule_playlist_program_page($nid = 0) {
     );
     menu_set_location($breadcrumb);
 
-    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.nid WHERE p.program_nid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), 50, 0, NULL, $node->nid);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n INNER JOIN {station_playlist} p ON n.nid = p.nid WHERE p.program_nid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $node->nid);
     $output = '';
     while ($node = db_fetch_object($result)) {
       $output .= node_view(node_load($node->nid), 1);
@@ -343,7 +343,7 @@ function station_schedule_playlist_user_page($uid = 0) {
   if ($user->uid) {
     drupal_set_title(t("%username's playlists", array('%username' => $user->name)));
 
-    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.uid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), 50, 0, NULL, $user->uid);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.uid = %d AND n.type = 'program_playlist' AND n.status = 1 ORDER BY n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $user->uid);
     $output = '';
     while ($node = db_fetch_object($result)) {
       $output .= node_view(node_load($node->nid), 1);

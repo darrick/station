@@ -34,7 +34,7 @@ function station_schedule_program_autocomplete($string = '') {
   while ($program = db_fetch_object($result)) {
     $matches[$program->title] = check_plain($program->title);
   }
-  print drupal_implode_autocomplete($matches);
+  print drupal_to_js($matches);
   exit();
 }
 

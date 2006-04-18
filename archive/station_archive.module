@@ -99,7 +99,7 @@ function station_archive_view_hours_html($hour_string) {
     'title' => t('RSS - %title', array('%title' => $title)),
     'href' => $rss_url,
   );
-  drupal_set_html_head('<link'. drupal_attributes($attributes) ." />\n");
+  drupal_add_link($attributes);
   drupal_set_title($title);
 
   $vid = _station_archive_get_vid();
@@ -368,7 +368,6 @@ function _station_archive_add_file($file) {
     // if we can't get the metadata, improvise!
     $audio_tags['title'] = t('DJ Auto mix');
   }
-  $audio_tags['recording_time'] = gmdate('Y-m-d\TG:i', $timestamp);
   $audio_tags['year'] = date('Y', $timestamp);
   $audio_tags['comment'] = t('Recorded at %date', array('%date' => $prettydate));
 

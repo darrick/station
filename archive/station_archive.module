@@ -236,7 +236,7 @@ function station_archive_settings() {
     '#type' => 'textfield',
     '#title' => t('Import path'),
     '#default_value' => variable_get('station_archive_import_dir', ''),
-    '#after_build'=>'_station_archive_settings_check_directory',
+    '#after_build' => array('_station_archive_settings_check_directory'),
     '#description' => t('The directory where new MP3s are left by the stream ripper script. Drupal will need to have write access to this directory so we can move the file.'),
     '#required' => TRUE,
   );

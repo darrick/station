@@ -65,8 +65,10 @@ function station_schedule_playlist_form(&$node) {
 
   $blanks = 10;
   $weight = 0;
-  $weights = range(-1, count($node->tracks) + $blanks + 1);
-  $weights = array_combine($weights, $weights);
+  $max = count($node->tracks) + $blanks + 1;
+  for($i = -1; $i < $max; $i++) {
+    $weights[$i] = $i;
+  }
 
   // load current tracks
   foreach ((array)$node->tracks as $key => $track) {

@@ -1,8 +1,0 @@
-- Test /rss/ feeds. Add titles and descriptions.
-- Finish /last/ url to display usable stuff.
-- Add gotos for /rss and /last if they're not to valid stuff.
-
-__Instructions__
-install stream ripper, filemanager and audio modules
-edit script file
-schedule the script

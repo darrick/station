@@ -1,0 +1,89 @@
+<?php
+
+// $Id$
+
+/**
+ * Install the initial schema.
+ */
+function station_archive_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("
+        CREATE TABLE {station_archive} (
+          `audio_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `imported` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          PRIMARY KEY(`audio_nid`, `program_nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      db_query("
+        CREATE TABLE {station_archive_program} (
+          `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `title` VARCHAR(128) NOT NULL DEFAULT '',
+          PRIMARY KEY(`program_nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      break;
+  }
+}
+
+/**
+ * Create the table and migrate in the tables
+ */
+function station_archive_update_1() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // create a table
+      $ret[] = update_sql("
+        CREATE TABLE {station_archive} (
+          `audio_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `imported` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          PRIMARY KEY(`audio_nid`, `program_nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      // if we've got a taxonomy, record any nodes in it in the table
+      if ($vid = _station_archive_get_vid()) {
+        $ret[] = update_sql('INSERT INTO {station_archive} (audio_nid, program_nid, imported)
+          SELECT DISTINCT n.nid, 0, n.created FROM {node} n INNER JOIN {term_node} tn ON n.nid = tn.nid INNER JOIN {term_data} td ON tn.tid = td.tid
+          WHERE td.vid = '. (int) $vid);
+      }
+
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Create a table to track program titles
+ */
+function station_archive_update_2() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // create a table
+      $ret[] = update_sql("
+        CREATE TABLE {station_archive_program} (
+          `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `title` VARCHAR(128) NOT NULL DEFAULT '',
+          PRIMARY KEY(`program_nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      // find titles for programs by looking for two different audio nodes with the same title
+      $ret[] = update_sql("
+        INSERT INTO {station_archive_program} (program_nid, title)
+        SELECT DISTINCT s1.program_nid, n1.title
+        FROM {station_archive} s1 JOIN {station_archive} s2 ON s1.program_nid = s2.program_nid
+        JOIN {node} n1 ON s1.audio_nid = n1.nid
+        JOIN {node} n2 ON s2.audio_nid = n2.nid
+        WHERE n1.title = n2.title AND n1.nid <> n2.nid;
+      ");
+
+      break;
+  }
+  return $ret;
+}

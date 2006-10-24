@@ -30,7 +30,7 @@ function station_schedule_program_access($op, $node) {
  */
 function station_schedule_program_autocomplete($string = '') {
   $matches = array();
-  $result = db_query_range('SELECT title FROM {node} WHERE type = \'program\' AND LOWER(title) LIKE LOWER("%%%s%%") AND status = 1 ORDER BY title', $string, 0, 10);
+  $result = db_query_range('SELECT DISTINCT title FROM {node} WHERE type = \'program\' AND LOWER(title) LIKE LOWER("%s%%") AND status = 1 ORDER BY title', $string, 0, 10);
   while ($program = db_fetch_object($result)) {
     $matches[$program->title] = check_plain($program->title);
   }
@@ -46,8 +46,7 @@ function station_schedule_program_form(&$node) {
     '#type' => 'textfield',
     '#title' => t('Title'),
     '#default_value' => $node->title,
-    '#required' =>  true,
-    '#size' =>  60,
+    '#required' =>  TRUE,
     '#maxlength' =>  128,
     '#description' => t('The name of the program. You should avoid making major changes to this without telling the programming director.'),
   );
@@ -57,8 +56,7 @@ function station_schedule_program_form(&$node) {
     '#description' => t('A free-form description of the musical genres played on the program.'),
     '#default_value' => $node->genre,
     '#required' =>  true,
-    '#size' =>  60,
-    '#maxlength' =>  200,
+    '#maxlength' => 200,
     '#weight' => -2,
   );
   $form['url'] = array(
@@ -66,8 +64,6 @@ function station_schedule_program_form(&$node) {
     '#title' => t('Homepage URL'),
     '#description' => t("Link to the program's website."),
     '#default_value' => $node->url,
-    '#required' =>  false,
-    '#size' =>  60,
     '#maxlength' =>  255,
     '#weight' => -1,
   );
@@ -75,65 +71,50 @@ function station_schedule_program_form(&$node) {
     '#type' => 'textarea',
     '#title' => t('Body'),
     '#default_value' => $node->body,
-    '#rows' => 5,
+    '#rows' => 10,
     '#required' => TRUE,
     '#description' => t("Free form description of the show."),
   );
   $form['body_filter']['format'] = filter_form($node->format);
 
   if (user_access('administer schedule')) {
-    $form['users'] = array(
-     '#type' => 'fieldset',
-     '#title' => t('DJs'),
-     '#weight' => 1,
-   );
-   if ($node->djs) {
-     $form['users']['dj_old'] = array(
-       '#type' => 'checkboxes',
-       '#title' => t('Current DJs'),
-       '#default_value' => $node->dj_old,
-       '#options' => $node->djs,
-       '#description' => t("Check the box to remove a DJ from the program."),
-     );
-   } else {
-      $form['users']['dj_old'] = array(
-        '#type' => 'item',
-        '#value' => t('This program has no DJs'),
+    $form['djs'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('DJs'),
+      '#weight' => 1,
+      '#tree' => TRUE,
+      '#description' => t("Enter the names of users you'd like to add as DJs"),
+    );
+    if ($node->djs) {
+      foreach ((array)$node->djs as $uid => $username) {
+        $form['djs'][$uid]['username'] = array(
+          '#type' => 'textfield', '#maxlength' => 60,
+          '#autocomplete_path' => 'user/autocomplete',
+          '#default_value' => $username,
+        );
+      }
+    }
+    // add some blank username textfields
+    for ($i = 0; $i < 4; $i++) {
+      $form['djs']['new'. $i]['username'] = array(
+        '#type' => 'textfield', '#maxlength' => 60,
+        '#autocomplete_path' => 'user/autocomplete',
       );
-   }
-   $form['users']['dj_new'] = array(
-     '#type' => 'textfield',
-     '#title' => t('New DJ'),
-     '#description' => t('Type the name of user to add as a DJ.'),
-     '#maxlength' => 60,
-     '#autocomplete_path' => 'user/autocomplete'
-   );
+    }
   }
 
   return $form;
 }
 
-
 // use this hook to convert form elements to node values
 function station_schedule_program_validate(&$node) {
-  // check that dj additions are valid users
-  if ($node->dj_new != '') {
-    $user = user_load(array('name' => $node->dj_new));
-    if ($user->uid) {
-      $node->djs[$user->uid] = $user->name;
-    } else {
-      form_set_error('dj_new', t('You need to specify a valid user name.'));
-    }
-  }
+  // validate the usernames
+  foreach ($node->djs as $key => $dj) {
+    if ($dj['username']) {
+      $user = user_load(array('name' => $dj['username']));
 
-  // add old users in so the preview works
-  if ($node->dj_old) {
-    foreach ((array)$node->dj_old as $uid => $checked) {
-      if (!$checked) {
-        $user = user_load(array('uid' => $uid));
-        if ($user->uid) {
-          $node->djs[$uid] = $user->name;
-        }
+      if (!$user->uid) {
+        form_set_error("djs][$key][username", t('You need to specify a valid user name.'));
       }
     }
   }
@@ -146,42 +127,18 @@ function station_schedule_program_validate(&$node) {
   }
 }
 
-/**
- * Load listen links for a program.
- * @param $program_nid integer node id of a program
- * @param $short bool true for short version of links
- */
-function station_schedule_program_listen_links($program_nid, $short = FALSE)  {
-  $links = array();
-
-  $archive_url = variable_get('station_schedule_archive_url', '');
-  if ($archive_url) {
-    $node = node_load($program_nid);
-    if ($node->nid) {
-      if ($node->times) {
-        // programs can have multiple time slots
-        if (count($node->times) > 1) {
-          // use the "hours" url so all shows appear on the same page.
-          foreach ($node->times as $time) {
-            $hour = ($time['day']) * 24 + $time['hour'] + 1;
-            $hours[] = $hour;
-          }
-          $hour = 'hours/' . implode('+', $hours);
-        }
-        else {
-          // single time slot
-          $time = array_pop($node->times);
-          $hour = strtolower(station_day_name($time['day']) .'/'. station_hour_name($time['hour']));
-        }
-
-        $archive_url = url($archive_url, NULL, NULL, TRUE);
-        $links['listen'] = theme('station_schedule_listen_link', $archive_url .'last/'. $hour, $short);
-        $links['rss'] = theme('station_schedule_rss_link', $archive_url .'rss/'. $hour, $short);
+function station_schedule_program_submit(&$node) {
+  // make a copy of the djs and put them back in the expected form
+  $djs = $node->djs;
+  $node->djs = array();
+  foreach ($djs as $key => $dj) {
+    if ($dj['username']) {
+      $user = user_load(array('name' => $dj['username']));
+      if ($user->uid) {
+        $node->djs[$user->uid] = $user->name;
       }
     }
   }
-
-  return $links;
 }
 
 /**
@@ -190,20 +147,13 @@ function station_schedule_program_listen_links($program_nid, $short = FALSE)  {
 function station_schedule_program_load($node) {
   $extras = db_fetch_object(db_query('SELECT genre, url FROM {station_program} WHERE vid = %d', $node->vid));
 
-  // load the program's users users under djs.
+  // load the program's users under djs.
   $extras->djs = _station_schedule_program_load_djs($node->nid);
 
-  // load the program's schedule times users under the times.
-  $schs = station_schedule_schedule_load(array('program_nid' => $node->nid), false);
-  foreach ($schs as $sch) {
-      $dayname = station_day_name($sch->day);
-      $hourname = station_hour_name($sch->hour);
-
-    $extras->times[$sch->sid] = array(
-      'day' => $sch->day,
-      'hour' => $sch->hour,
-      'link' => l($dayname, strtolower("schedule/$dayname")) .' at '. l($hourname, strtolower("schedule/$dayname/$hourname")),
-    );
+  // load program's schedule ids
+  $result = db_query('SELECT s.sid FROM {station_schedule} s WHERE s.program_nid = %d', $node->nid);
+  while ($s = db_fetch_object($result)) {
+    $extras->scheduled_sids[] = $s->sid;
   }
 
   return $extras;
@@ -214,6 +164,11 @@ function station_schedule_program_load($node) {
  */
 function station_schedule_program_insert($node) {
   db_query("INSERT INTO {station_program} (nid, vid, genre, url) VALUES (%d, %d, '%s', '%s')", $node->nid, $node->vid, $node->genre, $node->url);
+
+  // dj additions
+  foreach ($node->djs as $uid => $username) {
+    db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
+  }
 }
 
 /**
@@ -230,33 +185,28 @@ function station_schedule_program_delete($node) {
  * Update a program.
  */
 function station_schedule_program_update($node) {
-  if ($node->revision) {
-    station_schedule_program_insert($node);
-  } else {
-    db_query("UPDATE {station_program} SET genre = '%s', url = '%s' WHERE vid = %d", $node->genre, $node->url, $node->vid);
-  }
+  db_query("UPDATE {station_program} SET genre = '%s', url = '%s' WHERE vid = %d", $node->genre, $node->url, $node->vid);
 
   // only schedule admins should be able to add or remove djs
   if (user_access('administer schedule')) {
     // dj removals
-    // array filter will ignore any unchecked values
-    $removals = array_filter((array)$node->dj_old);
-    foreach ($removals as $uid => $checked) {
-      db_query('DELETE FROM {station_dj} WHERE uid = %d AND program_nid = %d', $uid, $node->nid);
-    }
+    db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
 
     // dj additions
-    $user = user_load(array('name' => $node->dj_new));
-    if ($user->uid) {
-      db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $user->uid, $node->nid);
+    foreach ($node->djs as $uid => $username) {
+      db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
     }
   }
 }
 
+/**
+ * Return an array of DJ info for a given program. The key is the user's uid
+ * and the value is the user's name.
+ */
 function _station_schedule_program_load_djs($program_nid) {
   // load the dj's users users under the djs item.
   $djs = array();
-  $result = db_query('SELECT d.uid, u.name FROM {station_dj} d INNER JOIN {users} u on d.uid = u.uid WHERE d.program_nid = %d ORDER BY u.name', $program_nid);
+  $result = db_query('SELECT d.uid, u.name FROM {station_dj} d INNER JOIN {users} u ON d.uid = u.uid WHERE d.program_nid = %d ORDER BY u.name', $program_nid);
   while ($dj = db_fetch_object($result)) {
     $djs[$dj->uid] = $dj->name;
   }
@@ -264,81 +214,41 @@ function _station_schedule_program_load_djs($program_nid) {
 }
 
 /**
- * Print a list of programs. Display a list of un-published programs at the
- * bottom for schedule admins.
+ * Returns an array of themed DJs.
  */
-function station_schedule_program_page($nid = null) {
-  if ($nid) {
-    if (is_numeric($nid) && ($node = node_load($nid))) {
-      return node_view($node, false, true);
-    }
-    drupal_not_found();
+function station_schedule_program_get_themed_djs($program_nid) {
+  // make djs into links
+  $djs = array();
+  foreach (_station_schedule_program_load_djs($program_nid) as $uid => $name) {
+    $user = user_load(array('uid' => $uid));
+    $djs[] = theme('username', $user);
   }
-  else {
-    $query = db_rewrite_sql("SELECT n.*, p.genre, p.url FROM {node} n LEFT JOIN {station_program} p ON n.vid = p.vid WHERE n.type = 'program' ORDER BY n.title");
-    $queryResult = db_query($query);
-
-    $cols = array('Program', 'Genre', 'DJs');
-    $rows = array();
-    $rowsOld = array();
-    while ($prog = db_fetch_object($queryResult)) {
-      $djs = array();
-      foreach (_station_schedule_program_load_djs($prog->nid) as $uid => $name) {
-        $djs[] = l($name, 'user/' . $uid);
-      }
-
-      $row = array(
-        array('data' => l($prog->title, 'node/' . $prog->nid), 'width' => 240),
-        array('data' => check_plain($prog->genre), 'width' => 240),
-        array('data' => implode(',', $djs), 'width' => 240)
-      );
-      if ($prog->status == 1) {
-        $rows[] = $row;
-      } else {
-        $rowsOld[] = $row;
-      }
-    }
-    $page = theme('table', $cols, $rows);
-
-    if (user_access('administer schedule')) {
-      $page .= '<h2>'. t('Unpublished shows') .'</h2>';
-      $page .= t('<p>These are shows that have been marked as unpublished.</p>');
-      $page .= theme('table', $cols, $rowsOld);
-    }
-
-    return $page;
-  }
+  return $djs;
 }
 
 /**
  * Get a program ready for viewing.
  */
-function station_schedule_program_view(&$node, $teaser = false, $page = false) {
+function station_schedule_program_view(&$node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+
   if ($page) {
     $breadcrumb = array();
-    $breadcrumb[] = array('path' => 'program', 'title' => t('programs'));
+    $breadcrumb[] = array('path' => 'station/programs', 'title' => t('programs'));
     $breadcrumb[] = array('path' => 'node/'. $node->nid);
     menu_set_location($breadcrumb);
-    drupal_set_title($node->title);
   }
 
   // make djs into links
-  $djs = array();
-  if (isset($node->djs)) {
-    foreach ((array)$node->djs as $uid => $name) {
-      $user = user_load(array('uid' => $uid));
-      $djs[] = theme('username', $user);
-    }
-  }
+  $djs = station_schedule_program_get_themed_djs($node->nid);
 
-  // make schedule time into links
+  // load the program's scheduled times
+  $ranges = station_schedule_program_get_times($node->nid);
+
+  // second pass to make pretty descriptions
   $times = array();
-  if (isset($node->times)) {
-    foreach ((array)$node->times as $nid => $time) {
-      $dayname = station_day_name($time['day']);
-      $hourname = station_hour_name($time['hour']);
-      $times[] = $time['link'];
-    }
+  foreach ($ranges as $range) {
+    $times[] = theme('station_dayhour_range', $range['start'], $range['finish']);
   }
 
   if ($teaser) {
@@ -365,6 +275,23 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
     $node->teaser = check_markup($node->teaser);
   }
   else {
+    // playlists
+    $time = time();
+    $time_format = 'F j, Y';
+
+    // pull all future playlists
+    $future_lists = array();
+    $result = db_query('SELECT p.nid, p.timestamp FROM {station_playlist} p INNER JOIN {node} n ON p.program_nid = n.nid WHERE n.status = 1 AND p.program_nid = %d AND p.timestamp > %d ORDER BY timestamp', $node->nid, $time);
+    while ($playlist = db_fetch_object($result)) {
+      $future_lists[] = l(format_date($playlist->timestamp, 'custom', $time_format, 0), 'node/'. $playlist->nid);
+    }
+    // pull N recent playlists
+    $past_lists = array();
+    $result = db_query_range('SELECT p.nid, p.timestamp FROM {station_playlist} p INNER JOIN {node} n ON p.program_nid = n.nid WHERE n.status = 1 AND p.program_nid = %d AND p.timestamp < %d ORDER BY timestamp DESC', $node->nid, $time, 0, 5);
+    while ($playlist = db_fetch_object($result)) {
+      $past_lists[] = l(format_date($playlist->timestamp, 'custom', $time_format, 0), 'node/'. $playlist->nid);
+    }
+
     if ($djs) {
       $dj_info = '<ul><li>'. implode('</li><li>', $djs) .'</li></ul>';
     } else {
@@ -377,21 +304,22 @@ function station_schedule_program_view(&$node, $teaser = false, $page = false) {
       $time_info = t('This program is currently unscheduled');
     }
 
-    $node->body = '<p><strong>Genre:</strong> ' . check_plain($node->genre) . '</p>'. $node->body;
+    $origbody = $node->body;
+    $node->body = '<p><strong>Genre:</strong> ' . check_plain($node->genre) . '</p>';
+    if ($node->url) {
+      $node->body .= '<p><strong>Homepage:</strong> '. l($node->url, $node->url) ."</p>\n";
+    }
+    $node->body .= $origbody;
     $node->body .= "<h4>DJs</h4>\n" . check_markup($dj_info);
     $node->body .= "<h4>Times</h4>\n" . check_markup($time_info);
+    if ($future_lists) {
+      $node->body .=  "<h4>Upcoming playlists</h4>\n" . '<ul><li>'. implode('</li><li>', $future_lists) .'</li></ul>';
+    }
+    if ($past_lists) {
+      $node->body .= "<h4>Recent playlists</h4>\n" . '<ul><li>'. implode('</li><li>', $past_lists) .'</li></ul>';
+      $node->body .= l(t('view older playlists'), 'station/playlists/'. $node->nid);
+    }
   }
-}
-
-/**
- * Get the program playing at the current time.
- *
- * @return
- *   program node
- */
-function station_schedule_program_current() {
-  // grab the program at this time
-  return station_schedule_program_get_at(time());
 }
 
 /**
@@ -399,31 +327,42 @@ function station_schedule_program_current() {
  * current time.
  *
  * @param $gmt_timestamp
- *   a timestamp used to specify a day of the week an hour.
+ *   a timestamp used to determine the day of the week an hour.
  * @return
  *   program node object if one is scheduled, an empty object if nothing is
- *   scheduled, or FALSE if there's an error.
+ *   scheduled.
  */
 function station_schedule_program_get_at($gmt_timestamp) {
-  global $base_url;
-
   $ts = station_local_ts($gmt_timestamp);
   $day = date('w', $ts);
   $hour = date('G', $ts);
 
-  // load the schedule
-  $schedules = station_schedule_schedule_load(array('day' => $day, 'hour' => $hour), false);
-  $schedule = $schedules[0];
+  // load the program id from the schedule
+  $minute = station_minute_from_day_hour($day, $hour);
+  $node = _station_schedule_load_program_at($minute);
 
   // if there's an associated program, load it
-  if ($schedule->program_nid) {
-    $node = node_load($schedule->program_nid);
+  if ($node) {
     // set this so that if the show is scheduled for multiple times the caller
     // can easily figure out which one.
     $node->current_time = $schedule->sid;
     // put this in so they can use a pretty url
-    $node->node_url = $base_url . url('node/' . $node->nid);
+    $node->node_url = url('node/'. $node->nid, NULL, NULL, TRUE);
     return $node;
   }
   return new stdClass;
+}
+
+/**
+ * Returns an array of hours the program is scheduled.
+ */
+function station_schedule_program_get_times($nid) {
+  // load the program's scheduled times
+  $i = 0;
+  $hours = array();
+  $result = db_query('SELECT s.sid, s.start, s.finish FROM {station_schedule} s WHERE s.program_nid = %s ORDER BY s.start', $nid);
+  while ($s = db_fetch_array($result)) {
+    $hours[] = $s;
+  }
+  return $hours;
 }

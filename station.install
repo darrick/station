@@ -1,0 +1,22 @@
+<?php
+
+// $Id$
+
+/**
+ * Rename some variables
+ */
+function station_update_1() {
+  _station_var_rename('station_archive_station_url', 'station_remote_station_url');
+  _station_var_rename('station_schedule_archive_url', 'station_remote_archive_url');
+
+  return array();
+}
+
+
+function _station_var_rename($from, $to) {
+  $value = variable_get($from, FALSE);
+  if ($value) {
+    variable_set($to, $value);
+  }
+  variable_del($from);
+}

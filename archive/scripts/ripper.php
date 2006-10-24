@@ -8,48 +8,42 @@
  * It connects to a webstream, downloads one hours worth and saves it as an
  * MP3 for the station archive module to import.
  *
+ *     Y O U   D O N ' T   N E E D   T O   E D I T   T H I S   F I L E !
+ *       Configuration options are now set in the ripper.ini file.
+ *
  * This script requires that Streamripper (http://streamripper.sourceforge.net/)
  * version 1.61.17 or higher be installed (we use the --quite option)
  */
 
-/**
- * Complete URL of webstream to rip
- */
-$STREAM_URL ='http://127.0.0.1:8000/listen';
+// Load our settings from the ripper.ini file.
+$settings = parse_ini_file(dirname(__FILE__) .'/ripper.ini');
 
-/**
- * Full path to the stream ripper executable. Remember, version 1.61.17 or higher.
- */
-$STREAMRIPPER = '/usr/local/bin/streamripper';
+// Check that the import directory is writable.
+$import_dir = $settings['import_path'];
+if (!is_dir($import_dir) || !is_writable($import_dir)) {
+  exit("Cannot write to the import directory '$import_dir'");
+}
 
-/**
- * full path to station archive module's import directory (no trailing slash)
- */
-$IMPORT_DIR = '/usr/local/www/drupal/modules/station/archive/import';
+// Make sure we can find stream ripper. The is_executable() test might not work
+// with PHP4 and Windows. Upgrade! PHP 5.1 is great.
+$streamripper = $settings['streamripper_path'];
+if (!file_exists($streamripper) || !is_executable($streamripper)) {
+  exit("Couldn't find the stream ripper executable at '$streamripper'");
+}
 
-/**
- * the number of seconds this hour will over lap the next.
- */
-$OVERLAP_SECONDS = 60;
-
- //////////////////////////////////////////////////////////////////////
-// Y O U   D O N ' T   N E E D   T O   E D I T   B E L O W   H E R E //
-//////////////////////////////////////////////////////////////////////
-
-// Because shows tend to start early or finish late, I want some overlap
-// on each end of the shows. This task should be scheduled to start one
-// minute before the hour and grab an extra minute at the end. Tweak thes
-// time to roll into the next hour.
+// Determine when we're starting, when we should end and convert that to a
+// length of time in seconds.
 $startTime = roundToNearestHour(time());
 $endTime = $startTime + 3600;
-$length = ($endTime - time()) + $OVERLAP_SECONDS;
+$length = ($endTime - time()) + $settings['overlap_seconds'];
 
-// download the stream
-exec("$STREAMRIPPER $STREAM_URL -s -d $IMPORT_DIR -A -l $length -a $startTime.mp3 --quiet");
+// Download the stream
+$stream_url = $settings['stream_url'];
+exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$startTime}.mp3 --quiet");
 
 // stream ripper creates the .cue file. we'll use its absence as a signal
 // to the module that it's safe to import a file.
-unlink("$IMPORT_DIR/$startTime.cue");
+unlink("{$import_dir}/{$startTime}.cue");
 
 exit(0);
 

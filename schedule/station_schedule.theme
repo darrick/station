@@ -3,38 +3,21 @@
 // $Id$
 
 /**
- * Theme the schedule table
- *
- * @param array $cols
- * @param array $rows
- * @return string HTML table.
- */
-function theme_station_schedule_schedule_table($cols, $rows) {
-    return theme('table', $cols, $rows, array('class'=>'station-schedule'));
-}
-
-/**
- * Theme the schedule block
- *
- * @param string $content
- * @return string HTML
- */
-function theme_station_schedule_schedule_day($content) {
-    return '<div class="node">' . $content . '</div>';
-}
-
-/**
  * Format the RSS link
  *
  * @param string $path
  * @param boolean $short Short version?
  */
-function theme_station_schedule_rss_link($url, $short = true) {
-  global $base_url;
-  $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif';
-  $text = t('subscribe to the podcast');
+function theme_station_schedule_rss_link($url, $short = TRUE) {
+  $text = t('subscribe to podcast');
   $title = t('Grab this show with your podcast software');
-  return _theme_station_link($short, $url, $title, $text, $img);
+  $path = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
+
+  $output = l(theme('image', $path, $text, $title), $url, NULL, NULL, NULL, TRUE, TRUE);
+  if (!$short) {
+    $output .= ' '. l($text, $url);
+  }
+  return $output;
 }
 
 /**
@@ -44,18 +27,13 @@ function theme_station_schedule_rss_link($url, $short = true) {
  * @param boolean $short Short version?
  */
 function theme_station_schedule_listen_link($url, $short = true) {
-  global $base_url;
-  $img = $base_url .'/'. drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif';
-  $text = t('listen to the program');
+  $text = t('listen to previous');
   $title = t('Listen to previous broadcasts of this show');
-  return _theme_station_link($short, $url, $title, $text, $img);
-}
+  $path = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
 
-function _theme_station_link($short, $url, $title, $text, $img) {
-  $a = "a href='$url' title='$title'";
-  $output = "<$a><img src='$img' alt='$text' /></a>";
+  $output = l(theme('image', $path, $text, $title), $url, NULL, NULL, NULL, TRUE, TRUE);
   if (!$short) {
-    $output .= " <$a>$text</a>";
+    $output .= ' '. l($text, $url);
   }
   return $output;
 }

@@ -1,0 +1,46 @@
+/* $Id$ */
+
+#station-schedule tbody {
+  padding: 0;
+  margin: 0;
+}
+#station-schedule tr {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+#station-schedule td {
+  width: 14%;
+  vertical-align: top;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #CCC;
+  border-top: 0;
+  border-right: 0;
+}
+#station-schedule #hour {
+  width: 2%;
+}
+.station-schedule-box {
+  overflow: hidden;
+  margin: -1px -1px 0 0;
+  border: 0;
+  border: 1px solid #CCC;
+  border-left: 0;
+  border-bottom: 0;
+}
+.station-schedule-time {
+  font-size: x-small;
+}
+.station-schedule-hour {
+}
+.station-schedule-unscheduled {
+}
+.station-schedule-scheduled {
+  background-color: #fff;
+  text-align: center;
+}
+.station-schedule-djs {
+  font-size: xx-small;
+  text-align: center;
+}

@@ -105,3 +105,105 @@ function station_hour_name($hour = 0) {
   }
   return $hour . $sufix;
 }
+
+function station_minute_from_day_hour($day, $hour) {
+  return (($day * 24) + $hour) * 60;
+}
+
+/**
+ * Format a range of minutes into a day hour string, i.e. Sunday 11pm - Monday 1am
+ * @param $start
+ *   minutes
+ * @param $finish
+ *   minutes
+ * @return formatted string
+ */
+function theme_station_dayhour_range($start, $finish) {
+  $start_day = station_day_name($start / 1440);
+  $finish_day = station_day_name($finish / 1440);
+  $start_hour = (int) (($start % 1440) / 60);
+  $finish_hour = (int) (($finish % 1440) / 60);
+
+  $sufix1 = $sufix2 = 'am';
+
+  if ($start_hour >= 12) {
+    $sufix1 = 'pm';
+    $start_hour -= 12;
+  }
+  if ($finish_hour >= 12) {
+    $sufix2 = 'pm';
+    $finish_hour -= 12;
+  }
+
+  // midnight and noon
+  if ($start_hour <= 0) {
+    $start_hour = 12;
+  }
+  if ($finish_hour <= 0) {
+    $finish_hour = 12;
+  }
+
+  if ($start_day == $finish_day) {
+    if ($sufix1 == $sufix2) {
+      $format = '%start_day %start_hour-%finish_hour%sufix2';
+    }
+    $format = '%start_day %start_hour%sufix1-%finish_hour%sufix2';
+  }
+  else {
+    $format = '%start_day %start_hour%sufix1-%finish_day%finish_hour%sufix2';
+  }
+  return t($format,
+    array(
+      '%start_day' => $start_day, '%start_hour' => $start_hour,
+      '%finish_day' => $finish_day, '%finish_hour' => $finish_hour,
+      '%sufix1' => $sufix1, '%sufix2' => $sufix2,
+    )
+  );
+}
+
+/**
+ * Format a range of minutes into a hour string, i.e. 1am-3pm
+ * @param $start
+ *   minutes
+ * @param $finish
+ *   minutes
+ * @return formatted string
+ */
+function theme_station_hour_range($start, $finish) {
+  $start_day = (int) ($start / 1440);
+  $finish_day = (int) ($finish / 1440);
+  $start_hour = (int) (($start % 1440) / 60);
+  $finish_hour = (int) (($finish % 1440) / 60);
+
+  $sufix1 = $sufix2 = 'am';
+
+  if ($start_hour >= 12) {
+    $sufix1 = 'pm';
+    $start_hour -= 12;
+  }
+  if ($finish_hour >= 12) {
+    $sufix2 = 'pm';
+    $finish_hour -= 12;
+  }
+
+  // midnight and noon
+  if ($start_hour <= 0) {
+    $start_hour = 12;
+  }
+  if ($finish_hour <= 0) {
+    $finish_hour = 12;
+  }
+
+  if ($sufix1 == $sufix2) {
+    $format = '%start_hour-%finish_hour%sufix2';
+  }
+  else {
+    $format = '%start_hour%sufix1-%finish_hour%sufix2';
+  }
+  return t($format,
+    array(
+      '%start_hour' => $start_hour, '%finish_hour' => $finish_hour,
+      '%sufix1' => $sufix1, '%sufix2' => $sufix2,
+    )
+  );
+}

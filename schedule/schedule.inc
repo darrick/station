@@ -3,12 +3,10 @@
 // $Id$
 
 function _station_make_hour_compatible(&$s) {
-  $s->start_day = (int) ($s->start / 1440);
-  $s->start_hour = (int) (($s->start % 1440) / 60);
-  $s->finish_day = (int) ($s->finish / 1440);
-  $s->finish_hour = (int) (($s->finish % 1440) / 60);
-  $s->day = $s->start_day;
-  $s->hour = $s->start_hour;
+  $s->start_day = station_day_from_minute($s->start);
+  $s->finish_day = station_day_from_minute($s->finish);
+  $s->start_hour = station_hour_from_minute($s->start);
+  $s->finish_hour = station_hour_from_minute($s->finish);
 }
 
 function station_schedule_schedule_load($sid) {
@@ -31,17 +29,6 @@ function station_schedule_schedule_load_day($day) {
     // FIXME this is a hack to get the schedule working...
     _station_make_hour_compatible($s);
     $ret[] = $s;
-  }
-  return $ret;
-}
-
-function station_schedule_schedule_load_week() {
-  $ret = array();
-  $result = db_query($query = 'SELECT * FROM {station_schedule} s ORDER BY s.start');
-  while ($s = db_fetch_object($result)) {
-    // FIXME this is a hack to get the schedule working...
-    _station_make_hour_compatible($s);
-    $ret[$s->day][$s->hour] = $s;
   }
   return $ret;
 }
@@ -77,7 +64,7 @@ function station_schedule_schedule_admin_list() {
       $height = ($s->finish - $s->start);
       $program = node_load($s->program_nid);
       $editurl = 'admin/schedule/edit/'. $s->sid;
-      $cell .= theme('station_schedule_admin_item', $s->start, $s->finish, $program->title, TRUE, $editurl);
+      $cell .= theme('station_schedule_admin_item', $s->start, $s->finish, $program->title, $editurl);
     }
     // any remaining time during the day
     if ($last_finish < $day_finish) {
@@ -88,13 +75,14 @@ function station_schedule_schedule_admin_list() {
   }
 
   // render the tables
-  return theme('table', $cols, array($row), array('id' => 'station-schedule'));
+  return theme('table', $cols, array($row), array('id' => 'station-sch', 'class' => 'station-sch-admin'));
 }
 
 function theme_station_schedule_admin_nonitem($start, $finish, $link = NULL) {
+  $class = 'station-sch-box station-sch-unscheduled';
   $height = ($finish - $start);
-  $output = "<div class='station-schedule-box station-schedule-unscheduled' style='height:{$height}px;'>";
-  $output .= "<span class='station-schedule-time'>". theme('station_hour_range', $start, $finish) ."</span><br />";
+  $output = "<div class='{$class}' style='height:{$height}px;'>";
+  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
   $output .= t('Unscheduled');
   $output .= "</div>\n";
   if ($link) {
@@ -103,10 +91,11 @@ function theme_station_schedule_admin_nonitem($start, $finish, $link = NULL) {
   return $output;
 }
 
-function theme_station_schedule_admin_item($start, $finish, $title = '', $scheduled = FALSE, $link = NULL) {
+function theme_station_schedule_admin_item($start, $finish, $title = '', $link = NULL) {
+  $class = 'station-sch-box station-sch-scheduled';
   $height = ($finish - $start);
-  $output = "<div class='station-schedule-box station-schedule-scheduled' style='height:{$height}px;'>";
-  $output .= "<span class='station-schedule-time'>". theme('station_hour_range', $start, $finish) ."</span><br />";
+  $output = "<div class='{$class}' style='height:{$height}px;'>";
+  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
   $output .= $title;
   $output .= "</div>\n";
   if ($link) {
@@ -275,19 +264,25 @@ function station_schedule_schedule_admin_delete_submit($formid, $form) {
  */
 function station_schedule_schedule_week_page() {
   theme_add_style(drupal_get_path('module', 'station_schedule') .'/station_schedule.css');
-
-  // full week schedule
   drupal_set_title(t('Weekly Schedule'));
 
-  $cols = array(t('Time'));
-  $cols = array_merge($cols, station_day_name());
-  $row = array();
+  $today = station_today();
 
+  // build the headers
+  $cols = array('data' => t('Time'));
+  foreach (station_day_name() as $name) {
+    $cols[] = array('data' => $name);
+  }
+  // ... add a class to indicate what day it is.
+  $cols[$today]['class'] = 'station-sch-now-day';
+
+  $row = array();
+  // put in a column of hours
   for ($i = 0; $i < 24; $i++) {
     $cell .= theme('station_schedule_hour', $i);
   }
-  $row[] = array('data' => $cell, 'id'=>'hour');
-
+  $row[] = array('data' => $cell, 'id' => 'station-sch-hours');
+  // now a column for each day
   for ($i = 0; $i < 7; $i++) {
     $cell = '';
     // find the minute that the day starts and finishes
@@ -296,55 +291,60 @@ function station_schedule_schedule_week_page() {
     $last_finish = $day_start;
     $result = db_query($query = 'SELECT * FROM {station_schedule} s WHERE s.finish > %d AND s.start < %d ORDER BY s.start', $day_start, $day_finish);
     while ($s = db_fetch_object($result)) {
-      // display blocks for unscheduled time periods
+      // display blocks for unscheduled time before this program
       if ($last_finish != $s->start) {
         $cell .= theme('station_schedule_spacer', $last_finish, $s->start);
       }
       $last_finish = $s->finish;
-
       // display the schedule item
-      $height = ($s->finish - $s->start);
       $program = node_load($s->program_nid);
       $cell .= theme('station_schedule_item', $s->start, $s->finish, $program);
     }
-    // any remaining time during the day
+    // create an unscheduled block for any remaining time
     if ($last_finish < $day_finish) {
       $cell .= theme('station_schedule_spacer', $last_finish, $day_finish);
     }
 
     $row[] = array('data' => $cell);
   }
+  $row[$today+1]['class'] = 'station-sch-now-day';
 
   // render the tables
-  return theme('table', $cols, array($row), array('id' => 'station-schedule'));
+  return theme('table', $cols, array($row), array('id' => 'station-sch'));
 }
 
 function theme_station_schedule_hour($hour) {
+  $class = 'station-sch-box station-sch-hour';
   $height = 60;
-  $output .= "<div class='station-schedule-box station-schedule-hour' style='height:{$height}px;'>";
+  $output = "<div class='{$class}' style='height:{$height}px;'>";
   $output .= station_hour_name($hour);
   $output .= "</div>\n";
   return $output;
 }
 
 function theme_station_schedule_spacer($start, $finish) {
+  $class = 'station-sch-box station-sch-unscheduled';
   $height = ($finish - $start);
-  $output = "<div class='station-schedule-box station-schedule-unscheduled' style='height:{$height}px;'></div>\n";
+  $output = "<div class='{$class}' style='height:{$height}px;'>";
+  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
+  $output .= "</div>\n";
   return $output;
 }
 
 function theme_station_schedule_item($start, $finish, $program) {
+  $class = 'station-sch-box station-sch-scheduled';
   $height = ($finish - $start);
-  $output = "<div class='station-schedule-box station-schedule-scheduled' style='height:{$height}px;'>\n";
-  $output .= $program->title ."\n";
+  $output = "<div class='{$class}' style='height:{$height}px;'>\n";
+  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
+  $output .= $program->title;
   if ($program->djs) {
     $djs = implode(', ', _station_schedule_program_load_djs($program->nid));
-    $output .= "  <div class='station-schedule-djs'>{$djs}</div>\n";
+    $output .= "<div class='station-sch-djs'>{$djs}</div>";
   }
 #  if ($program->genre) {
-#    $output .= "  <div class='station-schedule-genre'>{$program->genre}</div>\n";
+#    $output .= "<div class='station-sch-genre'>{$program->genre}</div>\n";
 #  }
-  $output .= "</div>";
+  $output .= "</div>\n";
   return l($output, 'node/'. $program->nid, NULL, NULL, NULL, NULL, TRUE);
 }
 
@@ -438,6 +438,6 @@ function _station_schedule_schedule_view_day($day) {
     else {
       $cols = array(t('Time'), t('Program'), t('Genre'), t('DJs'));
     }
-    return theme('table', $cols, $rows, array('class'=>'station-schedule'));
+    return theme('table', $cols, $rows, array('class'=>'station-sch'));
   }
 }

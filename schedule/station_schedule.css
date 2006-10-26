@@ -1,27 +1,32 @@
 /* $Id$ */
 
-#station-schedule tbody {
+#station-sch tbody {
   padding: 0;
   margin: 0;
 }
-#station-schedule tr {
+#station-sch th {
+  text-align: center;
+}
+#station-sch tr {
   padding: 0;
   margin: 0;
   border: 0;
 }
-#station-schedule td {
-  width: 14%;
-  vertical-align: top;
+#station-sch td {
   padding: 0;
   margin: 0;
+  width: 14%;
+  vertical-align: top;
+  text-align: center;
   border: 1px solid #CCC;
   border-top: 0;
   border-right: 0;
 }
-#station-schedule #hour {
+#station-sch td#station-sch-hours {
   width: 2%;
 }
-.station-schedule-box {
+
+.station-sch-box {
   overflow: hidden;
   margin: -1px -1px 0 0;
   border: 0;
@@ -29,18 +34,22 @@
   border-left: 0;
   border-bottom: 0;
 }
-.station-schedule-time {
+/* hide the time element for most schedules */
+.station-sch-time {
+  display: none;
+}
+/* display it on admin pages */
+.station-sch-admin .station-sch-time {
   font-size: x-small;
+  display: block;
 }
-.station-schedule-hour {
+.station-sch-unscheduled {
 }
-.station-schedule-unscheduled {
-}
-.station-schedule-scheduled {
-  background-color: #fff;
+.station-sch-scheduled {
   text-align: center;
 }
-.station-schedule-djs {
+.station-sch-djs {
   font-size: xx-small;
-  text-align: center;
+}
+.station-sch-now-hour, .station-sch-now-day {
 }

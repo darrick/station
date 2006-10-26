@@ -106,8 +106,32 @@ function station_hour_name($hour = 0) {
   return $hour . $sufix;
 }
 
+/**
+ * Convert a day hour tuple into minutes.
+ * @param $day 1-7
+ * @param $hour 0-23
+ * @return integer minutes.
+ */
 function station_minute_from_day_hour($day, $hour) {
   return (($day * 24) + $hour) * 60;
+}
+
+/**
+ * Day of the week from minutes.
+ * @param $minutes since midnight sunday
+ * @return day of the week
+ */
+function station_day_from_minute($minute) {
+  return (int) ($minute / 1400);
+}
+
+/**
+ * Day of the week from minutes.
+ * @param $minutes since midnight sunday
+ * @return day of the week
+ */
+function station_hour_from_minute($minute) {
+  return (int) (($minute % 1440) / 60);
 }
 
 /**
@@ -119,10 +143,10 @@ function station_minute_from_day_hour($day, $hour) {
  * @return formatted string
  */
 function theme_station_dayhour_range($start, $finish) {
-  $start_day = station_day_name($start / 1440);
-  $finish_day = station_day_name($finish / 1440);
-  $start_hour = (int) (($start % 1440) / 60);
-  $finish_hour = (int) (($finish % 1440) / 60);
+  $start_day = station_day_from_minute($start);
+  $finish_day = station_day_from_minute($finish);
+  $start_hour = station_hour_from_minute($start);
+  $finish_hour = station_hour_from_minute($finish);
 
   $sufix1 = $sufix2 = 'am';
 
@@ -154,8 +178,8 @@ function theme_station_dayhour_range($start, $finish) {
   }
   return t($format,
     array(
-      '%start_day' => $start_day, '%start_hour' => $start_hour,
-      '%finish_day' => $finish_day, '%finish_hour' => $finish_hour,
+      '%start_day' => station_day_name($start_day), '%start_hour' => $start_hour,
+      '%finish_day' => station_day_name($finish_day), '%finish_hour' => $finish_hour,
       '%sufix1' => $sufix1, '%sufix2' => $sufix2,
     )
   );
@@ -170,10 +194,8 @@ function theme_station_dayhour_range($start, $finish) {
  * @return formatted string
  */
 function theme_station_hour_range($start, $finish) {
-  $start_day = (int) ($start / 1440);
-  $finish_day = (int) ($finish / 1440);
-  $start_hour = (int) (($start % 1440) / 60);
-  $finish_hour = (int) (($finish % 1440) / 60);
+  $start_hour = station_hour_from_minute($start);
+  $finish_hour = station_hour_from_minute($finish);
 
   $sufix1 = $sufix2 = 'am';
 

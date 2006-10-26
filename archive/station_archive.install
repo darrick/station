@@ -42,7 +42,9 @@ function station_archive_update_1() {
           `audio_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `imported` INTEGER UNSIGNED NOT NULL DEFAULT 0,
-          PRIMARY KEY(`audio_nid`, `program_nid`)
+          `permanent` INT(2) NOT NULL DEFAULT '0',
+          PRIMARY KEY(`audio_nid`, `program_nid`),
+          KEY `station_archive_cleanup` (`permanent`,`imported`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
       // if we've got a taxonomy, record any nodes in it in the table
@@ -83,6 +85,24 @@ function station_archive_update_2() {
         WHERE n1.title = n2.title AND n1.nid <> n2.nid;
       ");
 
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Add a field to track permanent audio, and an index for the clean up query
+ */
+function station_archive_update_3() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("
+        ALTER TABLE {station_archive}
+          ADD COLUMN `permanent` INT(2) UNSIGNED NOT NULL DEFAULT 0 AFTER `imported`,
+          ADD INDEX `station_archive_cleanup`(`permanent`, `imported`);
+      ");
       break;
   }
   return $ret;

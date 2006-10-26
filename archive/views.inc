@@ -23,6 +23,15 @@ function station_archive_views_tables() {
         'help' => t('Date the audio was imported into the station archive.'),
       ),
     ),
+    'filters' => array(
+      'permanent' => array(
+        'name' => t('Station Archive: Is in permanent archive'),
+        'operator' => array('=' => 'Equals'),
+        'list' => 'views_handler_operator_yesno',
+        'list-type' => 'select',
+        'help' => t('Filter weather the node is part of the permanent archive.'),
+      ),
+    ),
   );
   $tables['station_archive_program'] = array(
     'name' => 'station_archive_program',
@@ -36,7 +45,7 @@ function station_archive_views_tables() {
       )
     ),
     'fields' => array(
-      'imported' => array(
+      'title' => array(
         'name' => t('Station Archive: Program Title'),
         'sortable' => TRUE,
         'handler' => array(

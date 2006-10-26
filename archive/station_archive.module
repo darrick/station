@@ -261,8 +261,9 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
 
       case 'update':
         // update the association of the audio and program node ids
-        if (isset($node->archive_program_nid)) {
-          db_query("UPDATE {station_archive} SET program_nid = %d WHERE audio_nid = %d", $node->archive_program_nid, $node->nid);
+        if (isset($node->station_archive)) {
+          db_query("UPDATE {station_archive} SET program_nid = %d, permanent = %d WHERE audio_nid = %d",
+            $node->station_archive['program_nid'], $node->station_archive['permanent'], $node->nid);
         }
         break;
 
@@ -274,21 +275,18 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
         break;
 
       case 'load':
-        $o = db_fetch_object(db_query("SELECT sa.program_nid, sap.title FROM {station_archive} sa LEFT OUTER JOIN {station_archive_program} sap ON sa.program_nid = sap.program_nid WHERE sa.audio_nid = %d", $node->nid));
-        if ($o) {
-          return array(
-            'archive_program_nid' => $o->program_nid,
-            'archive_program_title' => $o->title
-          );
+        $row = db_fetch_array(db_query("SELECT sa.program_nid, sap.title AS program_title, sa.imported, sa.permanent FROM {station_archive} sa LEFT OUTER JOIN {station_archive_program} sap ON sa.program_nid = sap.program_nid WHERE sa.audio_nid = %d", $node->nid));
+        if ($row) {
+          return array('station_archive' => $row);
         }
         break;
 
       case 'view':
         // if it's in the archives, set the menu appropriately
-        if (!$teaser && isset($node->archive_program_nid)) {
+        if (!$teaser && isset($node->station_archive)) {
           $breadcrumb[] = array('path' => 'station', 'title' => t('station'));
-          $breadcrumb[] = array('path' => 'station/archives/', 'title' => t('archives'));
-          $breadcrumb[] = array('path' => 'station/archives/'. $node->archive_program_nid, 'title' => $node->archive_program_title);
+          $breadcrumb[] = array('path' => 'station/archives', 'title' => t('archives'));
+          $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);
           $breadcrumb[] = array('path' => 'node/'. $node->nid);
           menu_set_location($breadcrumb);
         }
@@ -309,7 +307,7 @@ function station_archive_form_alter($form_id, &$form) {
 
   if ($form_id == "{$type}_node_form") {
     $node = $form['#node'];
-    if (isset($node->archive_program_nid)) {
+    if (isset($node->station_archive)) {
       $result = db_query('SELECT sap.program_nid AS nid, sap.title FROM {station_archive_program} sap ORDER BY sap.title');
       while ($obj = db_fetch_object($result)) {
         $options[$obj->nid] = $obj->title;
@@ -318,15 +316,38 @@ function station_archive_form_alter($form_id, &$form) {
       $form['station_archive'] = array(
         '#type' => 'fieldset',
         '#title' => t('Station Archive'),
-        '#collapsible'=> FALSE,
+        '#collapsible'=> TRUE,
         '#weight' => -5,
+        '#tree' => TRUE,
       );
-      $form['station_archive']['archive_program_nid'] = array(
+      $form['station_archive']['program_nid'] = array(
         '#type' => 'select',
-        '#title' => t('Archived program'),
-        '#default_value' => $node->archive_program_nid,
+        '#title' => t('Recording of'),
+        '#default_value' => $node->station_archive['program_nid'],
         '#options' => $options,
         '#description' => t('Select the program that this audio is a recording of.')
+      );
+      $form['station_archive']['imported'] = array(
+        '#type' => 'item',
+        '#title' => t('Imported on'),
+        '#value' => format_date($node->station_archive['imported'], 'large'),
+        '#description' => t('This is the date the audio was actually imported to the archive.')
+      );
+      if (variable_get('station_archive_cleanup_old', 1)) {
+        $max_age = variable_get('station_archive_max_age', 604800);
+        $delete = $node->station_archive['imported'] + $max_age;
+        $form['station_archive']['deletion'] = array(
+          '#type' => 'item',
+          '#title' => t('Deletion scheduled for'),
+          '#value' => format_date($delete, 'large'),
+          '#description' => t("The administrator has specified that archived recordings will be removed being posted for %interval. ", array('%interval' => format_interval($max_age)))
+        );
+      }
+      $form['station_archive']['permanent'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('In permanent archive'),
+        '#default_value' => $node->station_archive['permanent'],
+        '#description' => t("If this is checked, this recording will not be deleted during the Station Archive's clean up of old recordings.")
       );
     }
   }
@@ -362,7 +383,7 @@ function station_archive_cron() {
  */
 function _station_archive_delete_old_nodes() {
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
-  $result = db_query('SELECT n.nid, n.title FROM node n INNER JOIN station_archive a ON n.nid = a.audio_nid WHERE a.imported < %d', $cutoff);
+  $result = db_query('SELECT n.nid, n.title FROM node n INNER JOIN station_archive sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
   while ($node = db_fetch_object($result)) {
     watchdog('stationarchive', t('Removing %title from the archive.', array('%title' => theme('placeholder', $node->title))), WATCHDOG_NOTICE);
     node_delete($node->nid);

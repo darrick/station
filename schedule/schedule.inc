@@ -2,18 +2,9 @@
 
 // $Id$
 
-function _station_make_hour_compatible(&$s) {
-  $s->start_day = station_day_from_minute($s->start);
-  $s->finish_day = station_day_from_minute($s->finish);
-  $s->start_hour = station_hour_from_minute($s->start);
-  $s->finish_hour = station_hour_from_minute($s->finish);
-}
-
 function station_schedule_schedule_load($sid) {
   $result = db_query('SELECT * FROM {station_schedule} s WHERE s.sid = %d', $sid);
   if ($s = db_fetch_object($result)) {
-    // FIXME this is a hack to get the schedule working...
-    _station_make_hour_compatible($s);
     return $s;
   }
 }
@@ -21,13 +12,19 @@ function station_schedule_schedule_load($sid) {
 function station_schedule_schedule_load_day($day) {
   // there are 1440 minutes in a day (60minute * 24hours = 1day)
   $start = $day * 1440;
-  $finish = $start + 1439;
+  $finish = $start + 1440;
 
   $ret = array();
-  $result = db_query('SELECT * FROM {station_schedule} s WHERE s.start BETWEEN %d AND %d ORDER BY s.start', $start, $finish);
+  $result = db_query('SELECT * FROM {station_schedule} s WHERE s.finish > %d AND s.start < %d ORDER BY s.start', $start, $finish);
   while ($s = db_fetch_object($result)) {
-    // FIXME this is a hack to get the schedule working...
-    _station_make_hour_compatible($s);
+    // if a show spans a day, limit its start and finish times to be with-in
+    // the day
+    if ($s->start < $start) {
+      $s->start = $start;
+    }
+    if ($s->finish > $finish) {
+      $s->finish = $finish;
+    }
     $ret[] = $s;
   }
   return $ret;
@@ -52,8 +49,7 @@ function station_schedule_schedule_admin_list() {
     $day_start = $i * 1440;
     $day_finish = $day_start + 1440;
     $last_finish = $day_start;
-    $result = db_query($query = 'SELECT * FROM {station_schedule} s WHERE s.finish > %d AND s.start < %d ORDER BY s.start', $day_start, $day_finish);
-    while ($s = db_fetch_object($result)) {
+    foreach (station_schedule_schedule_load_day($i) as $s) {
       // display blocks for unscheduled time periods
       if ($last_finish != $s->start) {
         $cell .= theme('station_schedule_admin_nonitem', $last_finish, $s->start);
@@ -114,9 +110,11 @@ function station_schedule_schedule_admin_form($sid = NULL) {
   }
 
   $day_options = station_day_name();
-  $hour_options = array();
-  for ($i = 0; $i < 24; $i++) {
-    $hour_options[$i] = station_hour_name($i);
+  $minute_options = array();
+  $increment = variable_get('station_schedule_increment', 60);
+  for ($minute = 0; $minute < 24 * 60; $minute += $increment) {
+    $time = station_time_from_minute($minute);
+    $minute_options[$minute] = $time['H'] .':'. $time['i'];
   }
 
   if ($sch = station_schedule_schedule_load($sid)) {
@@ -130,34 +128,32 @@ function station_schedule_schedule_admin_form($sid = NULL) {
   }
   else {
     $sch = new stdClass;
-    $sch->start_day = 0;
-    $sch->finish_day = 0;
-    $sch->start_hour = 0;
-    $sch->finish_hour = 1;
+    $sch->start = 0;
+    $sch->finish = 60;
   }
 
   $form['start_day'] = array(
     '#type' => 'select',
     '#title' => t('Starts'),
-    '#default_value' => $sch->start_day,
+    '#default_value' => station_day_from_minute($sch->start),
     '#options' => $day_options,
   );
-  $form['start_hour'] = array(
+  $form['start_minutes'] = array(
     '#type' => 'select',
-    '#default_value' => $sch->start_hour,
-    '#options' => $hour_options,
+    '#default_value' => $sch->start % 1440,
+    '#options' => $minute_options,
   );
   $form['finish_day'] = array(
     '#type' => 'select',
     '#title' => t('Ends'),
-    '#default_value' => $sch->finish_day,
+    '#default_value' => station_day_from_minute($sch->finish),
     '#options' => $day_options,
     '#description' => $description,
   );
-  $form['finish_hour'] = array(
+  $form['finish_minutes'] = array(
     '#type' => 'select',
-    '#default_value' => $sch->finish_hour,
-    '#options' => $hour_options,
+    '#default_value' => $sch->finish % 1440,
+    '#options' => $minute_options,
   );
   $form['program_title'] = array(
     '#type' => 'textfield',
@@ -186,11 +182,11 @@ function station_schedule_schedule_admin_form($sid = NULL) {
 }
 
 function station_schedule_schedule_admin_form_validate($form_id, $form_values) {
-  $start = station_minute_from_day_hour($form_values['start_day'], $form_values['start_hour']);
-  $finish = station_minute_from_day_hour($form_values['finish_day'], $form_values['finish_hour']);
+  $start = ($form_values['start_day'] * 1440) + $form_values['start_minutes'];
+  $finish = ($form_values['finish_day'] * 1440) + $form_values['finish_minutes'];
 
   if ($start >= $finish) {
-    form_set_error('finish', t("The program has to finish after it starts."));
+    form_set_error('finish', t("The program must start before it finishes."));
   }
 
   $result = db_query('SELECT count(*) AS count, min(s.start) AS start, max(s.finish) AS finish FROM {station_schedule} s WHERE s.sid <> %d AND s.finish > %d AND s.start < %d', $form_values['sid'], $start, $finish);
@@ -210,8 +206,8 @@ function station_schedule_schedule_admin_form_validate($form_id, $form_values) {
 }
 
 function station_schedule_schedule_admin_form_submit($form_id, $form_values) {
-  $start = station_minute_from_day_hour($form_values['start_day'], $form_values['start_hour']);
-  $finish = station_minute_from_day_hour($form_values['finish_day'], $form_values['finish_hour']);
+  $start = ($form_values['start_day'] * 1440) + $form_values['start_minutes'];
+  $finish = ($form_values['finish_day'] * 1440) + $form_values['finish_minutes'];
   $program = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
 
   if ($form_values['sid']) {
@@ -289,8 +285,7 @@ function station_schedule_schedule_week_page() {
     $day_start = $i * 1440;
     $day_finish = $day_start + 1440;
     $last_finish = $day_start;
-    $result = db_query($query = 'SELECT * FROM {station_schedule} s WHERE s.finish > %d AND s.start < %d ORDER BY s.start', $day_start, $day_finish);
-    while ($s = db_fetch_object($result)) {
+    foreach (station_schedule_schedule_load_day($i) as $s) {
       // display blocks for unscheduled time before this program
       if ($last_finish != $s->start) {
         $cell .= theme('station_schedule_spacer', $last_finish, $s->start);

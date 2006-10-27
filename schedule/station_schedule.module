@@ -175,10 +175,13 @@ function station_schedule_perm() {
 function station_schedule_admin_settings() {
   $form = array();
 
-  $form['no_settings'] = array(
-    '#type' => 'item',
-    '#title' => t('Nothing to see here'),
-    '#value' => t("Right now, there aren't any schedule settings. But it is a nice place for us to display the module info:"),
+  $form['station_schedule_increment'] = array(
+    '#type' => 'select',
+    '#title' => t('Time increment'),
+    '#default_value' => variable_get('station_schedule_increment', 60),
+    '#options' => array(15 => t('15 Minutes'), 30 => t('30 Minutes'), 60 => t('1 Hour')),
+    '#description' => t("This is the minimum increment that programs can be scheduled in. <strong>Watch out:</strong> Changing this to a larger value on an existing schedule will probably cause wierdness."),
+    '#required' => TRUE,
   );
 
   $form['module_cvs_id'] = array(

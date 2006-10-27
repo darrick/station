@@ -122,16 +122,38 @@ function station_minute_from_day_hour($day, $hour) {
  * @return day of the week
  */
 function station_day_from_minute($minute) {
-  return (int) ($minute / 1400);
+  return (int) (($minute) / 1440);
 }
 
 /**
- * Day of the week from minutes.
+ * Hour of the day from minutes.
  * @param $minutes since midnight sunday
  * @return day of the week
  */
 function station_hour_from_minute($minute) {
   return (int) (($minute % 1440) / 60);
+}
+
+function station_time_from_minute($minutes) {
+  $min = $minutes % 60;
+  $day = (int) (($minutes - $min) / 1400);
+  $hour24 = (int) (($minutes % 1440) / 60);
+  if (!($hour12 = $hour24 % 12)) {
+    $hour12 = 12;
+  }
+  $i = str_pad($min, 2, '0', STR_PAD_LEFT);
+  $h = str_pad($hour12, 2, '0', STR_PAD_LEFT);
+  return array(
+    'w' => $day,
+    'G' => $hour24,
+    'g' => $hour12,
+    'H' => str_pad($hour24, 2, '0', STR_PAD_LEFT),
+    'h' => $h,
+    'i' => $i,
+    'time' => ($min == 0) ? $hour12 : "$hour12:$i",
+    'minutes' => $minutes,
+    'a' => ($hour24 > 11) ? 'pm' : 'am',
+  );
 }
 
 /**
@@ -143,44 +165,28 @@ function station_hour_from_minute($minute) {
  * @return formatted string
  */
 function theme_station_dayhour_range($start, $finish) {
-  $start_day = station_day_from_minute($start);
-  $finish_day = station_day_from_minute($finish);
-  $start_hour = station_hour_from_minute($start);
-  $finish_hour = station_hour_from_minute($finish);
+  $start = station_time_from_minute($start);
+  $finish = station_time_from_minute($finish);
 
-  $sufix1 = $sufix2 = 'am';
-
-  if ($start_hour >= 12) {
-    $sufix1 = 'pm';
-    $start_hour -= 12;
-  }
-  if ($finish_hour >= 12) {
-    $sufix2 = 'pm';
-    $finish_hour -= 12;
-  }
-
-  // midnight and noon
-  if ($start_hour <= 0) {
-    $start_hour = 12;
-  }
-  if ($finish_hour <= 0) {
-    $finish_hour = 12;
-  }
-
-  if ($start_day == $finish_day) {
-    if ($sufix1 == $sufix2) {
-      $format = '%start_day %start_hour-%finish_hour%sufix2';
+  // same day
+  if ($start['w'] == $finish['w']) {
+    // same am pm
+    if ($start['a'] == $finish['a']) {
+      $format = '%sday %stime-%ftime%sampm';
     }
-    $format = '%start_day %start_hour%sufix1-%finish_hour%sufix2';
+    else {
+      $format = '%sday %stime%sampm-%ftime%fampm';
+    }
   }
   else {
-    $format = '%start_day %start_hour%sufix1-%finish_day%finish_hour%sufix2';
+    $format = '%sday %stime%sampm-%fday %ftime%fampm';
   }
   return t($format,
     array(
-      '%start_day' => station_day_name($start_day), '%start_hour' => $start_hour,
-      '%finish_day' => station_day_name($finish_day), '%finish_hour' => $finish_hour,
-      '%sufix1' => $sufix1, '%sufix2' => $sufix2,
+      '%sday' => station_day_name($start['w']), '%shour' => $start['g'],
+      '%stime' => $start['time'], '%sampm' => $start['a'],
+      '%fday' => station_day_name($finish['w']), '%fhour' => $finish['g'],
+      '%ftime' => $finish['time'], '%fampm' => $finish['a'],
     )
   );
 }
@@ -194,38 +200,19 @@ function theme_station_dayhour_range($start, $finish) {
  * @return formatted string
  */
 function theme_station_hour_range($start, $finish) {
-  $start_hour = station_hour_from_minute($start);
-  $finish_hour = station_hour_from_minute($finish);
+  $start = station_time_from_minute($start);
+  $finish = station_time_from_minute($finish);
 
-  $sufix1 = $sufix2 = 'am';
-
-  if ($start_hour >= 12) {
-    $sufix1 = 'pm';
-    $start_hour -= 12;
-  }
-  if ($finish_hour >= 12) {
-    $sufix2 = 'pm';
-    $finish_hour -= 12;
-  }
-
-  // midnight and noon
-  if ($start_hour <= 0) {
-    $start_hour = 12;
-  }
-  if ($finish_hour <= 0) {
-    $finish_hour = 12;
-  }
-
-  if ($sufix1 == $sufix2) {
-    $format = '%start_hour-%finish_hour%sufix2';
+  if ($start['a'] == $finish['a']) {
+    $format = '%stime-%ftime%sampm';
   }
   else {
-    $format = '%start_hour%sufix1-%finish_hour%sufix2';
+    $format = '%stime%sampm-%ftime%fampm';
   }
   return t($format,
     array(
-      '%start_hour' => $start_hour, '%finish_hour' => $finish_hour,
-      '%sufix1' => $sufix1, '%sufix2' => $sufix2,
+      '%stime' => $start['time'], '%sampm' => $start['a'],
+      '%ftime' => $finish['time'], '%fampm' => $finish['a'],
     )
   );
 }

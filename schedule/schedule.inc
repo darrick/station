@@ -100,13 +100,13 @@ function theme_station_schedule_admin_item($start, $finish, $title = '', $link =
   return $output;
 }
 
-function station_schedule_schedule_admin_form($sid = NULL) {
-  $op = $_POST['op'];
-  if ($op == t('Cancel')) {
+function station_schedule_schedule_admin_form($op, $id = NULL) {
+  $post_op = $_POST['op'];
+  if ($post_op == t('Cancel')) {
     drupal_goto('admin/schedule');
   }
-  if ($op == t('Delete')) {
-    drupal_goto("admin/schedule/delete/$sid");
+  if ($post_op == t('Delete')) {
+    drupal_goto("admin/schedule/delete/$id");
   }
 
   $day_options = station_day_name();
@@ -117,19 +117,27 @@ function station_schedule_schedule_admin_form($sid = NULL) {
     $minute_options[$minute] = $time['H'] .':'. $time['i'];
   }
 
-  if ($sch = station_schedule_schedule_load($sid)) {
-    $program = node_load($sch->program_nid);
-    $program_title = $program->title;
-
-    $form['sid'] = array(
-      '#type' => 'value',
-      '#value' => $sid,
-    );
-  }
-  else {
+  if ($op == 'add') {
+    if ($id && $program = node_load($id)) {
+      $program_title = $program->title;
+    }
     $sch = new stdClass;
+    $sch->sid = 0;
     $sch->start = 0;
     $sch->finish = 60;
+  }
+  else if ($op == 'edit') {
+    if ($id && $sch = station_schedule_schedule_load($id)) {
+      $program = node_load($sch->program_nid);
+      $program_title = $program->title;
+      $form['sid'] = array(
+        '#type' => 'value',
+        '#value' => $sch->sid,
+      );
+    }
+    else {
+      drupal_goto('admin/schedule');
+    }
   }
 
   $form['start_day'] = array(

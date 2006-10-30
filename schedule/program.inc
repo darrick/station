@@ -78,6 +78,14 @@ function station_schedule_program_form(&$node) {
   $form['body_filter']['format'] = filter_form($node->format);
 
   if (user_access('administer schedule')) {
+    // if it's a saved, published, un-scheduled program, provide a link to add
+    // it to the schedule.
+    if ($node->nid && $node->status && !$node->scheduled_sids) {
+      drupal_set_message(
+        t("This program is unscheduled. You can <a href='%link'>add it to the schedule</a>.", 
+        array('%link' => url('admin/schedule/add/'. $node->nid)))
+      );
+    }
     $form['djs'] = array(
       '#type' => 'fieldset',
       '#title' => t('DJs'),
@@ -252,27 +260,22 @@ function station_schedule_program_view(&$node, $teaser = FALSE, $page = FALSE) {
   }
 
   if ($teaser) {
+    $format = '%genre';
+    if ($djs) {
+      $format .= ' with %djs';
+    }
+    if ($times) {
+      $format .= ', on %times.';
+    }
+    else {
+      $format .= ', is currently unscheduled.';
+    }
     $options = array(
       '%genre' => $node->genre,
       '%djs' => station_anded_list($djs),
       '%times' => station_anded_list($times),
     );
-
-    if ($djs) {
-      if ($times) {
-        $node->teaser = t('%genre with %djs on %times.', $options);
-      } else {
-        $node->teaser = t('%genre with %djs, which is currently unscheduled.', $options);
-      }
-    }
-    else {
-      if ($times) {
-        $node->teaser = t('%genre, %times.', $options);
-      } else {
-        $node->teaser = t('%genre, which is currently unscheduled.', $options);
-      }
-    }
-    $node->teaser = check_markup($node->teaser);
+    $node->teaser = check_markup(t($format, $options));
   }
   else {
     // playlists
@@ -294,13 +297,15 @@ function station_schedule_program_view(&$node, $teaser = FALSE, $page = FALSE) {
 
     if ($djs) {
       $dj_info = '<ul><li>'. implode('</li><li>', $djs) .'</li></ul>';
-    } else {
+    }
+    else {
       $dj_info = t('This program has no DJs');
     }
 
     if ($times) {
       $time_info = '<ul><li>'. implode('</li><li>', $times) .'</li></ul>';
-    } else {
+    }
+    else {
       $time_info = t('This program is currently unscheduled');
     }
 

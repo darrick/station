@@ -63,11 +63,13 @@ function station_schedule_menu($may_cache) {
     );
     $items[] = array('path' => 'admin/schedule/add', 'title' => t('add new'),
       'callback' => 'station_schedule_schedule_admin_form',
+      'callback arguments' => array('add'),
       'type' => MENU_LOCAL_TASK,
     );
     $items[] = array('path' => 'admin/schedule/edit',
       'title' => t('edit'),
       'callback' => 'station_schedule_schedule_admin_form',
+      'callback arguments' => array('edit'),
       'type' => MENU_CALLBACK
     );
     $items[] = array('path' => 'admin/schedule/delete',

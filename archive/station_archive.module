@@ -62,6 +62,12 @@ function station_archive_menu($may_cache) {
   return $items;
 }
 
+function station_archive_perm() {
+  return array(
+    'administer archive',
+  );
+}
+
 function station_archive_view_html($dayname = NULL, $hourname = NULL) {
   if (!is_null($dayname)) {
     $day = station_valid_day($dayname);
@@ -256,12 +262,60 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
   if ($node->type == 'audio'){
 
     switch ($op) {
+      case 'prepare':
+        // reload the
+        if ('Reload Program' == $_POST['op']) {
+          // use the create timestamp as the
+          $gmt_timestamp = (integer) $node->created;
+          // get a timestamp that's correct for the timezone
+          $local_timestamp = station_local_ts($gmt_timestamp);
+          $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
+
+          // connect to the station module and find program info based on timestamp
+          $program = station_get_program_at($gmt_timestamp);
+          if ($program === FALSE) {
+            // couldn't get the program info, configuation error?
+            drupal_set_error(t("Couldn't load the program metadata from the schedule."));
+            break;
+          }
+          elseif ($program === NULL) {
+            // nothing is scheduled...
+            // if we've got no program use the default metadata
+            $program_nid = 0;
+            $audio_tags['title'] = variable_get('station_archive_unscheduled_title', t('DJ Auto mix'));
+          }
+          else {
+            // we've got program information
+            $program_nid = $program->nid;
+            $audio_tags['title'] = $program->title;
+            $audio_tags['artist'] = station_anded_list($program->djs);
+            $audio_tags['genre'] = $program->genre;
+            $audio_tags['url_source'] = $program->node_url;
+          }
+          $audio_tags['year'] = date('Y', $local_timestamp);
+          $audio_tags['comment'] = t('Recorded at %date', array('%date' => $prettydate));
+
+          // audio metadata tags
+          $_POST['edit']['audio_tags'] = $audio_tags;
+          // archive program nid (this won't work if there isn't already a copy
+          // of the program in station_archive_program).
+          $_POST['edit']['station_archive']['program_nid'] = $program_nid;
+          // taxonomy
+          $vid = _station_archive_get_vid();
+          $_POST['edit']['taxonomy'][$vid] = _station_archive_get_taxonomy($local_timestamp);
+          // promotion
+          $_POST['edit']['promote'] = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
+
+          drupal_set_message(t("The program information has been reloaded from the schedule. Verify that it is correct and save the changes."));
+        }
+        break;
+
       case 'validate':
         break;
 
       case 'update':
-        // update the association of the audio and program node ids
-        if (isset($node->station_archive)) {
+        if (isset($node->station_archive) && user_access('administer archive')) {
+          // update the association of the audio and program node ids
           db_query("UPDATE {station_archive} SET program_nid = %d, permanent = %d WHERE audio_nid = %d",
             $node->station_archive['program_nid'], $node->station_archive['permanent'], $node->nid);
         }
@@ -283,7 +337,7 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
 
       case 'view':
         // if it's in the archives, set the menu appropriately
-        if (!$teaser && isset($node->station_archive)) {
+        if ($page && isset($node->station_archive)) {
           $breadcrumb[] = array('path' => 'station', 'title' => t('station'));
           $breadcrumb[] = array('path' => 'station/archives', 'title' => t('archives'));
           $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);
@@ -295,24 +349,17 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
   }
 }
 
+
 /**
  * implementation of hook_form_alter()
  */
 function station_archive_form_alter($form_id, &$form) {
-  // Make a copy of the type to shorten up the code
-  $type =  $form['type']['#value'];
-  if (!isset($form['type']) || $type != 'audio') {
-    return;
-  }
+  // We only alter audio node edit forms
+  if ($form_id == $form['type']['#value'] .'_node_form') {
 
-  if ($form_id == "{$type}_node_form") {
     $node = $form['#node'];
-    if (isset($node->station_archive)) {
-      $result = db_query('SELECT sap.program_nid AS nid, sap.title FROM {station_archive_program} sap ORDER BY sap.title');
-      while ($obj = db_fetch_object($result)) {
-        $options[$obj->nid] = $obj->title;
-      }
 
+    if (isset($node->station_archive)) {
       $form['station_archive'] = array(
         '#type' => 'fieldset',
         '#title' => t('Station Archive'),
@@ -320,13 +367,33 @@ function station_archive_form_alter($form_id, &$form) {
         '#weight' => -5,
         '#tree' => TRUE,
       );
-      $form['station_archive']['program_nid'] = array(
-        '#type' => 'select',
-        '#title' => t('Recording of'),
-        '#default_value' => $node->station_archive['program_nid'],
-        '#options' => $options,
-        '#description' => t('Select the program that this audio is a recording of.')
-      );
+      if (user_access('administer archive')) {
+        // insert a callback for us to process
+        $form['#process']['station_testing'] = array();
+
+
+        $result = db_query('SELECT sap.program_nid AS nid, sap.title FROM {station_archive_program} sap ORDER BY sap.title');
+        while ($obj = db_fetch_object($result)) {
+          $options[$obj->nid] = $obj->title;
+        }
+        $form['station_archive']['program_nid'] = array(
+          '#type' => 'select',
+          '#title' => t('Recording of'),
+          '#default_value' => $node->station_archive['program_nid'],
+          '#options' => $options,
+          '#description' => t('Select the program that this audio is a recording of.')
+        );
+        $form['station_archive']['permanent'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('In permanent archive'),
+          '#default_value' => $node->station_archive['permanent'],
+          '#description' => t("If this is checked, this recording will not be deleted during the Station Archive's clean up of old recordings.")
+        );
+        $form['station_archive']['reload'] = array(
+          '#type' => 'button',
+          '#value' => 'Reload Program',
+        );
+      }
       $form['station_archive']['imported'] = array(
         '#type' => 'item',
         '#title' => t('Imported on'),
@@ -340,15 +407,9 @@ function station_archive_form_alter($form_id, &$form) {
           '#type' => 'item',
           '#title' => t('Deletion scheduled for'),
           '#value' => format_date($delete, 'large'),
-          '#description' => t("The administrator has specified that archived recordings will be removed being posted for %interval. ", array('%interval' => format_interval($max_age)))
+          '#description' => t("The administrator has specified that archived recordings will be removed after being posted for %interval.", array('%interval' => format_interval($max_age)))
         );
       }
-      $form['station_archive']['permanent'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('In permanent archive'),
-        '#default_value' => $node->station_archive['permanent'],
-        '#description' => t("If this is checked, this recording will not be deleted during the Station Archive's clean up of old recordings.")
-      );
     }
   }
 }

@@ -263,8 +263,8 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
 
     switch ($op) {
       case 'prepare':
-        // reload the
-        if ('Reload Program' == $_POST['op']) {
+        // if they clicked the button, reload the program information
+        if (t('Reload Program') == $_POST['op']) {
           // use the create timestamp as the
           $gmt_timestamp = (integer) $node->created;
           // get a timestamp that's correct for the timezone
@@ -355,8 +355,7 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
  */
 function station_archive_form_alter($form_id, &$form) {
   // We only alter audio node edit forms
-  if ($form_id == $form['type']['#value'] .'_node_form') {
-
+  if ($form_id == 'audio_node_form') {
     $node = $form['#node'];
 
     if (isset($node->station_archive)) {
@@ -368,10 +367,6 @@ function station_archive_form_alter($form_id, &$form) {
         '#tree' => TRUE,
       );
       if (user_access('administer archive')) {
-        // insert a callback for us to process
-        $form['#process']['station_testing'] = array();
-
-
         $result = db_query('SELECT sap.program_nid AS nid, sap.title FROM {station_archive_program} sap ORDER BY sap.title');
         while ($obj = db_fetch_object($result)) {
           $options[$obj->nid] = $obj->title;
@@ -389,9 +384,13 @@ function station_archive_form_alter($form_id, &$form) {
           '#default_value' => $node->station_archive['permanent'],
           '#description' => t("If this is checked, this recording will not be deleted during the Station Archive's clean up of old recordings.")
         );
+        // put a reload button on the form so the admin can refresh program
+        // information that was retreived incorrectly or before changes were
+        // made to the schedule. this is processed in station_archive_nodeapi()
+        // under the $op == 'prepare'.
         $form['station_archive']['reload'] = array(
           '#type' => 'button',
-          '#value' => 'Reload Program',
+          '#value' => t('Reload Program'),
         );
       }
       $form['station_archive']['imported'] = array(
@@ -422,7 +421,7 @@ function station_archive_cron() {
   // permissions check and delete old audio nodes.
   global $user;
   $olduser = $user;
-  $user = user_load(array('uid'=>1));
+  $user = user_load(array('uid' => 1));
 
   if (variable_get('station_archive_cleanup_old', 1) == 1) {
     _station_archive_delete_old_nodes();
@@ -431,8 +430,7 @@ function station_archive_cron() {
     _station_archive_import_files();
   }
 
-  // make sure we restore the old user so we don't screw something else up in
-  // the cron run
+  // restore the old user so we don't screw something else up in the cron run
   $user = $olduser;
 }
 

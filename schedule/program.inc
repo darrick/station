@@ -11,7 +11,7 @@ function station_schedule_program_access($op, $node) {
       break;
 
     case 'update':
-      $djs =_station_schedule_program_load_djs($node->nid);
+      $djs = _station_schedule_program_load_djs($node->nid);
       // if they're a DJ, check they should be able to do it.
       if (isset($djs[$user->uid])) {
         return user_access('edit own program');
@@ -183,10 +183,8 @@ function station_schedule_program_insert($node) {
  * Delete a program.
  */
 function station_schedule_program_delete($node) {
-  if (user_access('administer schedule')) {
-    db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
-    db_query('DELETE FROM {station_program} WHERE nid = %d', $node->nid);
-  }
+  db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
+  db_query('DELETE FROM {station_program} WHERE nid = %d', $node->nid);
 }
 
 /**

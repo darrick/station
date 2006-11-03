@@ -59,8 +59,7 @@ function station_schedule_schedule_admin_list() {
       // display the schedule item
       $height = ($s->finish - $s->start);
       $program = node_load($s->program_nid);
-      $editurl = 'admin/schedule/edit/'. $s->sid;
-      $cell .= theme('station_schedule_admin_item', $s->start, $s->finish, $program->title, $editurl);
+      $cell .= theme('station_schedule_admin_item', $s->sid, $s->start, $s->finish, $program->title);
     }
     // any remaining time during the day
     if ($last_finish < $day_finish) {
@@ -74,33 +73,37 @@ function station_schedule_schedule_admin_list() {
   return theme('table', $cols, array($row), array('id' => 'station-sch', 'class' => 'station-sch-admin'));
 }
 
-function theme_station_schedule_admin_nonitem($start, $finish, $link = NULL) {
+function theme_station_schedule_admin_nonitem($start, $finish) {
   $class = 'station-sch-box station-sch-unscheduled';
   $height = ($finish - $start);
+  $link = "admin/schedule/add/0/{$start}/{$finish}";
+
   $output = "<div class='{$class}' style='height:{$height}px;'>";
-  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
+  $output .= '<div class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</div>';
   $output .= t('Unscheduled');
   $output .= "</div>\n";
-  if ($link) {
-    return l($output, $link, NULL, NULL, NULL, NULL, TRUE);
-  }
-  return $output;
+
+  return l($output, $link, NULL, NULL, NULL, NULL, TRUE);
 }
 
-function theme_station_schedule_admin_item($start, $finish, $title = '', $link = NULL) {
+function theme_station_schedule_admin_item($sid, $start, $finish, $title) {
   $class = 'station-sch-box station-sch-scheduled';
   $height = ($finish - $start);
+  $link = 'admin/schedule/edit/'. $sid;
+
   $output = "<div class='{$class}' style='height:{$height}px;'>";
-  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
+  $output .= '<div class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</div>';
   $output .= $title;
   $output .= "</div>\n";
-  if ($link) {
-    return l($output, $link, NULL, NULL, NULL, NULL, TRUE);
-  }
-  return $output;
+
+  return l($output, $link, NULL, NULL, NULL, NULL, TRUE);
 }
 
-function station_schedule_schedule_admin_form($op, $id = NULL) {
+/**
+ * @param $op 'add' or 'edit'
+ * @param $id when adding it's a program id. when editing, it's a schedule id.
+ */
+function station_schedule_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) {
   $post_op = $_POST['op'];
   if ($post_op == t('Cancel')) {
     drupal_goto('admin/schedule');
@@ -122,9 +125,9 @@ function station_schedule_schedule_admin_form($op, $id = NULL) {
       $program_title = $program->title;
     }
     $sch = new stdClass;
-    $sch->sid = 0;
-    $sch->start = 0;
-    $sch->finish = 60;
+    $sch->sid = $id;
+    $sch->start = (int) $start;
+    $sch->finish = (int) $finish;
   }
   else if ($op == 'edit') {
     if ($id && $sch = station_schedule_schedule_load($id)) {

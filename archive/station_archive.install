@@ -14,7 +14,9 @@ function station_archive_install() {
           `audio_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `imported` INTEGER UNSIGNED NOT NULL DEFAULT 0,
-          PRIMARY KEY(`audio_nid`, `program_nid`)
+          `permanent` int(2) UNSIGNED NOT NULL DEFAULT '0',
+          PRIMARY KEY(`audio_nid`, `program_nid`),
+          KEY `station_archive_cleanup` (`permanent`,`imported`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
       db_query("

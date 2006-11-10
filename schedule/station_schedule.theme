@@ -1,0 +1,39 @@
+<?php
+
+// $Id$
+
+/**
+ * Format the RSS link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_schedule_rss_link($url, $short = TRUE) {
+  $text = t('subscribe to podcast');
+  $title = t('Grab this show with your podcast software');
+  $path = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
+
+  $output = l(theme('image', $path, $text, $title), $url, NULL, NULL, NULL, TRUE, TRUE);
+  if (!$short) {
+    $output .= ' '. l($text, $url);
+  }
+  return $output;
+}
+
+/**
+ * Format the listen link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_schedule_listen_link($url, $short = true) {
+  $text = t('listen to previous');
+  $title = t('Listen to previous broadcasts of this show');
+  $path = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
+
+  $output = l(theme('image', $path, $text, $title), $url, NULL, NULL, NULL, TRUE, TRUE);
+  if (!$short) {
+    $output .= ' '. l($text, $url);
+  }
+  return $output;
+}

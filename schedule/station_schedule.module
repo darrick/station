@@ -1,0 +1,295 @@
+<?php
+
+define('STATION_SCHEDULE_CVS_ID', '$Id$');
+
+require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
+
+require_once(drupal_get_path('module', 'station_schedule') .'/schedule.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/program.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/playlist.inc');
+require_once(drupal_get_path('module', 'station_schedule') .'/station_schedule.theme');
+
+if (module_exist('views')) {
+  require_once(drupal_get_path('module', 'station_schedule') .'/views.inc');
+  require_once(drupal_get_path('module', 'station_schedule') .'/views_defaults.inc');
+}
+
+
+/**
+ * Display help and module information
+ * @param section which section of the site we're displaying help
+ * @return help text for section
+ */
+function station_schedule_help($section='') {
+  switch ($section) {
+    case 'admin/schedule':
+      return t('Use this page to make changes to the schedule. You can select which programs air at what time.');
+    case 'admin/modules#description':
+      return t('Module to allow radio station scheduling, programs, and playlists. <em>Requires the station and views modules.</em>');
+    case 'node/add#program':
+      return t('A radio program that you can schedule.');
+    case 'node/add#program_playlist':
+      return t("A playlist lets your listeners see a list of all the music played during a program. It also allows the music director to easily chart what's being played.");
+    case 'admin/settings/station/schedule':
+      return t("These settings allow you to configure the station's schedule.");
+    case 'station/schedule':
+      $output = '';
+      if (station_has_archive()) {
+        $output .= t('The %listen_img listen link will take you to the list of archived copies of a show. The %rss_img link will take you to an RSS feed of the archived copies suitable for podcasting.',
+          array(
+            '%listen_img' => theme('image', drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif', 'listen'),
+            '%rss_img' =>  theme('image', drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif', 'podcast'),
+          )
+        );
+      }
+      return $output;
+    default:
+      return null;
+  }
+}
+
+function station_schedule_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array('path' => 'admin/schedule',
+      'title' => t('schedule'),
+      'callback' => 'station_schedule_schedule_admin_list',
+      'access' => user_access('administer schedule'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+    $items[] = array('path' => 'admin/schedule/list',
+      'title' => t('list'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10
+    );
+    $items[] = array('path' => 'admin/schedule/add', 'title' => t('add new'),
+      'callback' => 'station_schedule_schedule_admin_form',
+      'callback arguments' => array('add'),
+      'type' => MENU_LOCAL_TASK,
+    );
+    $items[] = array('path' => 'admin/schedule/edit',
+      'title' => t('edit'),
+      'callback' => 'station_schedule_schedule_admin_form',
+      'callback arguments' => array('edit'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array('path' => 'admin/schedule/delete',
+      'title' => t('edit'),
+      'callback' => 'station_schedule_schedule_admin_delete',
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array('path' => 'admin/settings/station/schedule',
+      'title' => t('schedule'),
+      'callback' => 'station_schedule_admin_settings',
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_LOCAL_TASK
+    );
+
+
+    $items[] = array(
+      'path' => 'node/add/program',
+      'title' => t('program'),
+      'access' => user_access('administer schedule')
+    );
+    $items[] = array(
+      'path' => 'node/add/program_playlist',
+      'title' => t('program playlist'),
+      'access' => user_access('create playlists')
+    );
+
+    $items[] = array(
+      'path' => 'station/autocomplete/program',
+      'title' => t('program autocomplete'),
+      'callback' => 'station_schedule_program_autocomplete',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+    $items[] = array(
+      'path' => 'station/autocomplete/playlist',
+      'title' => t('playlist autocomplete'),
+      'callback' => 'station_schedule_playlist_autocomplete',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+
+    $items[] = array(
+      'path' => 'schedule',
+      'callback' => 'station_schedule_redirect_old',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+
+    $items[] = array(
+      'path' => 'station/schedule',
+      'title' => t('schedule'),
+      'callback' => 'station_schedule_schedule_today_page',
+      'access' => user_access('access content'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+    $items[] = array(
+      'path' => 'station/schedule/week',
+      'title' => t('Full week'),
+      'callback' => 'station_schedule_schedule_week_page',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+    );
+  }
+  else {
+    // days of the week schedule...
+    $today = station_today();
+    foreach (station_day_name() as $day => $dayname) {
+      $items[] = array(
+        'path' => 'station/schedule/' . strtolower($dayname),
+        'title' => t(substr($dayname, 0, 3)),
+        'callback' => 'station_schedule_schedule_day_page',
+        'callback arguments' => array($day),
+        'type' => ($today == $day) ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
+        'weight' => $day,
+      );
+    }
+  }
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_node_info().
+ */
+function station_schedule_node_info() {
+  return array(
+    'program' => array('name' => t('program'), 'base' => 'station_schedule_program'),
+    'program_playlist' => array('name' => t('program playlist'), 'base' => 'station_schedule_playlist'),
+  );
+}
+
+/**
+ * Valid permissions for this module
+ * @return array An array of valid permissions for the station module
+ */
+function station_schedule_perm() {
+  return array(
+    'create playlists',
+    'edit own playlists',
+    'edit own program',
+    'administer schedule',
+  );
+}
+
+function station_schedule_admin_settings() {
+  $form = array();
+
+  $form['station_schedule_increment'] = array(
+    '#type' => 'select',
+    '#title' => t('Time increment'),
+    '#default_value' => variable_get('station_schedule_increment', 60),
+    '#options' => array(15 => t('15 Minutes'), 30 => t('30 Minutes'), 60 => t('1 Hour')),
+    '#description' => t("This is the minimum increment that programs can be scheduled in. <strong>Watch out:</strong> Changing this to a larger value on an existing schedule will probably cause wierdness."),
+    '#required' => TRUE,
+  );
+
+  $form['module_cvs_id'] = array(
+    '#type' => 'item',
+    '#value' => '<pre>'. STATION_SCHEDULE_CVS_ID .'</pre>',
+  );
+
+  return system_settings_form('station_schedule_admin_settings', $form);
+}
+
+/**
+ * Implementation of hook_link().
+ *
+ * This is implemented so that an edit link is displayed for users who have
+ * the rights to edit a node.
+ */
+function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
+  $links = array();
+
+  if ($type == 'node') {
+    switch ($node->type) {
+      case 'program':
+        if ($teaser) {
+          if ($playlists = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} WHERE program_nid = %d", $node->nid))) {
+            $links[] = l('view playlists', 'station/playlists/'. $node->nid);
+          }
+        }
+        $links = array_merge($links, station_listen_links($node));
+
+        break;
+
+      case 'program_playlist':
+        if ($teaser) {
+          $links[] = l('view program', 'node/'. $node->program_nid);
+        }
+        else {
+          $program = node_load($node->program_nid);
+          if ($program->nid) {
+            $links = array_merge($links, station_listen_links($program));
+          }
+        }
+        break;
+    }
+  }
+
+  return $links;
+}
+
+
+/**
+ * Implements hook_user() to associate programs with the users.
+ */
+function station_schedule_user($op, &$edit, &$user, $category = NULL) {
+  switch ($op) {
+  case 'load':
+    // load the dj's programs.
+    $user->programs = array();
+    $result = db_query('SELECT n.nid, n.title FROM {node} n INNER JOIN {station_dj} d ON n.nid = d.program_nid WHERE d.uid = %d ORDER BY n.title', $user->uid);
+    while ($program = db_fetch_object($result)) {
+      $user->programs[$program->nid] = $program->title;
+    }
+    break;
+  case 'view':
+    if ($user->programs) {
+      foreach($user->programs as $nid => $title) {
+        $node = node_load($nid);
+        station_schedule_program_view($node, TRUE);
+        $items[] = array('title' => l($title, 'node/' . $nid),
+          'value' => $node->teaser,
+          'class' => 'program',
+        );
+      }
+      return array(t('Programs') => $items);
+    }
+    break;
+  case 'delete':
+    db_query('DELETE FROM {station_dj} WHERE uid = %d', $user->uid);
+    break;
+  }
+}
+
+
+/**
+ * Implementation of hook_xmlrpc().
+ */
+function station_schedule_xmlrpc() {
+  return array(
+    array(
+      'station.program.get.at',
+      'station_schedule_program_get_at',
+      array('array', 'int'),
+      t('Fetch info on the program playing at a day/hour of a given timestamp.')
+    ),
+  );
+}
+
+/**
+ * Function to redirect old /schedule/* links to /station/schedule/*
+ */
+function station_schedule_redirect_old($day = '', $hour = '') {
+  $path = 'station/schedule';
+  if ($day) {
+    $path .= "/$day";
+    if ($hour) {
+      $path .= "/$hour";
+    }
+  }
+  drupal_goto($path);
+}

@@ -15,20 +15,25 @@
  * version 1.61.17 or higher be installed (we use the --quite option)
  */
 
+// Make sure we're being run from the command line.
+if (isset($_SERVER['REMOTE_ADDR'])) {
+  exit("This script must be called from the command line.\n");
+}
+
 // Load our settings from the ripper.ini file.
 $settings = parse_ini_file(dirname(__FILE__) .'/ripper.ini');
 
 // Check that the import directory is writable.
 $import_dir = $settings['import_path'];
 if (!is_dir($import_dir) || !is_writable($import_dir)) {
-  exit("Cannot write to the import directory '$import_dir'");
+  exit("Cannot write to the import directory '$import_dir'.\n");
 }
 
 // Make sure we can find stream ripper. The is_executable() test might not work
 // with PHP4 and Windows. Upgrade! PHP 5.1 is great.
 $streamripper = $settings['streamripper_path'];
 if (!file_exists($streamripper) || !is_executable($streamripper)) {
-  exit("Couldn't find the stream ripper executable at '$streamripper'");
+  exit("Couldn't find the stream ripper executable at '$streamripper'.\n");
 }
 
 // Determine when we're starting, when we should end and convert that to a

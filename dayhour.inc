@@ -64,7 +64,7 @@ function station_valid_day($day) {
 /**
  * Return an array of the names of the days of the week.
  *
- * @param integer optional day of the week
+ * @param integer optional day of the week. Sunday = 0
  * @return array|string array if $index isn't specified
  */
 function station_day_name($day = null) {
@@ -81,7 +81,7 @@ function station_day_name($day = null) {
   if ($day === null) {
     return $days;
   } else {
-    return $days[$day];
+    return $days[$day % 7];
   }
 }
 
@@ -125,18 +125,10 @@ function station_day_from_minute($minute) {
   return (int) (($minute) / 1440);
 }
 
-/**
- * Hour of the day from minutes.
- * @param $minutes since midnight sunday
- * @return day of the week
- */
-function station_hour_from_minute($minute) {
-  return (int) (($minute % 1440) / 60);
-}
 
 function station_time_from_minute($minutes) {
   $min = $minutes % 60;
-  $day = (int) (($minutes - $min) / 1400);
+  $day = (int) (($minutes) / 1440);
   $hour24 = (int) (($minutes % 1440) / 60);
   if (!($hour12 = $hour24 % 12)) {
     $hour12 = 12;
@@ -167,6 +159,12 @@ function station_time_from_minute($minutes) {
 function theme_station_dayhour_range($start, $finish) {
   $start = station_time_from_minute($start);
   $finish = station_time_from_minute($finish);
+  $format_params = array(
+    '%sday' => station_day_name($start['w']), '%shour' => $start['g'],
+    '%stime' => $start['time'], '%sampm' => $start['a'],
+    '%fday' => station_day_name($finish['w']), '%fhour' => $finish['g'],
+    '%ftime' => $finish['time'], '%fampm' => $finish['a'],
+  );
 
   // same day
   if ($start['w'] == $finish['w']) {
@@ -181,14 +179,7 @@ function theme_station_dayhour_range($start, $finish) {
   else {
     $format = '%sday %stime%sampm-%fday %ftime%fampm';
   }
-  return t($format,
-    array(
-      '%sday' => station_day_name($start['w']), '%shour' => $start['g'],
-      '%stime' => $start['time'], '%sampm' => $start['a'],
-      '%fday' => station_day_name($finish['w']), '%fhour' => $finish['g'],
-      '%ftime' => $finish['time'], '%fampm' => $finish['a'],
-    )
-  );
+  return t($format, $format_params);
 }
 
 /**
@@ -202,6 +193,10 @@ function theme_station_dayhour_range($start, $finish) {
 function theme_station_hour_range($start, $finish) {
   $start = station_time_from_minute($start);
   $finish = station_time_from_minute($finish);
+  $format_params = array(
+    '%stime' => $start['time'], '%sampm' => $start['a'],
+    '%ftime' => $finish['time'], '%fampm' => $finish['a'],
+  );
 
   if ($start['a'] == $finish['a']) {
     $format = '%stime-%ftime%sampm';
@@ -209,10 +204,5 @@ function theme_station_hour_range($start, $finish) {
   else {
     $format = '%stime%sampm-%ftime%fampm';
   }
-  return t($format,
-    array(
-      '%stime' => $start['time'], '%sampm' => $start['a'],
-      '%ftime' => $finish['time'], '%fampm' => $finish['a'],
-    )
-  );
+  return t($format, $format_params);
 }

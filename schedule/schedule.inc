@@ -115,9 +115,10 @@ function station_schedule_schedule_admin_form($op, $id = NULL, $start = 0, $fini
   $day_options = station_day_name();
   $minute_options = array();
   $increment = variable_get('station_schedule_increment', 60);
-  for ($minute = 0; $minute < 24 * 60; $minute += $increment) {
-    $time = station_time_from_minute($minute);
-    $minute_options[$minute] = $time['H'] .':'. $time['i'];
+  for ($minute = 0; $minute <= 24 * 60; $minute += $increment) {
+    $h = str_pad((int) ($minute / 60), 2, '0', STR_PAD_LEFT);
+    $i = str_pad($minute % 60, 2, '0', STR_PAD_LEFT);
+    $minute_options[$minute] = $h .':'. $i;
   }
 
   if ($op == 'add') {

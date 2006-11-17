@@ -186,7 +186,8 @@ function _station_archive_browse_block() {
 
 
 function station_archive_admin_settings() {
-  $ageoptions = drupal_map_assoc(array(86400, 172800, 259200, 345600, 432000, 518400, 604800, 1209600, 1814400, 2419200, 3024000, 3628800, 4233600), 'format_interval');
+  $times = array(86400, 172800, 259200, 345600, 432000, 518400, 604800, 1209600, 1814400, 2419200, 3024000, 3628800, 4233600, 4838400, 5443200, 6048000);
+  $ageoptions = drupal_map_assoc($times, 'format_interval');
 
   $form['station_archive_import'] = array(
     '#type' => 'fieldset',

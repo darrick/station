@@ -1,5 +1,5 @@
-; These are the settings for the stream ripper script.
 ; $Id$
+; These are the settings for the stream ripper script.
 
 ; Complete URL of webstream to rip
 stream_url = "http://127.0.0.1:8000/high"

@@ -21,26 +21,30 @@ if (isset($_SERVER['REMOTE_ADDR'])) {
 }
 
 // Load our settings from the ripper.ini file.
-$settings = parse_ini_file(dirname(__FILE__) .'/ripper.ini');
+$inifile = realpath(dirname(__FILE__) .'/ripper.inc');
+if (!file_exists($inifile)) {
+  exit("Cannot read the ripper.inc file from {$inifile}.\n");
+}
+$settings = parse_ini_file($inifile);
 
 // Check that the import directory is writable.
-$import_dir = $settings['import_path'];
+$import_dir = realpath($settings['import_path']);
 if (!is_dir($import_dir) || !is_writable($import_dir)) {
-  exit("Cannot write to the import directory '$import_dir'.\n");
+  exit("Cannot write to the import directory '{$import_dir}'.\n");
 }
 
 // Make sure we can find stream ripper. The is_executable() test might not work
 // with PHP4 and Windows. Upgrade! PHP 5.1 is great.
-$streamripper = $settings['streamripper_path'];
+$streamripper = realpath($settings['streamripper_path']);
 if (!file_exists($streamripper) || !is_executable($streamripper)) {
-  exit("Couldn't find the stream ripper executable at '$streamripper'.\n");
+  exit("Couldn't find the stream ripper executable at '{$streamripper}'.\n");
 }
 
 // Determine when we're starting, when we should end and convert that to a
 // length of time in seconds.
 $startTime = roundToNearestHour(time());
 $endTime = $startTime + 3600;
-$length = ($endTime - time()) + $settings['overlap_seconds'];
+$length = ($endTime - time()) + (int) $settings['overlap_seconds'];
 
 // Download the stream
 $stream_url = $settings['stream_url'];
@@ -48,7 +52,10 @@ exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$sta
 
 // stream ripper creates the .cue file. we'll use its absence as a signal
 // to the module that it's safe to import a file.
-unlink("{$import_dir}/{$startTime}.cue");
+$cuefile = "{$import_dir}/{$startTime}.cue";
+if (file_exists($cuefile)) {
+  unlink($cuefile);
+}
 
 exit(0);
 

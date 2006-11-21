@@ -1,0 +1,5 @@
+; $Id$
+name = Station Schedule
+description = Module to allow radio station scheduling and playlists.
+dependencies = station views station_program
+package = Station

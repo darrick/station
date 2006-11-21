@@ -1,0 +1,30 @@
+<?php
+
+// $Id$
+
+/**
+ * Install the initial schema.
+ */
+function station_program_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("
+        CREATE TABLE {station_program} (
+          `nid` int(10) unsigned NOT NULL default '0',
+          `vid` int(10) unsigned NOT NULL default '0',
+          `genre` varchar(200) NOT NULL default '',
+          `url` varchar(255) default NULL ,
+          PRIMARY KEY  (`nid`,`vid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      break;
+  }
+}
+
+/**
+ * Empty update to set a schema number for Drupal 5.0.
+ */
+function station_program_update_100() {
+  return array();
+}

@@ -20,3 +20,10 @@ function _station_var_rename($from, $to) {
   }
   variable_del($from);
 }
+
+/**
+ * Empty update to set a schema number for Drupal 5.0.
+ */
+function station_update_100() {
+  return array();
+}

@@ -160,24 +160,24 @@ function theme_station_dayhour_range($start, $finish) {
   $start = station_time_from_minute($start);
   $finish = station_time_from_minute($finish);
   $format_params = array(
-    '%sday' => station_day_name($start['w']), '%shour' => $start['g'],
-    '%stime' => $start['time'], '%sampm' => $start['a'],
-    '%fday' => station_day_name($finish['w']), '%fhour' => $finish['g'],
-    '%ftime' => $finish['time'], '%fampm' => $finish['a'],
+    '@sday' => station_day_name($start['w']), '@shour' => $start['g'],
+    '@stime' => $start['time'], '@sampm' => $start['a'],
+    '@fday' => station_day_name($finish['w']), '@fhour' => $finish['g'],
+    '@ftime' => $finish['time'], '@fampm' => $finish['a'],
   );
 
   // same day
   if ($start['w'] == $finish['w']) {
     // same am pm
     if ($start['a'] == $finish['a']) {
-      $format = '%sday %stime-%ftime%sampm';
+      $format = '@sday @stime-@ftime@sampm';
     }
     else {
-      $format = '%sday %stime%sampm-%ftime%fampm';
+      $format = '@sday @stime@sampm-@ftime@fampm';
     }
   }
   else {
-    $format = '%sday %stime%sampm-%fday %ftime%fampm';
+    $format = '@sday @stime@sampm-@fday @ftime@fampm';
   }
   return t($format, $format_params);
 }
@@ -194,15 +194,15 @@ function theme_station_hour_range($start, $finish) {
   $start = station_time_from_minute($start);
   $finish = station_time_from_minute($finish);
   $format_params = array(
-    '%stime' => $start['time'], '%sampm' => $start['a'],
-    '%ftime' => $finish['time'], '%fampm' => $finish['a'],
+    '@stime' => $start['time'], '@sampm' => $start['a'],
+    '@ftime' => $finish['time'], '@fampm' => $finish['a'],
   );
 
   if ($start['a'] == $finish['a']) {
-    $format = '%stime-%ftime%sampm';
+    $format = '@stime-@ftime@sampm';
   }
   else {
-    $format = '%stime%sampm-%ftime%fampm';
+    $format = '@stime@sampm-@ftime@fampm';
   }
   return t($format, $format_params);
 }

@@ -219,3 +219,10 @@ function station_schedule_update_7() {
   }
   return $ret;
 }
+
+/**
+ * Empty update to set a schema number for Drupal 5.0.
+ */
+function station_schedule_update_100() {
+  return array();
+}

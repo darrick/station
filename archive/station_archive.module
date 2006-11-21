@@ -4,15 +4,13 @@ define('STATION_ARCHIVE_CVS_ID', '$Id$');
 
 require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
 
-if (module_exist('views')) {
+if (module_exists('views')) {
   require_once(drupal_get_path('module', 'station_archive') .'/views.inc');
   require_once(drupal_get_path('module', 'station_archive') .'/views_defaults.inc');
 }
 
 function station_archive_help($section = '') {
   switch ($section) {
-    case 'admin/modules#description':
-      return t("Provides an archive of the station's webstream. <em>Requires the audio, station, taxonomy, views and views_rss modules.</em>");
     case 'admin/settings/station/archive':
       return t("These settings let you configure the way the station's webstream is archived into audio nodes. Audio is imported into the archive as part of Drupal's cron task. You'll need to ensure that that is properly configured. ");
     default:
@@ -23,9 +21,10 @@ function station_archive_help($section = '') {
 function station_archive_menu($may_cache) {
   $items = array();
   if ($may_cache) {
+    // legacy menus, views is where it's at now...
     $items[] = array(
       'path' => 'last',
-      'title' => t('show archive'),
+      'title' => t('Show archive'),
       'callback' => 'station_archive_view_html',
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK,
@@ -36,10 +35,9 @@ function station_archive_menu($may_cache) {
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK,
     );
-
     $items[] = array(
       'path' => 'rss',
-      'title' => t('rss show archive'),
+      'title' => t('RSS show archive'),
       'callback' => 'station_archive_view_rss',
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK,
@@ -50,10 +48,12 @@ function station_archive_menu($may_cache) {
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK,
     );
+    // end legacy menu items
 
     $items[] = array('path' => 'admin/settings/station/archive',
-      'title' => t('archive'),
-      'callback' => 'station_archive_admin_settings',
+      'title' => t('Archive'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_archive_admin_settings'),
       'access' => user_access('administer site configuration'),
       'type' => MENU_LOCAL_TASK
     );
@@ -253,7 +253,7 @@ function station_archive_admin_settings() {
     '#value' => '<pre>'. STATION_ARCHIVE_CVS_ID .'</pre>',
   );
 
-  return system_settings_form('station_archive_admin_settings', $form);
+  return system_settings_form($form);
 }
 
 /**

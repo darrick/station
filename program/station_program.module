@@ -1,0 +1,191 @@
+<?php
+
+define('STATION_PROGRAM_CVS_ID', '$Id$');
+
+if (module_exists('views')) {
+  require_once(drupal_get_path('module', 'station_program') .'/views.inc');
+  require_once(drupal_get_path('module', 'station_program') .'/views_defaults.inc');
+}
+
+function station_program_help($section='') {
+  switch ($section) {
+    case 'admin/settings/station/program':
+      return t("These settings allow you to configure the station's program node.");
+    default:
+      return null;
+  }
+}
+
+function station_program_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/station/program',
+      'title' => t('Program'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_program_admin_settings'),
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_LOCAL_TASK
+    );
+  }
+  return $items;
+}
+
+function station_program_node_info() {
+  return array(
+    'program' => array(
+      'name' => t('Program'),
+      'module' => 'station_program',
+      'description' => t('A radio program that you can schedule.'),
+    )
+  );
+}
+
+function station_program_perm() {
+  return array(
+    'edit own program',
+    'administer programs',
+  );
+}
+
+function station_program_admin_settings() {
+  $form = array();
+  $form['station_program_no_settings'] = array(
+    '#type' => 'item',
+    '#value' => t('Currently, there are no settings for this module.'),
+  );
+  $form['module_cvs_id'] = array(
+    '#type' => 'item',
+    '#value' => '<pre>'. STATION_PROGRAM_CVS_ID .'</pre>',
+  );
+  return system_settings_form($form);
+}
+
+
+function station_program_access($op, $node) {
+  global $user;
+
+  switch ($op) {
+    case 'view':
+      return user_access('access content');
+      break;
+
+    case 'update':
+      // TODO: figure out how to allow the schedule's decide who can edit...
+      $djs = _station_schedule_program_load_djs($node->nid);
+      // if they're a DJ, check they should be able to do it.
+      if (isset($djs[$user->uid])) {
+        return user_access('edit own program');
+      }
+      break;
+
+    case 'delete':
+    case 'create':
+    default:
+      return user_access('administer programs');
+  }
+}
+
+function station_program_form(&$node) {
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => $node->title,
+    '#required' =>  TRUE,
+    '#maxlength' =>  128,
+    '#description' => t('The name of the program. You should avoid making major changes to this without telling the programming director.'),
+  );
+  $form['genre'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Text genre'),
+    '#description' => t('A free-form description of the musical genres played on the program.'),
+    '#default_value' => $node->genre,
+    '#required' =>  true,
+    '#maxlength' => 200,
+    '#weight' => -2,
+  );
+  $form['url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Homepage URL'),
+    '#description' => t("Link to the program's website."),
+    '#default_value' => $node->url,
+    '#maxlength' =>  255,
+    '#weight' => -1,
+  );
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Body'),
+    '#default_value' => $node->body,
+    '#rows' => 10,
+    '#required' => TRUE,
+    '#description' => t("Free form description of the show."),
+  );
+  $form['body_filter']['format'] = filter_form($node->format);
+
+  return $form;
+}
+
+function station_program_validate(&$node) {
+  // check the url
+  if ($node->url) {
+    if (!valid_url($node->url)) {
+      form_set_error('url', t('You need to provide a valid URL.'));
+    }
+  }
+}
+
+function station_program_submit(&$node) {
+  // make a copy of the djs and put them back in the expected form
+  $djs = $node->djs;
+  $node->djs = array();
+  foreach ($djs as $key => $dj) {
+    if ($dj['username']) {
+      $user = user_load(array('name' => $dj['username']));
+      if ($user->uid) {
+        $node->djs[$user->uid] = $user->name;
+      }
+    }
+  }
+}
+
+function station_program_load($node) {
+  return db_fetch_object(db_query('SELECT genre, url FROM {station_program} WHERE vid = %d', $node->vid));
+}
+
+function station_program_insert($node) {
+  db_query("INSERT INTO {station_program} (nid, vid, genre, url) VALUES (%d, %d, '%s', '%s')", $node->nid, $node->vid, $node->genre, $node->url);
+}
+
+function station_program_delete($node) {
+  db_query('DELETE FROM {station_program} WHERE nid = %d', $node->nid);
+}
+
+function station_program_update($node) {
+  db_query("UPDATE {station_program} SET genre = '%s', url = '%s' WHERE vid = %d", $node->genre, $node->url, $node->vid);
+}
+
+function station_program_view(&$node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+  if ($teaser) {
+    $node->content['genre'] = array(
+      '#value' => $node->genre,
+      '#weight' => 0,
+    );
+  }
+  else {
+    $node->content['genre'] = array(
+      '#type' => 'item',
+      '#title' => t('Genre'),
+      '#value' => $node->genre,
+      '#weight' => -6,
+    );
+    if ($node->url) {
+      $node->content['homepage'] = array(
+        '#type' => 'item',
+        '#title' => t('Homepage'),
+        '#value' => l($node->url, $node->url),
+        '#weight' => 1,
+      );
+    }
+  }
+  return $node;
+}

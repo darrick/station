@@ -2,7 +2,7 @@
 
 // $Id$
 
-function station_schedule_views_default_views() {
+function station_playlist_views_default_views() {
   $view = new stdClass();
   $view->name = 'station_schedule_playlists';
   $view->description = 'Playlists';
@@ -24,7 +24,7 @@ function station_schedule_views_default_views() {
   $view->use_pager = TRUE;
   $view->nodes_per_page = '20';
   $view->menu = TRUE;
-  $view->menu_title = 'Playlists';
+  $view->menu_title = 'playlists';
   $view->menu_tab = FALSE;
   $view->menu_tab_default = FALSE;
   $view->menu_tab_weight = '0';

@@ -1,8 +1,123 @@
 <?php
 
-// $Id$
+define('STATION_PLAYLIST_CVS_ID', '$Id$');
 
-function station_schedule_playlist_access($op, $node) {
+if (module_exists('views')) {
+  require_once(drupal_get_path('module', 'station_playlist') .'/views.inc');
+  require_once(drupal_get_path('module', 'station_playlist') .'/views_defaults.inc');
+}
+
+
+/**
+ * Display help and module information
+ * @param section which section of the site we're displaying help
+ * @return help text for section
+ */
+function station_playlist_help($section='') {
+  switch ($section) {
+    case 'admin/settings/station/playlist':
+      return t("These settings allow you to configure the playlist node.");
+    default:
+      return null;
+  }
+}
+
+function station_playlist_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'station/autocomplete/playlist',
+      'title' => t('Playlist Autocomplete'),
+      'callback' => 'station_playlist_autocomplete',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+  return $items;
+}
+
+function station_playlist_node_info() {
+  return array(
+    'station_playlist' => array(
+      'name' => t('Program Playlist'),
+      'module' => 'station_playlist',
+      'description' => t("A playlist lets your listeners see a list of all the music played during a program. It also allows the music director to easily chart what's being played."),
+    )
+  );
+}
+
+/**
+ * Valid permissions for this module
+ * @return array An array of valid permissions for the station module
+ */
+function station_playlist_perm() {
+  return array(
+    'create playlists',
+    'edit own playlists',
+  );
+}
+
+function station_playlist_admin_settings() {
+  $form = array();
+
+  $form['module_cvs_id'] = array(
+    '#type' => 'item',
+    '#value' => '<pre>'. STATION_PLAYLIST_CVS_ID .'</pre>',
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implementation of hook_link().
+ *
+ * This is implemented so that an edit link is displayed for users who have
+ * the rights to edit a node.
+ */
+function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
+  $links = array();
+
+  if ($type == 'node') {
+    switch ($node->type) {
+      case STATION_PROGRAM_NODE_TYPE:
+        if ($result = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} sp WHERE sp.program_nid = %d", $node->nid))) {
+          $links['station_station_playlist_view'] = array(
+            'title' => t('View all playlists'),
+            'href' => 'station/playlists/'. $node->nid,
+          );
+        }
+
+        if ($teaser) {
+        }
+        else {
+          if (node_access('update', $node)) {
+            $links['station_station_playlist_add'] = array(
+              'title' => t('Add new playlist'),
+              'href' => 'node/add/station_playlist/'. $node->nid,
+            );
+          }
+        }
+        break;
+
+      case 'station_playlist':
+        $links['station_program_program_view'] = array(
+          'title' => t('View program'),
+          'href' => 'node/'. $node->program_nid,
+        );
+
+        if (!$teaser) {
+          $program = node_load($node->program_nid);
+          if ($program->nid) {
+            $links = array_merge($links, station_listen_links($program));
+          }
+        }
+        break;
+    }
+  }
+  return $links;
+}
+
+
+function station_playlist_access($op, $node) {
   global $user;
 
   if (user_access('administer schedule')) {
@@ -31,9 +146,19 @@ function station_schedule_playlist_access($op, $node) {
 /**
  * Build a form for playlist nodes.
  */
-function station_schedule_playlist_form(&$node) {
+function station_playlist_form(&$node) {
+  // if this is a new node (with no nid) and we've got a numeric argument,
+  // assume that's the program we should attach to.
+  if (!$node->nid && is_numeric(arg(3))) {
+    $node->program_nid = (int) arg(3);
+  }
+
+  // make sure we've got a valid program title
   if (!isset($node->program_title) && isset($node->program_nid)) {
-    $program = node_load($node->program_nid);
+    $program = node_load(array(
+      'nid' => $node->program_nid,
+      'type' => STATION_PROGRAM_NODE_TYPE
+    ));
     $node->program_title = $program->title;
   }
 
@@ -43,10 +168,9 @@ function station_schedule_playlist_form(&$node) {
     '#default_value' => $node->program_title,
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program',
-    '#required' => TRUE,
-    '#description' => t('The name of the program. If you filled in for someone else, enter the name of their show.'),
+    '#required' => FALSE,
+    '#description' => t('The name of the program. If you filled in for someone else, enter the name of their program.'),
   );
-
   $form['program_date'] = array(
     '#type' => 'date',
     '#title' => t('Program date'),
@@ -54,13 +178,20 @@ function station_schedule_playlist_form(&$node) {
     '#required' => TRUE,
     '#description' => t('The date the program aired.'),
   );
-
   $form['tracks'] = array(
     '#type' => 'fieldset', '#title' => t('Tracks'),
     '#tree' => TRUE, '#collapsible' => FALSE, '#weight'=>1,
-    '#theme' => 'station_schedule_playlist_track_form',
+    '#theme' => 'station_playlist_track_form',
     '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
   );
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Description'),
+    '#default_value' => $node->body,
+    '#rows' => 5,
+  );
+  $form['body_filter']['format'] = filter_form($node->format);
+
 
   $blanks = 10;
   $weight = 0;
@@ -118,29 +249,20 @@ function station_schedule_playlist_form(&$node) {
     $weight++;
   }
 
-  $form['body_filter']['body'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Description'),
-    '#default_value' => $node->body,
-    '#rows' => 5,
-    '#required' => FALSE,
-  );
-  $form['body_filter']['format'] = filter_form($node->format);
-
   return $form;
 }
 
-function theme_station_schedule_playlist_track_form($form) {
+function theme_station_playlist_track_form($form) {
   $header = array(t('Artist'), t('Title'), t('Album'), t('Label'), t('Weight'));
 
   $rows = array();
   foreach (element_children($form) as $key) {
     $row = array();
-    $row[] = form_render($form[$key]['artist']);
-    $row[] = form_render($form[$key]['title']);
-    $row[] = form_render($form[$key]['album']);
-    $row[] = form_render($form[$key]['label']);
-    $row[] = form_render($form[$key]['weight']);
+    $row[] = drupal_render($form[$key]['artist']);
+    $row[] = drupal_render($form[$key]['title']);
+    $row[] = drupal_render($form[$key]['album']);
+    $row[] = drupal_render($form[$key]['label']);
+    $row[] = drupal_render($form[$key]['weight']);
     $rows[] = $row;
   }
 
@@ -151,14 +273,14 @@ function theme_station_schedule_playlist_track_form($form) {
     $output = theme('table', $header, $rows);
   }
 
-  return $output . form_render($form);
+  return $output . drupal_render($form);
 }
 
 // use this hook to convert form elements to node values
-function station_schedule_playlist_validate(&$node) {
+function station_playlist_validate(&$node) {
   // convert the programs title into a node id
   if (isset($node->program_title)) {
-    $prog = node_load(array('type' => 'program', 'title' => $node->program_title));
+    $prog = node_load(array('type' => STATION_PROGRAM_NODE_TYPE, 'title' => $node->program_title));
     if ($prog) {
       $node->program_nid = $prog->nid;
     }
@@ -179,10 +301,10 @@ function station_schedule_playlist_validate(&$node) {
   }
 }
 
-function station_schedule_playlist_submit(&$node) {
+function station_playlist_submit(&$node) {
   // convert the programs title into a node id
   if (isset($node->program_title)) {
-    if ($prog = node_load(array('type' => 'program', 'title' => $node->program_title))) {
+    if ($prog = node_load(array('type' => STATION_PROGRAM_NODE_TYPE, 'title' => $node->program_title))) {
       $node->program_nid = $prog->nid;
     }
   }
@@ -197,7 +319,7 @@ function station_schedule_playlist_submit(&$node) {
 /**
  * Load a playlist.
  */
-function station_schedule_playlist_load($node) {
+function station_playlist_load($node) {
   // id and time
   $extras = db_fetch_object(db_query('SELECT program_nid, timestamp FROM {station_playlist} WHERE nid = %d', $node->nid));
 
@@ -225,7 +347,7 @@ function station_schedule_playlist_load($node) {
 /**
  * Insert a new playlist
  */
-function station_schedule_playlist_insert($node) {
+function station_playlist_insert($node) {
   db_query("INSERT INTO {station_playlist} (nid, program_nid, timestamp) VALUES (%d, %d, %d)", $node->nid, $node->program_nid, $node->timestamp);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
@@ -238,7 +360,7 @@ function station_schedule_playlist_insert($node) {
 /**
  * Delete a playlist.
  */
-function station_schedule_playlist_delete($node) {
+function station_playlist_delete($node) {
   db_query('DELETE FROM {station_playlist} WHERE nid = %d', $node->nid);
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
 }
@@ -246,7 +368,7 @@ function station_schedule_playlist_delete($node) {
 /**
  * Update a playlist.
  */
-function station_schedule_playlist_update($node) {
+function station_playlist_update($node) {
   db_query("UPDATE {station_playlist} SET program_nid = %d, timestamp= %d WHERE nid = %d", $node->program_nid, $node->timestamp, $node->nid);
   // delete and re-add tracks
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
@@ -261,30 +383,36 @@ function station_schedule_playlist_update($node) {
 /**
  * Get a playlist ready for viewing.
  */
-function station_schedule_playlist_view(&$node, $teaser = false, $page = false) {
+function station_playlist_view(&$node, $teaser = false, $page = false) {
   $node = node_prepare($node, $teaser);
 
   if ($page) {
     $breadcrumb = array(
-      array('path' => 'station/programs', 'title' => t('programs')),
+      array('path' => 'station/programs', 'title' => t('Programs')),
       array('path' => 'node/'. $node->program_nid, 'title' => $node->program_title),
-      array('path' => 'station/playlists/'. $node->program_nid, 'title' => t('playlists')),
-      array('path' => 'node/'. $node->nid, 'title' => t('playlist')),
+      array('path' => 'station/playlists/'. $node->program_nid, 'title' => t('Playlists')),
+      array('path' => 'node/'. $node->nid),
     );
     menu_set_location($breadcrumb);
   }
 
-  if ($teaser) {
-    if (!$node->body) {
-      $node->teaser = t('%trackcount tracks', array('%trackcount' => count($node->tracks)));
-    }
-  } else {
+  if (!$teaser) {
     if (count($node->tracks) > 0) {
-      foreach ((array) $node->tracks as $track) {
-        $hasAlbum = ($track['album']) ? TRUE : $hasAlbum;
-        $hasLabel = ($track['label']) ? TRUE : $hasLabel;
-      }
       $rows = array();
+      // make one pass to figure out what fields we've got...
+      $hasAlbum = $hasLabel = FALSE;
+      foreach ((array) $node->tracks as $track) {
+        $hasAlbum |= (bool) ($track['album']);
+        $hasLabel |= (bool) ($track['label']);
+      }
+      $header = array(t('Artist'), t('Title'));
+      if ($hasAlbum) {
+        $header[] = t('Album');
+      }
+      if ($hasLabel) {
+        $header[] = t('Label');
+      }
+      // ...then put the into the table
       foreach ((array) $node->tracks as $track) {
         if ($track['artist'] || $track['title']) {
           $row = array($track['artist'], $track['title']);
@@ -297,24 +425,70 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
           $rows[] = $row;
         }
       }
-      $header = array(t('Artist'), t('Title'));
-      if ($hasAlbum) {
-        $header[] = t('Album');
-      }
-      if ($hasLabel) {
-        $header[] = t('Label');
-      }
 
-      $node->body .= theme('table', $header, $rows);
+      $node->content['tracks'] = array(
+        '#value' => theme('table', $header, $rows),
+        '#title' => 'Tracks',
+        '#weight' => 0,
+      );
+    }
+  }
+  return $node;
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
+  if ($node->type == STATION_PROGRAM_NODE_TYPE){
+    switch ($op) {
+      case 'view':
+        if (!$teaser) {
+          // playlists
+          $time = time();
+          $time_format = 'F j, Y';
+
+          // pull all future playlists
+          $future_lists = array();
+          $result = db_query('SELECT p.nid, p.timestamp FROM {station_playlist} p INNER JOIN {node} n ON p.program_nid = n.nid WHERE n.status = 1 AND p.program_nid = %d AND p.timestamp > %d ORDER BY timestamp', $node->nid, $time);
+          while ($playlist = db_fetch_object($result)) {
+            $future_lists[] = l(format_date($playlist->timestamp, 'custom', $time_format, 0), 'node/'. $playlist->nid);
+          }
+          if ($future_lists) {
+            $node->content['playlists_future'] = array(
+              '#type' => 'item',
+              '#value' => '<ul><li>'. implode('</li><li>', $future_lists) .'</li></ul>',
+              '#title' => 'Upcoming shows',
+              '#weight' => 1,
+            );
+          }
+
+          // pull N recent playlists
+          $past_lists = array();
+          $result = db_query_range('SELECT p.nid, p.timestamp FROM {station_playlist} p INNER JOIN {node} n ON p.program_nid = n.nid WHERE n.status = 1 AND p.program_nid = %d AND p.timestamp < %d ORDER BY timestamp DESC', $node->nid, $time, 0, 5);
+          while ($playlist = db_fetch_object($result)) {
+            $past_lists[] = l(format_date($playlist->timestamp, 'custom', $time_format, 0), 'node/'. $playlist->nid);
+          }
+          if ($past_lists) {
+            $node->content['playlists_past'] = array(
+              '#type' => 'item',
+              '#value' => '<ul><li>'. implode('</li><li>', $past_lists) .'</li></ul>',
+              '#title' => 'Previous shows',
+              '#weight' => 2,
+            );
+          }
+        }
+        break;
     }
   }
 }
+
 
 /**
  * Retrieve a pipe delimited string of autocomplete suggestions for playlist
  * items.
  */
-function station_schedule_playlist_autocomplete($field = '', $string = '') {
+function station_playlist_autocomplete($field = '', $string = '') {
   $matches = array();
   if (in_array($field, array('artist', 'title', 'album', 'label'))) {
     $result = db_query_range('SELECT DISTINCT %s AS val FROM {station_playlist_track} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY val', $field, $field, $string, 0, 10);

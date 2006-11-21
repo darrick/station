@@ -6,8 +6,6 @@ require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
 
 function station_help($section='') {
   switch ($section) {
-    case 'admin/modules#description':
-      return t('Core of station module for running an internet radio station.');
     case 'admin/settings/station':
       return t('Configure the core station settings. These settings are used by all of the station modules.');
   }
@@ -17,12 +15,26 @@ function station_help($section='') {
 function station_menu($may_cache) {
   $items = array();
   if ($may_cache) {
-    $items[] = array('path' => 'admin/settings/station/main', 'title' => t('station'),
-      'callback' => 'station_settings',
+    $items[] = array(
+      'path' => 'admin/settings/station',
+      'title' => t('Station'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_admin_settings'),
+      'description' => t('Change settings for the Station module.'),
       'access' => user_access('administer site configuration'),
-      'type' => MENU_DEFAULT_LOCAL_TASK, 'weight' => '-10');
+      'type' => MENU_NORMAL_ITEM);
 
-    $items[] = array('path' => 'station', 'title' => t('station'),
+    $items[] = array(
+      'path' => 'admin/settings/station/main',
+      'title' => t('Core'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_admin_settings'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => '-10');
+
+    $items[] = array(
+      'path' => 'station',
+      'title' => t('Station'),
       'callback' => 'station_page',
       'access' => user_access('access content'),
       'type' => MENU_NORMAL_ITEM);
@@ -34,7 +46,7 @@ function station_menu($may_cache) {
 /**
  * the modules settings form
  */
-function station_settings() {
+function station_admin_settings() {
   $form['station_stream'] = array(
     '#type' => 'fieldset',
     '#title' => t('Webstream settings'),
@@ -59,7 +71,7 @@ function station_settings() {
     '#description' => t('The Station module is designed to allow different modules to be run on different servers. So the archive could be on a dedicated machine while the schedule runs on your primary webserver.'),
   );
 
-  if (!module_exist('station_archive')) {
+  if (!module_exists('station_archive')) {
     $form['station_remote']['station_remote_archive_url'] = array(
       '#type' => 'textfield',
       '#title' => t('Station Archive remote URL'),
@@ -75,7 +87,7 @@ function station_settings() {
     );
   }
 
-  if (!module_exist('station_schedule')) {
+  if (!module_exists('station_schedule')) {
     $form['station_remote']['station_remote_schedule_url'] = array(
       '#type' => 'textfield',
       '#title' => t('Station Schedule remote URL'),
@@ -96,7 +108,7 @@ function station_settings() {
     '#value' => '<pre>'. STATION_CVS_ID .'</pre>',
   );
 
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
@@ -170,7 +182,7 @@ function station_page() {
  * @return boolean
  */
 function station_has_archive() {
-  return (module_exist('station_archive') || variable_get('station_remote_archive_url', FALSE));
+  return (module_exists('station_archive') || variable_get('station_remote_archive_url', FALSE));
 }
 
 /**
@@ -180,7 +192,7 @@ function station_has_archive() {
  * @return boolean
  */
 function station_has_schedule() {
-  return (module_exist('station_schedule') || variable_get('station_remote_schedule_url', FALSE));
+  return (module_exists('station_schedule') || variable_get('station_remote_schedule_url', FALSE));
 }
 
 /**
@@ -195,7 +207,7 @@ function station_has_schedule() {
  */
 function station_get_program_at($timestamp) {
   // Use the locally schedule if one is available
-  if (module_exist('station_schedule')) {
+  if (module_exists('station_schedule')) {
     $program = station_schedule_program_get_at($timestamp);
     if ($program->nid) {
       return $program;
@@ -310,7 +322,7 @@ function station_listen_links($node, $short = FALSE)  {
   $rss_url = 'station/archives/rss/'. $node->nid;
   $listen_url = 'station/archives/'. $node->nid;
 
-  if (!module_exist('station_archive')) {
+  if (!module_exists('station_archive')) {
     $archive_url = variable_get('station_remote_archive_url', FALSE);
     $rss_url = url($archive_url . $rss_url);
     $listen_url = url($archive_url . $listen_url);
@@ -322,6 +334,47 @@ function station_listen_links($node, $short = FALSE)  {
   );
 }
 
+/**
+ * Format the RSS link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_schedule_rss_link($url, $short = TRUE) {
+  $text = t('subscribe to podcast');
+  $title = t('Grab this show with your podcast software');
+  $path = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
+
+  $links['station_archive_rss'] = array(
+    'title' => theme('image', $path, $text, $title),
+    'href' => $url,
+  );
+  if (!$short) {
+    $links['station_archive_rss']['title'] .= $text;
+  }
+  return $links;
+}
+
+/**
+ * Format the listen link
+ *
+ * @param string $path
+ * @param boolean $short Short version?
+ */
+function theme_station_schedule_listen_link($url, $short = true) {
+  $text = t('listen to previous');
+  $title = t('Listen to previous broadcasts of this show');
+  $path = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
+
+  $links['station_archive_listen'] = array(
+    'title' => theme('image', $path, $text, $title),
+    'href' => $url,
+  );
+  if (!$short) {
+    $links['station_archive_listen']['title'] .= $text;
+  }
+  return $links;
+}
 
 /**
  * Convert an array to a comma separates list with an add between the last terms.
@@ -353,13 +406,4 @@ function station_local_ts($ts = FALSE) {
  */
 function station_today() {
   return date('w', station_local_ts());
-}
-
-/**
-* Implementation of hook_simpletest().
-*/
-function station_simpletest() {
-  $dir = drupal_get_path('module', 'station'). '/tests';
-  $tests = file_scan_directory($dir, '\.test', array('.', '..', 'CVS', '.svn'));
-  return array_keys($tests);
 }

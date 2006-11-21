@@ -1,0 +1,50 @@
+<?php
+
+// $Id$
+
+/**
+ * Install the initial schema.
+ */
+function station_playlist_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("
+        CREATE TABLE {station_playlist} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program node id',
+          `timestamp` int(11) NOT NULL default '0' COMMENT 'Timestamp of show'
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      db_query("
+        CREATE TABLE  {station_playlist_track} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `weight` tinyint(4) unsigned NOT NULL default '0' COMMENT 'Ordering weight',
+          `artist` varchar(255) NOT NULL default '',
+          `album` varchar(255) NOT NULL default '',
+          `title` varchar(255) NOT NULL default '',
+          `label` varchar(255) NOT NULL default '',
+          KEY `station_playlist_artist` (`artist`),
+          KEY `station_playlist_nid_weight` (`nid`,`weight`),
+          KEY `station_playlist_title` (`title`),
+          KEY `station_playlist_album` (`album`),
+          KEY `station_playlist_label` (`label`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      break;
+  }
+}
+
+/**
+ * Change node name from 4.7 for Drupal 5.0
+ */
+function station_playlist_update_100() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("UPDATE {node} SET type = 'station_playlist' WHERE type='program_playlist';");
+    break;
+  }
+  return $ret;
+}

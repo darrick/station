@@ -109,3 +109,10 @@ function station_archive_update_3() {
   }
   return $ret;
 }
+
+/**
+ * Empty update to set a schema number
+ */
+function station_archive_update_100() {
+  return array();
+}

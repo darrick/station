@@ -1,0 +1,5 @@
+; $Id$
+name = Station Playlist
+description = Provides a program playlist node type.
+dependencies = station views
+package = Station

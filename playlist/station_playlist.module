@@ -25,6 +25,15 @@ function station_playlist_help($section='') {
 function station_playlist_menu($may_cache) {
   if ($may_cache) {
     $items[] = array(
+      'path' => 'admin/settings/station/playlist',
+      'title' => t('Playlist'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_playlist_admin_settings'),
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_LOCAL_TASK
+    );
+
+    $items[] = array(
       'path' => 'station/autocomplete/playlist',
       'title' => t('Playlist Autocomplete'),
       'callback' => 'station_playlist_autocomplete',
@@ -58,13 +67,11 @@ function station_playlist_perm() {
 
 function station_playlist_admin_settings() {
   $form = array();
-
   $form['module_cvs_id'] = array(
     '#type' => 'item',
     '#value' => '<pre>'. STATION_PLAYLIST_CVS_ID .'</pre>',
   );
-
-  return system_settings_form($form);
+  return $form;
 }
 
 /**

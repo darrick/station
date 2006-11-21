@@ -49,15 +49,11 @@ function station_program_perm() {
 
 function station_program_admin_settings() {
   $form = array();
-  $form['station_program_no_settings'] = array(
-    '#type' => 'item',
-    '#value' => t('Currently, there are no settings for this module.'),
-  );
   $form['module_cvs_id'] = array(
     '#type' => 'item',
     '#value' => '<pre>'. STATION_PROGRAM_CVS_ID .'</pre>',
   );
-  return system_settings_form($form);
+  return $form;
 }
 
 

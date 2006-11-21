@@ -319,61 +319,32 @@ function theme_station_block_current_program($program = NULL, $unscheduled_messa
  * @param $short bool true for short version of links
  */
 function station_listen_links($node, $short = FALSE)  {
-  $rss_url = 'station/archives/rss/'. $node->nid;
   $listen_url = 'station/archives/'. $node->nid;
+  $rss_url = 'station/archives/rss/'. $node->nid;
+
+  $listen_img = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
+  $rss_img = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
 
   if (!module_exists('station_archive')) {
     $archive_url = variable_get('station_remote_archive_url', FALSE);
-    $rss_url = url($archive_url . $rss_url);
     $listen_url = url($archive_url . $listen_url);
+    $rss_url = url($archive_url . $rss_url);
   }
 
   return array(
-    'listen' => theme('station_schedule_listen_link', $listen_url, $short),
-    'rss' => theme('station_schedule_rss_link', $rss_url, $short),
+    'station_archive_listen' => array(
+      'href' => $listen_url,
+      'title' => theme('image', $listen_img, t('Listen')) . (($short) ? '' : ' '. t('Listen to previous')),
+      'attributes' => array('title' => t('Listen to previous broadcasts of this show')),
+       'html' => TRUE,
+    ),
+    'station_archive_rss' => array(
+      'href' => $rss_url,
+      'title' => theme('image', $rss_img, t('Podcast'))  . (($short) ? '' : ' '. t('Subscribe to podcast')),
+      'attributes' => array('title' => t('Grab this show with your podcast software')),
+      'html' => TRUE,
+    ),
   );
-}
-
-/**
- * Format the RSS link
- *
- * @param string $path
- * @param boolean $short Short version?
- */
-function theme_station_schedule_rss_link($url, $short = TRUE) {
-  $text = t('subscribe to podcast');
-  $title = t('Grab this show with your podcast software');
-  $path = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
-
-  $links['station_archive_rss'] = array(
-    'title' => theme('image', $path, $text, $title),
-    'href' => $url,
-  );
-  if (!$short) {
-    $links['station_archive_rss']['title'] .= $text;
-  }
-  return $links;
-}
-
-/**
- * Format the listen link
- *
- * @param string $path
- * @param boolean $short Short version?
- */
-function theme_station_schedule_listen_link($url, $short = true) {
-  $text = t('listen to previous');
-  $title = t('Listen to previous broadcasts of this show');
-  $path = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
-
-  $links['station_archive_listen'] = array(
-    'title' => theme('image', $path, $text, $title),
-    'href' => $url,
-  );
-  if (!$short) {
-    $links['station_archive_listen']['title'] .= $text;
-  }
-  return $links;
 }
 
 /**

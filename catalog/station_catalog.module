@@ -12,8 +12,6 @@ if (module_exists('views')) {
 
 function station_catalog_help($section='') {
   switch ($section) {
-    case 'node/add#album':
-      return t("An album in the station's library.");
     case 'admin/settings/station/catalog':
       return t("These settings allow you to configure the station catalog.");
     default:
@@ -25,21 +23,16 @@ function station_catalog_menu($may_cache) {
   if ($may_cache) {
     $items[] = array(
       'path' => 'admin/settings/station/catalog',
-      'title' => t('catalog'),
-      'callback' => 'station_catalog_admin_settings',
+      'title' => t('Catalog'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => 'station_catalog_admin_settings',
       'access' => user_access('administer site configuration'),
       'type' => MENU_LOCAL_TASK
     );
 
     $items[] = array(
-      'path' => 'node/add/album',
-      'title' => t('album'),
-      'access' => user_access('administer catalog')
-    );
-
-    $items[] = array(
       'path' => 'station/catalog',
-      'title' => t('catalog'),
+      'title' => t('Catalog'),
       'callback' => 'station_catalog_page',
       'access' => user_access('access content'),
       'type' => MENU_NORMAL_ITEM,
@@ -52,13 +45,11 @@ function station_catalog_menu($may_cache) {
 
 function station_catalog_admin_settings() {
   $form = array();
-
   $form['module_cvs_id'] = array(
     '#type' => 'item',
     '#value' => '<pre>'. STATION_CATALOG_CVS_ID .'</pre>',
   );
-
-  return system_settings_form('station_catalog_admin_settings', $form);
+  return $form;
 }
 
 
@@ -67,7 +58,11 @@ function station_catalog_admin_settings() {
  */
 function station_catalog_node_info() {
   return array(
-    'album' => array('name' => t('album'), 'base' => 'station_catalog_album'),
+    'album' => array(
+      'name' => t('Album'),
+      'module' => 'station_catalog_album',
+      'description' => t("An album in the station's library."),
+    )
   );
 }
 
@@ -135,7 +130,6 @@ function station_catalog_album_form(&$node) {
   return $form;
 }
 
-
 function station_catalog_album_validate(&$node) {
   if (!is_numeric($node->number)) {
     form_set_error('number', 'Must be a numeric value');
@@ -179,16 +173,33 @@ function station_catalog_album_update($node) {
 }
 
 function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+
   if ($page) {
     $breadcrumb = array();
     $breadcrumb[] = array('path' => 'station/catalog', 'title' => t('catalog'));
     $breadcrumb[] = array('path' => 'node/'. $node->nid);
     menu_set_location($breadcrumb);
   }
-//musicbrainz_request('artist', array('name' => $node->artist));
-  $body = "<div><strong>Artist:</strong> {$node->artist}</div>\n";
-  $body .= "<div><strong>Album:</strong> {$node->album}</div>\n";
-  $body .= "<div><strong>Label:</strong> {$node->label}</div>\n";
-  $node->body = $body . $node->body;
-  $node = node_prepare($node, $teaser);
+
+  $node->content['artist'] = array(
+    '#type' => 'item',
+    '#title' => t('Artist'),
+    '#value' => $node->artist,
+    '#weight' => -5,
+  );
+  $node->content['album'] = array(
+    '#type' => 'item',
+    '#title' => t('Album'),
+    '#value' => $node->album,
+    '#weight' => -4,
+  );
+  $node->content['label'] = array(
+    '#type' => 'item',
+    '#title' => t('Label'),
+    '#value' => $node->label,
+    '#weight' => -3,
+  );
+  //musicbrainz_request('artist', array('name' => $node->artist));
+  return $node;
 }

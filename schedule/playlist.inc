@@ -43,7 +43,7 @@ function station_schedule_playlist_form(&$node) {
     '#default_value' => $node->program_title,
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program',
-    '#required' => FALSE,
+    '#required' => TRUE,
     '#description' => t('The name of the program. If you filled in for someone else, enter the name of their show.'),
   );
 
@@ -61,7 +61,6 @@ function station_schedule_playlist_form(&$node) {
     '#theme' => 'station_schedule_playlist_track_form',
     '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
   );
-
 
   $blanks = 10;
   $weight = 0;
@@ -124,7 +123,7 @@ function station_schedule_playlist_form(&$node) {
     '#title' => t('Description'),
     '#default_value' => $node->body,
     '#rows' => 5,
-    '#required' => TRUE,
+    '#required' => FALSE,
   );
   $form['body_filter']['format'] = filter_form($node->format);
 

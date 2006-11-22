@@ -239,7 +239,7 @@ function station_get_program_at($timestamp) {
 
     // try to grab it from the cache
     $cacheid = 'station_remote:program_at_'. $timestamp;
-    if ($cache = cache_get($cacheid)) {
+    if ($cache = cache_get($cacheid, 'cache')) {
       $program = unserialize($cache->data);
     }
     else {
@@ -250,7 +250,7 @@ function station_get_program_at($timestamp) {
         return FALSE;
       }
       // save it to the cache
-      cache_set($cacheid, serialize($program), CACHE_TEMPORARY);
+      cache_set($cacheid, 'cache', serialize($program), CACHE_TEMPORARY);
     }
 
     // program returned by XMLRPC is an array

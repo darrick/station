@@ -292,7 +292,7 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
             $audio_tags['url_source'] = $program->node_url;
           }
           $audio_tags['year'] = date('Y', $local_timestamp);
-          $audio_tags['comment'] = t('Recorded at %date', array('%date' => $prettydate));
+          $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
 
           // audio metadata tags
           $_POST['edit']['audio_tags'] = $audio_tags;
@@ -337,8 +337,8 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
       case 'view':
         // if it's in the archives, set the menu appropriately
         if ($page && isset($node->station_archive)) {
-          $breadcrumb[] = array('path' => 'station', 'title' => t('station'));
-          $breadcrumb[] = array('path' => 'station/archives', 'title' => t('archives'));
+          $breadcrumb[] = array('path' => 'station', 'title' => t('Station'));
+          $breadcrumb[] = array('path' => 'station/archives', 'title' => t('Archives'));
           $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);
           $breadcrumb[] = array('path' => 'node/'. $node->nid);
           menu_set_location($breadcrumb);
@@ -443,7 +443,7 @@ function _station_archive_delete_old_nodes() {
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
   $result = db_query('SELECT n.nid, n.title FROM node n INNER JOIN station_archive sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
   while ($node = db_fetch_object($result)) {
-    watchdog('stationarchive', t('Removing %title from the archive.', array('%title' => theme('placeholder', $node->title))), WATCHDOG_NOTICE);
+    watchdog('stationarchive', t('Removing %title from the archive.', array('%title' => $node->title)), WATCHDOG_NOTICE);
     node_delete($node->nid);
   }
 }
@@ -456,6 +456,10 @@ function _station_archive_import_files() {
   if ($dirpath = variable_get('station_archive_import_dir', drupal_get_path('module', 'station_archive') .'/import')) {
     $files = file_scan_directory($dirpath, '[0-9]+\.mp3$');
     foreach ($files as $file) {
+      // try to avoid php's script timeout with a bunch of large files or
+      // a slow machine
+      set_time_limit(0);
+
       $cuefile = dirname($file->filename) .'/'. $file->name .'.cue';
       // if there's a .cue file, it's still being downloaded, we'll get it on
       // the next cron call.
@@ -497,7 +501,7 @@ function _station_archive_add_file($file) {
     // ...check if they've elected to delete unscheduled programs, do so.
     if (variable_get('station_archive_delete_unscheduled', 0)) {
       file_delete($file->filename);
-      watchdog('stationarchive', t('Deleted audio that was recorded during unscheduled time. Filename %filename', array('%filename' => theme('placeholder', $file->filename))), WATCHDOG_NOTICE);
+      watchdog('stationarchive', t('Deleted audio that was recorded during unscheduled time. Filename %filename', array('%filename' => $file->filename)), WATCHDOG_NOTICE);
       return TRUE;
     }
     // if we've got no program use the default metadata
@@ -514,14 +518,14 @@ function _station_archive_add_file($file) {
   }
   $audio_tags['title'] = $program_title;
   $audio_tags['year'] = date('Y', $local_timestamp);
-  $audio_tags['comment'] = t('Recorded at %date', array('%date' => $prettydate));
+  $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
 
   // rename the file to something more readable than a timestamp
   $newname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).mp3");
   file_move($file->filename, $newname, FILE_EXISTS_REPLACE);
 
   // then create a new audio node with it
-  $node = audio_api_insert($file->filename, '%title', $audio_tags);
+  $node = audio_api_insert($file->filename, '!title', $audio_tags);
 
   // make any other changes to the node...
   $node->audio_fileinfo['downloadable'] = 1;
@@ -540,7 +544,7 @@ function _station_archive_add_file($file) {
   db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program_nid);
   db_query("INSERT INTO {station_archive_program} (program_nid, title) VALUES (%d, '%s')", $program_nid, $program_title);
 
-  watchdog('stationarchive', t('Added %title to the archive.', array('%title' => theme('placeholder', $program_title))), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
+  watchdog('stationarchive', t('Added %title to the archive.', array('%title' => $program_title)), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
 
   return TRUE;
 }

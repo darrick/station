@@ -246,7 +246,7 @@ function station_get_program_at($timestamp) {
       // if it isn't cached get the program info from the server
       $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp);
       if (xmlrpc_errno()) {
-        watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => theme('placeholder', xmlrpc_errno()), '%message' =>  theme('placeholder', xmlrpc_error_msg()))), WATCHDOG_ERROR);
+        watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
         return FALSE;
       }
       // save it to the cache

@@ -40,34 +40,35 @@ function station_schedule_help($section='') {
 function station_schedule_menu($may_cache) {
   if ($may_cache) {
     $items[] = array(
-      'path' => 'admin/schedule',
+      'path' => 'admin/content/schedule',
       'title' => t('Station schedule'),
       'callback' => 'station_schedule_admin_list',
       'access' => user_access('administer schedule'),
+      'description' => t("Alter the Station's schedule."),
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
-      'path' => 'admin/schedule/list',
+      'path' => 'admin/content/schedule/list',
       'title' => t('List'),
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'weight' => -10
     );
     $items[] = array(
-      'path' => 'admin/schedule/add',
+      'path' => 'admin/content/schedule/add',
       'title' => t('Add new'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('station_schedule_admin_form', 'add'),
       'type' => MENU_LOCAL_TASK,
     );
     $items[] = array(
-      'path' => 'admin/schedule/edit',
+      'path' => 'admin/content/schedule/edit',
       'title' => t('Edit schedule item'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('station_schedule_admin_form', 'edit'),
       'type' => MENU_CALLBACK
     );
     $items[] = array(
-      'path' => 'admin/schedule/delete',
+      'path' => 'admin/content/schedule/delete',
       'title' => t('Delete'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('station_schedule_admin_delete'),

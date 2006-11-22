@@ -2,7 +2,7 @@
 
 define('STATION_CATALOG_CVS_ID', '$Id$');
 
-require_once(drupal_get_path('module', 'station_catalog') .'/musicbrainz.inc');
+#require_once(drupal_get_path('module', 'station_catalog') .'/musicbrainz.inc');
 
 if (module_exists('views')) {
 #  require_once(drupal_get_path('module', 'station_catalog') .'/views.inc');

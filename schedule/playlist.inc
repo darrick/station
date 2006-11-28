@@ -280,22 +280,11 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
     }
   } else {
     if (count($node->tracks) > 0) {
+      // make one pass to figure out what fields we've got...
+      $hasAlbum = $hasLabel = FALSE;
       foreach ((array) $node->tracks as $track) {
-        $hasAlbum = ($track['album']) ? TRUE : $hasAlbum;
-        $hasLabel = ($track['label']) ? TRUE : $hasLabel;
-      }
-      $rows = array();
-      foreach ((array) $node->tracks as $track) {
-        if ($track['artist'] || $track['title']) {
-          $row = array($track['artist'], $track['title']);
-          if ($hasAlbum) {
-            $row[] = $track['album'];
-          }
-          if ($hasLabel) {
-            $row[] = $track['label'];
-          }
-          $rows[] = $row;
-        }
+        $hasAlbum |= (bool) ($track['album']);
+        $hasLabel |= (bool) ($track['label']);
       }
       $header = array(t('Artist'), t('Title'));
       if ($hasAlbum) {
@@ -303,6 +292,23 @@ function station_schedule_playlist_view(&$node, $teaser = false, $page = false) 
       }
       if ($hasLabel) {
         $header[] = t('Label');
+      }
+      // ...then put the into the table
+      $rows = array();
+      foreach ((array) $node->tracks as $track) {
+        if ($track['artist'] || $track['title']) {
+          $row = array(
+            check_plain($track['artist']),
+            check_plain($track['title']),
+          );
+          if ($hasAlbum) {
+            $row[] = check_plain($track['album']);
+          }
+          if ($hasLabel) {
+            $row[] = check_plain($track['label']);
+          }
+          $rows[] = $row;
+        }
       }
 
       $node->body .= theme('table', $header, $rows);

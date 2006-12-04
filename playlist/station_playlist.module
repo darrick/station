@@ -422,12 +422,15 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
       // ...then put the into the table
       foreach ((array) $node->tracks as $track) {
         if ($track['artist'] || $track['title']) {
-          $row = array($track['artist'], $track['title']);
+          $row = array(
+            check_plain($track['artist']),
+            check_plain($track['title']),
+          );
           if ($hasAlbum) {
-            $row[] = $track['album'];
+            $row[] = check_plain($track['album']);
           }
           if ($hasLabel) {
-            $row[] = $track['label'];
+            $row[] = check_plain($track['label']);
           }
           $rows[] = $row;
         }

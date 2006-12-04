@@ -177,7 +177,7 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
 
   if ($page) {
     $breadcrumb = array();
-    $breadcrumb[] = array('path' => 'station/catalog', 'title' => t('catalog'));
+    $breadcrumb[] = array('path' => 'station/catalog', 'title' => t('Catalog'));
     $breadcrumb[] = array('path' => 'node/'. $node->nid);
     menu_set_location($breadcrumb);
   }

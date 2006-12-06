@@ -202,10 +202,10 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
     if ($user->programs) {
       foreach($user->programs as $nid => $title) {
         $node = node_load($nid);
-        station_schedule_program_view($node, TRUE);
-        $items[] = array('title' => l($title, 'node/' . $nid),
-          'value' => $node->teaser,
+        $node = node_build_content($node, TRUE, FALSE);
+        $items[] = array('title' => l($title, 'node/'. $nid),
           'class' => 'program',
+          'value' => $node->content['genre']['#value'] .t(' on '). $node->content['times']['#value'],
         );
       }
       return array(t('Programs') => $items);
@@ -869,7 +869,6 @@ function station_schedule_day_page($day) {
       $program = node_load($hour->program_nid);
       $row['time'] = array('width' => 50,
         'data' => theme('station_hour_range', $hour->start, $hour->finish));
-
       if (station_has_archive()) {
         $listen = '';
         foreach(station_listen_links($program, TRUE) as $link) {

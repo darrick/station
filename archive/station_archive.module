@@ -520,10 +520,6 @@ function _station_archive_add_file($file) {
   $audio_tags['year'] = date('Y', $local_timestamp);
   $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
 
-  // rename the file to something more readable than a timestamp
-  $newname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).mp3");
-  file_move($file->filename, $newname, FILE_EXISTS_REPLACE);
-
   // then create a new audio node with it
   $node = audio_api_insert($file->filename, '!title', $audio_tags);
 
@@ -534,6 +530,10 @@ function _station_archive_add_file($file) {
   $node->taxonomy = _station_archive_get_taxonomy($local_timestamp);
   // don't bother to check for promotion if there's no metadata
   $node->promote = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
+  // keep the timestamp as the filename so we can re-import again if needed but 
+  // store a more readable filename for the user.
+  $prettyname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).mp3");
+  $node->audio_file->origname = $prettyname;
 
   // ... and save it
   node_save($node);

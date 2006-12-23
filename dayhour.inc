@@ -69,13 +69,13 @@ function station_valid_day($day) {
  */
 function station_day_name($day = null) {
   static $days = array(
-    0 => 'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday'
+    0 => t('Sunday'),
+    t('Monday'),
+    t('Tuesday'),
+    t('Wednesday'),
+    t('Thursday'),
+    t('Friday'),
+    t('Saturday')
   );
 
   if ($day === null) {

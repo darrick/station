@@ -15,7 +15,8 @@ function station_valid_hour($hour) {
     // take care of a couple of handy strings
     if ($hour == t('midnight')) {
       return 0;
-    } else if ($hour == t('noon')) {
+    }
+    else if ($hour == t('noon')) {
       return 12;
     }
 
@@ -50,11 +51,13 @@ function station_valid_day($day) {
   if (is_numeric($day)) {
     if ($day < 0) {
       return ((integer) $day % 7) + 7;
-    } else if ($day > 6) {
+    }
+    else if ($day > 6) {
       return ((integer) $day % 7);
     }
     return (integer) $day;
-  } else {
+  }
+  else {
     $dayname = station_day_name();
     $ret = array_search(ucfirst($day), $dayname, false);
     return ($ret === false) ? 0 : $ret;
@@ -69,18 +72,19 @@ function station_valid_day($day) {
  */
 function station_day_name($day = null) {
   static $days = array(
-    0 => 'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday'
+    0 => t('Sunday'),
+    t('Monday'),
+    t('Tuesday'),
+    t('Wednesday'),
+    t('Thursday'),
+    t('Friday'),
+    t('Saturday')
   );
 
   if ($day === null) {
     return $days;
-  } else {
+  }
+  else {
     return $days[$day % 7];
   }
 }
@@ -95,7 +99,8 @@ function station_day_name($day = null) {
 function station_hour_name($hour = 0) {
   if ($hour < 12) {
     $sufix = 'am';
-  } else {
+  }
+  else {
     $sufix = 'pm';
     $hour -= 12;
   }

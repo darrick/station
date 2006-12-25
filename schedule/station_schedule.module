@@ -158,7 +158,7 @@ function station_schedule_admin_settings() {
   $form['station_schedule_program_node_type'] = array(
     '#type' => 'item',
     '#title' => t('Scheduled node type'),
-    '#value' => t('The schedule is using the <code>%type</code> node provided by the <code>%module</code> module.', array('%type' => STATION_PROGRAM_NODE_TYPE, '%module' => node_get_types('module', STATION_PROGRAM_NODE_TYPE))),
+    '#value' => t('The schedule is using the %type node provided by the %module module.', array('%type' => STATION_PROGRAM_NODE_TYPE, '%module' => node_get_types('module', STATION_PROGRAM_NODE_TYPE))),
   );
 
   $form['module_cvs_id'] = array(
@@ -344,8 +344,8 @@ function station_schedule_form_alter($form_id, &$form) {
       // it to the schedule.
       if ($node->nid && $node->status && !$node->scheduled_sids) {
         drupal_set_message(
-          t("This program is unscheduled. You can <a href='%link'>add it to the schedule</a>.",
-          array('%link' => url('admin/content/schedule/add/'. $node->nid)))
+          t("This program is unscheduled. You can <a href='!link'>add it to the schedule</a>.",
+          array('!link' => url('admin/content/schedule/add/'. $node->nid)))
         );
       }
       $form['djs'] = array(

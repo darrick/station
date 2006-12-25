@@ -71,15 +71,18 @@ function station_valid_day($day) {
  * @return array|string array if $index isn't specified
  */
 function station_day_name($day = null) {
-  static $days = array(
-    0 => t('Sunday'),
-    t('Monday'),
-    t('Tuesday'),
-    t('Wednesday'),
-    t('Thursday'),
-    t('Friday'),
-    t('Saturday')
-  );
+  static $days;
+  if (!isset($days)) {
+    $days = array(
+      0 => t('Sunday'),
+      t('Monday'),
+      t('Tuesday'),
+      t('Wednesday'),
+      t('Thursday'),
+      t('Friday'),
+      t('Saturday')
+    );
+  }
 
   if ($day === null) {
     return $days;

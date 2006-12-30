@@ -340,20 +340,36 @@ function station_schedule_form_alter($form_id, &$form) {
     $node = $form['#node'];
 
     if (user_access('administer schedule')) {
-      // if it's a saved, published, un-scheduled program, provide a link to add
-      // it to the schedule.
-      if ($node->nid && $node->status && !$node->scheduled_sids) {
-        drupal_set_message(
-          t("This program is unscheduled. You can <a href='!link'>add it to the schedule</a>.",
-          array('!link' => url('admin/content/schedule/add/'. $node->nid)))
+      // if it's a saved display the scheduled times.
+      if ($node->nid) {
+        $form['schedule'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Schedule'),
+          '#weight' => 1,
+          '#tree' => TRUE,
+          '#description' => t("These are the times the program is currently scheduled."),
         );
+        $times = station_schedule_program_get_times($node->nid);
+        foreach ($times as $time) {
+          $form['schedule'][$sid] = array(
+            '#type' => 'item',
+            '#value' => l(theme('station_dayhour_range', $time['start'], $time['finish']), 'admin/content/schedule/edit/'. $time['sid']),
+	  );
+        }
+        // don't encourage adding unpublished stuff to the schedule.
+        if ($node->status) {
+          $form['schedule']['new'] = array(
+            '#type' => 'item',
+            '#value' => t("<a href='!link'>Add to the schedule</a>", array('!link' => url('admin/content/schedule/add/'. $node->nid))),
+	  );
+        }
       }
       $form['djs'] = array(
         '#type' => 'fieldset',
         '#title' => t('DJs'),
         '#weight' => 1,
         '#tree' => TRUE,
-        '#description' => t("Enter the names of users you'd like to add as DJs"),
+        '#description' => t("Enter the names of users you'd like to add as DJs."),
       );
       if ($node->djs) {
         foreach ((array)$node->djs as $uid => $username) {

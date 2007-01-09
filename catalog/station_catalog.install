@@ -28,6 +28,13 @@ function station_catalog_install() {
 }
 
 /**
+ * Implementation of hook_uninstall().
+ */
+function station_catalog_uninstall() {
+  db_query('DROP TABLE {station_catalog}');
+}
+
+/**
  * Empty update to set a schema number for Drupal 5.0.
  */
 function station_catalog_update_100() {

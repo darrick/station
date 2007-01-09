@@ -32,6 +32,16 @@ function station_schedule_install() {
 }
 
 /**
+ * Implementation of hook_uninstall().
+ */
+function station_schedule_uninstall() {
+  db_query('DROP TABLE {station_schedule}');
+  db_query('DROP TABLE {station_dj}');
+
+  variable_del('station_schedule_increment');
+}
+
+/**
  * Update the tables to UTF-8
  */
 function station_schedule_update_2() {

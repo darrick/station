@@ -31,6 +31,29 @@ function station_archive_install() {
 }
 
 /**
+ * Implementation of hook_uninstall().
+ */
+function station_archive_uninstall() {
+  db_query('DROP TABLE {station_archive}');
+  db_query('DROP TABLE {station_archive_program}');
+
+/* i'm not sure if this is a good idea so i'm commenting it out
+  if ($vid = variable_get('station_archive_vid', '')) {
+    taxonomy_del_vocabulary($vid);
+  }
+  variable_del('station_archive_vid');
+*/
+
+  variable_del('station_archive_cleanup_old');
+  variable_del('station_archive_delete_unscheduled');
+  variable_del('station_archive_import_new');
+  variable_del('station_archive_import_dir');
+  variable_del('station_archive_max_age');
+  variable_del('station_archive_promote_scheduled');
+  variable_del('station_archive_unscheduled_title');
+}
+
+/**
  * Create the table and migrate in the tables
  */
 function station_archive_update_1() {

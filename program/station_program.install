@@ -23,6 +23,13 @@ function station_program_install() {
 }
 
 /**
+ * Implementation of hook_uninstall().
+ */
+function station_program_uninstall() {
+  db_query('DROP TABLE {station_program}');
+}
+
+/**
  * Empty update to set a schema number for Drupal 5.0.
  */
 function station_program_update_100() {

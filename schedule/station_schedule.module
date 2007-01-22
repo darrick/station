@@ -755,11 +755,13 @@ function station_schedule_admin_delete($sid = '') {
   $time = theme('station_dayhour_range', $sch->start, $sch->finish);
 
   $form['sid'] = array('#type' => 'value', '#value' => $sch->sid);
-  return confirm_form('station_schedule_admin_delete', $form,
+  return confirm_form(
+    $form,
     t('Are you sure you want to delete %title at %time?', array('%title' => $program->title, '%time' => $time)),
     $_GET['destination'] ? $_GET['destination'] : 'admin/content/schedule',
     t('This action cannot be undone.'),
-    t('Delete'), t('Cancel')
+    t('Delete'), 
+    t('Cancel')
   );
 }
 

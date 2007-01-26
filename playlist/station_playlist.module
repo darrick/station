@@ -85,7 +85,7 @@ function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
 
   if ($type == 'node') {
     switch ($node->type) {
-      case STATION_PROGRAM_NODE_TYPE:
+      case 'program':
         if ($result = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} sp WHERE sp.program_nid = %d", $node->nid))) {
           $links['station_station_playlist_view'] = array(
             'title' => t('View all playlists'),
@@ -156,15 +156,24 @@ function station_playlist_access($op, $node) {
 function station_playlist_form(&$node) {
   // if this is a new node (with no nid) and we've got a numeric argument,
   // assume that's the program we should attach to.
-  if (!$node->nid && is_numeric(arg(3))) {
-    $node->program_nid = (int) arg(3);
+  if (!$node->nid) {
+    if (is_numeric(arg(3))) {
+      $node->program_nid = (int) arg(3);
+    }
+    // and new nodes need a default date
+    $date = getdate();
+    $node->program_date = array(
+      'month' => $date['mon'],
+      'day' => $date['mday'],
+      'year' => $date['year']
+    );
   }
 
   // make sure we've got a valid program title
   if (!isset($node->program_title) && isset($node->program_nid)) {
     $program = node_load(array(
       'nid' => $node->program_nid,
-      'type' => STATION_PROGRAM_NODE_TYPE
+      'type' => 'program'
     ));
     $node->program_title = $program->title;
   }
@@ -175,7 +184,7 @@ function station_playlist_form(&$node) {
     '#default_value' => $node->program_title,
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program',
-    '#required' => FALSE,
+    '#required' => TRUE,
     '#description' => t('The name of the program. If you filled in for someone else, enter the name of their program.'),
   );
   $form['program_date'] = array(
@@ -228,6 +237,10 @@ function station_playlist_form(&$node) {
       '#default_value' => $track['label'],
       '#autocomplete_path' => 'station/autocomplete/playlist/label',
     );
+    $form['tracks'][$weight]['link'] = array(
+      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
+      '#default_value' => $track['link'],
+    );
     $form['tracks'][$weight]['weight'] = array(
       '#type' => 'select', '#options' => $weights, '#default_value' => $weight,
     );
@@ -250,6 +263,9 @@ function station_playlist_form(&$node) {
       '#size' => 30, '#maxlength' => 255,
       '#autocomplete_path' => 'station/autocomplete/playlist/label',
     );
+    $form['tracks'][$weight]['link'] = array('#type'=>'textfield',
+      '#size' => 30, '#maxlength' => 255,
+    );
     $form['tracks'][$weight]['weight'] = array('#type' => 'select',
       '#options' => $weights, '#default_value' => $weight,
     );
@@ -260,7 +276,7 @@ function station_playlist_form(&$node) {
 }
 
 function theme_station_playlist_track_form($form) {
-  $header = array(t('Artist'), t('Title'), t('Album'), t('Label'), t('Weight'));
+  $header = array(t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'));
 
   $rows = array();
   foreach (element_children($form) as $key) {
@@ -269,6 +285,7 @@ function theme_station_playlist_track_form($form) {
     $row[] = drupal_render($form[$key]['title']);
     $row[] = drupal_render($form[$key]['album']);
     $row[] = drupal_render($form[$key]['label']);
+    $row[] = drupal_render($form[$key]['link']);
     $row[] = drupal_render($form[$key]['weight']);
     $rows[] = $row;
   }
@@ -287,7 +304,7 @@ function theme_station_playlist_track_form($form) {
 function station_playlist_validate(&$node) {
   // convert the programs title into a node id
   if (isset($node->program_title)) {
-    $prog = node_load(array('type' => STATION_PROGRAM_NODE_TYPE, 'title' => $node->program_title));
+    $prog = node_load(array('type' => 'program', 'title' => $node->program_title));
     if ($prog) {
       $node->program_nid = $prog->nid;
     }
@@ -311,7 +328,7 @@ function station_playlist_validate(&$node) {
 function station_playlist_submit(&$node) {
   // convert the programs title into a node id
   if (isset($node->program_title)) {
-    if ($prog = node_load(array('type' => STATION_PROGRAM_NODE_TYPE, 'title' => $node->program_title))) {
+    if ($prog = node_load(array('type' => 'program', 'title' => $node->program_title))) {
       $node->program_nid = $prog->nid;
     }
   }
@@ -343,7 +360,7 @@ function station_playlist_load($node) {
 
   // tracks
   $extras->tracks = array();
-  $result = db_query('SELECT weight, album, artist, title, label FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
+  $result = db_query('SELECT weight, album, artist, title, label, link FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
   while ($track = db_fetch_array($result)) {
     $extras->tracks[] = $track;
   }
@@ -358,8 +375,8 @@ function station_playlist_insert($node) {
   db_query("INSERT INTO {station_playlist} (nid, program_nid, timestamp) VALUES (%d, %d, %d)", $node->nid, $node->program_nid, $node->timestamp);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label) VALUES (%d, %d, '%s', '%s', '%s', '%s')",
-        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']));
+      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label, link) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')",
+        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']), trim($track['link']));
     }
   }
 }
@@ -381,8 +398,8 @@ function station_playlist_update($node) {
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label) VALUES (%d, %d, '%s', '%s', '%s', '%s')",
-        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']));
+      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label, link) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')",
+        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']), trim($track['link']));
     }
   }
 }
@@ -407,10 +424,11 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
     if (count($node->tracks) > 0) {
       $rows = array();
       // make one pass to figure out what fields we've got...
-      $hasAlbum = $hasLabel = FALSE;
+      $hasAlbum = $hasLabel = $hasLink = FALSE;
       foreach ((array) $node->tracks as $track) {
         $hasAlbum |= (bool) ($track['album']);
         $hasLabel |= (bool) ($track['label']);
+        $hasLink |= (bool) ($track['link']);
       }
       $header = array(t('Artist'), t('Title'));
       if ($hasAlbum) {
@@ -418,6 +436,9 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
       }
       if ($hasLabel) {
         $header[] = t('Label');
+      }
+      if ($hasLink) {
+        $header[] = t('Link');
       }
       // ...then put the into the table
       foreach ((array) $node->tracks as $track) {
@@ -431,6 +452,9 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
           }
           if ($hasLabel) {
             $row[] = check_plain($track['label']);
+          }
+          if ($hasLink) {
+            $row[] = l(t('Link'), $track['link']);
           }
           $rows[] = $row;
         }
@@ -450,7 +474,7 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
  * Implementation of hook_nodeapi().
  */
 function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == STATION_PROGRAM_NODE_TYPE){
+  if ($node->type == 'program'){
     switch ($op) {
       case 'view':
         if (!$teaser) {

@@ -24,6 +24,7 @@ function station_playlist_install() {
           `album` varchar(255) NOT NULL default '',
           `title` varchar(255) NOT NULL default '',
           `label` varchar(255) NOT NULL default '',
+          `link` varchar(255) NOT NULL default '',
           KEY `station_playlist_artist` (`artist`),
           KEY `station_playlist_nid_weight` (`nid`,`weight`),
           KEY `station_playlist_title` (`title`),
@@ -33,6 +34,14 @@ function station_playlist_install() {
       ");
       break;
   }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function station_playlist_uninstall() {
+  db_query('DROP TABLE {station_playlist}');
+  db_query('DROP TABLE {station_playlist_track}');
 }
 
 /**
@@ -48,3 +57,20 @@ function station_playlist_update_100() {
   }
   return $ret;
 }
+
+/**
+ * Add a link field to the track.
+ */
+function station_playlist_update_101() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_playlist_track} ADD COLUMN `link` VARCHAR(255) NOT NULL DEFAULT '' AFTER `label`;");
+    break;
+  }
+  return $ret;
+}
+
+
+

@@ -236,6 +236,20 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         }
         break;
 
+      case 'submit':
+        // make a copy of the djs and put them back in the expected form
+        $djs = (array) $node->djs;
+        $node->djs = array();
+        foreach ($djs as $key => $dj) {
+          if ($dj['username']) {
+            $user = user_load(array('name' => $dj['username']));
+            if ($user->uid) {
+              $node->djs[$user->uid] = $user->name;
+            }
+          }
+        }
+        break;
+
       case 'insert':
         // dj additions
         foreach ($node->djs as $uid => $username) {
@@ -354,14 +368,14 @@ function station_schedule_form_alter($form_id, &$form) {
           $form['schedule'][$time['sid']] = array(
             '#type' => 'item',
             '#value' => l(theme('station_dayhour_range', $time['start'], $time['finish']), 'admin/content/schedule/edit/'. $time['sid']),
-	  );
+          );
         }
         // don't encourage adding unpublished stuff to the schedule.
         if ($node->status) {
           $form['schedule']['new'] = array(
             '#type' => 'item',
             '#value' => t("<a href='!link'>Add to the schedule</a>", array('!link' => url('admin/content/schedule/add/'. $node->nid))),
-	  );
+          );
         }
       }
       $form['djs'] = array(
@@ -760,7 +774,7 @@ function station_schedule_admin_delete($sid = '') {
     t('Are you sure you want to delete %title at %time?', array('%title' => $program->title, '%time' => $time)),
     $_GET['destination'] ? $_GET['destination'] : 'admin/content/schedule',
     t('This action cannot be undone.'),
-    t('Delete'), 
+    t('Delete'),
     t('Cancel')
   );
 }

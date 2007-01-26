@@ -12,7 +12,7 @@ function station_program_help($section='') {
     case 'admin/settings/station/program':
       return t("These settings allow you to configure the station's program node.");
     default:
-      return null;
+      return NULL;
   }
 }
 
@@ -125,20 +125,6 @@ function station_program_validate(&$node) {
   if ($node->url) {
     if (!valid_url($node->url)) {
       form_set_error('url', t('You need to provide a valid URL.'));
-    }
-  }
-}
-
-function station_program_submit(&$node) {
-  // make a copy of the djs and put them back in the expected form
-  $djs = $node->djs;
-  $node->djs = array();
-  foreach ($djs as $key => $dj) {
-    if ($dj['username']) {
-      $user = user_load(array('name' => $dj['username']));
-      if ($user->uid) {
-        $node->djs[$user->uid] = $user->name;
-      }
     }
   }
 }

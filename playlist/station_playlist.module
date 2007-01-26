@@ -198,7 +198,8 @@ function station_playlist_form(&$node) {
     '#type' => 'fieldset', '#title' => t('Tracks'),
     '#tree' => TRUE, '#collapsible' => FALSE, '#weight'=>1,
     '#theme' => 'station_playlist_track_form',
-    '#description' => t('Enter the tracks played on the show, the artist and title are required. The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
+    '#description' => t('Enter the tracks played on the show, the artist and title are required. If you provide a link, it needs to begin with <code>http://</code> or you will get a link to a page on this site.') .'<br />'
+      . t('The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
   );
   $form['body_filter']['body'] = array(
     '#type' => 'textarea',
@@ -454,7 +455,14 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
             $row[] = check_plain($track['label']);
           }
           if ($hasLink) {
-            $row[] = l(t('Link'), $track['link']);
+            if ($track['link']) {
+              // Use the host name as a link text
+              $parts = parse_url(url($track['link'], NULL, NULL, TRUE));
+              $row[] = l($parts['host'], $track['link']);
+            }
+            else {
+              $row[] = '';
+            }
           }
           $rows[] = $row;
         }

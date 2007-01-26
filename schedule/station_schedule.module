@@ -2,8 +2,6 @@
 
 define('STATION_SCHEDULE_CVS_ID', '$Id$');
 
-define('STATION_PROGRAM_NODE_TYPE', 'program');
-
 if (module_exists('views')) {
   require_once(drupal_get_path('module', 'station_schedule') .'/views.inc');
   require_once(drupal_get_path('module', 'station_schedule') .'/views_defaults.inc');
@@ -85,14 +83,6 @@ function station_schedule_menu($may_cache) {
     );
 
     $items[] = array(
-      'path' => 'station/autocomplete/program',
-      'title' => t('program autocomplete'),
-      'callback' => 'station_schedule_program_autocomplete',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-
-    $items[] = array(
       'path' => 'schedule',
       'callback' => 'station_schedule_redirect_old',
       'access' => user_access('access content'),
@@ -158,7 +148,7 @@ function station_schedule_admin_settings() {
   $form['station_schedule_program_node_type'] = array(
     '#type' => 'item',
     '#title' => t('Scheduled node type'),
-    '#value' => t('The schedule is using the %type node provided by the %module module.', array('%type' => STATION_PROGRAM_NODE_TYPE, '%module' => node_get_types('module', STATION_PROGRAM_NODE_TYPE))),
+    '#value' => t('The schedule is using the %type node provided by the %module module.', array('%type' => 'program', '%module' => node_get_types('module', 'program'))),
   );
 
   $form['module_cvs_id'] = array(
@@ -177,7 +167,7 @@ function station_schedule_admin_settings() {
  */
 function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
   if ($type == 'node') {
-    if ($node->type == STATION_PROGRAM_NODE_TYPE) {
+    if ($node->type == 'program') {
       return station_listen_links($node);
     }
   }
@@ -221,7 +211,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
  * Implementation of hook_nodeapi().
  */
 function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == STATION_PROGRAM_NODE_TYPE){
+  if ($node->type == 'program'){
     switch ($op) {
       case 'validate':
         // validate the usernames
@@ -350,7 +340,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
  */
 function station_schedule_form_alter($form_id, &$form) {
   // We only alter audio node edit forms
-  if ($form_id == STATION_PROGRAM_NODE_TYPE .'_node_form') {
+  if ($form_id == 'program_node_form') {
     $node = $form['#node'];
 
     if (user_access('administer schedule')) {
@@ -507,21 +497,6 @@ function station_schedule_program_get_times($nid) {
   }
   return $hours;
 }
-
-
-/**
- * Retrieve a pipe delimited string of autocomplete suggestions for existing programs
- */
-function station_schedule_program_autocomplete($string = '') {
-  $matches = array();
-  $result = db_query_range("SELECT DISTINCT title FROM {node} WHERE type = '%s' AND LOWER(title) LIKE LOWER('%s%%') AND status = 1 ORDER BY title", STATION_PROGRAM_NODE_TYPE, $string, 0, 10);
-  while ($program = db_fetch_object($result)) {
-    $matches[$program->title] = check_plain($program->title);
-  }
-  print drupal_to_js($matches);
-  exit();
-}
-
 
 function station_schedule_load($sid) {
   $result = db_query('SELECT * FROM {station_schedule} s WHERE s.sid = %d', $sid);

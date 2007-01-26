@@ -94,6 +94,12 @@ function station_admin_settings() {
       '#default_value' => variable_get('station_remote_schedule_url', ''),
       '#description' => t("The station schedule module is not enabled on this machine. The Station module can connect to another Drupal server running the station schedule module and retrieve information on scheduled programs via XML-RPC. If this is left blank, no connection will be attempted but things may not work. Omit the trailing slash, i.e.: http://example.com or http://example.com/drupal"),
     );
+    $form['station_remote']['station_remote_schedule_offset'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Station Schedule remote minute adjustment'),
+      '#default_value' => variable_get('station_remote_schedule_offset', 0),
+      '#description' => t("If the clocks on your two servers aren't accurately synchronized the archive will end up with the wrong names for programs. This number of minutes (positive or negative) will be added to the time before checking the schedule."),
+    );
   }
   else {
     $form['station_remote']['schedule_status'] = array(
@@ -114,7 +120,7 @@ function station_admin_settings() {
 /**
  * Checks that the RPC endpoint is valid.
  */
-function station_settings_validate($form_id, $edit) {
+function station_admin_settings_validate($form_id, $edit) {
   // check station url
   if ($url = $edit['station_remote_schedule_url']) {
     $url = check_url($url .'/xmlrpc.php');
@@ -124,6 +130,11 @@ function station_settings_validate($form_id, $edit) {
         t('You must provide a a valid URL for a Drupal site with the station schedule module installed.<br />Specific error: %xmlrpc-error', array('%xmlrpc-error' => xmlrpc_error_msg()))
       );
     }
+  }
+
+  $offset = $edit['station_remote_schedule_offset'];
+  if (!(is_numeric($offset) && intval($offset) == $offset)) {
+    form_set_error('station_remote_schedule_offset', t('The offset must be an integer.'));
   }
 }
 
@@ -222,6 +233,9 @@ function station_get_program_at($timestamp) {
     if (!$url) {
       return FALSE;
     }
+
+    // add in our magic offset
+    $timestamp += 60 * variable_get('station_remote_schedule_offset', 0);
 
     // round the time to the nearest 15 minute increment so we can do some
     // caching

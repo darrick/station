@@ -334,7 +334,7 @@ function theme_station_block_current_program($program = NULL, $unscheduled_messa
  */
 function station_listen_links($node, $short = FALSE)  {
   $listen_url = 'station/archives/'. $node->nid;
-  $rss_url = 'station/archives/rss/'. $node->nid;
+  $rss_url = 'station/archives/'. $node->nid .'/feed';
 
   $listen_img = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
   $rss_img = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';

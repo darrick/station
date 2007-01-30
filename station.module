@@ -121,20 +121,23 @@ function station_admin_settings() {
  * Checks that the RPC endpoint is valid.
  */
 function station_admin_settings_validate($form_id, $edit) {
-  // check station url
-  if ($url = $edit['station_remote_schedule_url']) {
-    $url = check_url($url .'/xmlrpc.php');
-    $ret = xmlrpc($url, 'station.program.get.at', time());
-    if (xmlrpc_error_msg()) {
-      form_set_error('station_remote_schedule_url',
-        t('You must provide a a valid URL for a Drupal site with the station schedule module installed.<br />Specific error: %xmlrpc-error', array('%xmlrpc-error' => xmlrpc_error_msg()))
-      );
+  if (!module_exists('station_schedule')) {
+    // check station url
+    if ($url = $edit['station_remote_schedule_url']) {
+      $url = check_url($url .'/xmlrpc.php');
+      $ret = xmlrpc($url, 'station.program.get.at', time());
+      if (xmlrpc_error_msg()) {
+        form_set_error('station_remote_schedule_url',
+          t('You must provide a a valid URL for a Drupal site with the station schedule module installed.<br />Specific error: %xmlrpc-error', array('%xmlrpc-error' => xmlrpc_error_msg()))
+        );
+      }
     }
-  }
 
-  $offset = $edit['station_remote_schedule_offset'];
-  if (!(is_numeric($offset) && intval($offset) == $offset)) {
-    form_set_error('station_remote_schedule_offset', t('The offset must be an integer.'));
+    // check that the offset is an integer
+    $offset = $edit['station_remote_schedule_offset'];
+    if (!(is_numeric($offset) && intval($offset) == $offset)) {
+      form_set_error('station_remote_schedule_offset', t('The offset must be an integer.'));
+    }
   }
 }
 

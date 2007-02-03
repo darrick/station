@@ -145,6 +145,14 @@ function station_schedule_admin_settings() {
     '#required' => TRUE,
   );
 
+  $form['station_schedule_dj_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('DJ title'),
+    '#default_value' => variable_get('station_schedule_dj_title', 'DJs'),
+    '#description' => t("This setting lets you determine what you'd like to call the users associated with programs."),
+    '#required' => TRUE,
+  );
+
   $form['station_schedule_program_node_type'] = array(
     '#type' => 'item',
     '#title' => t('Scheduled node type'),
@@ -307,11 +315,11 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
             $dj_info = '<ul><li>'. implode('</li><li>', $djs) .'</li></ul>';
           }
           else {
-            $dj_info = t('This program has no DJs');
+            $dj_info = t('This program has no @dj-title.', array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs')));
           }
           $node->content['djs'] = array(
             '#type' => 'item',
-            '#title' => 'DJs',
+            '#title' => variable_get('station_schedule_dj_title', 'DJs'),
             '#value' => $dj_info,
             '#weight' => -5,
           );
@@ -324,7 +332,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
           }
           $node->content['times'] = array(
             '#type' => 'item',
-            '#title' => 'Times',
+            '#title' => t('Times'),
             '#value' => $time_info,
             '#weight' => -4,
           );
@@ -370,10 +378,10 @@ function station_schedule_form_alter($form_id, &$form) {
       }
       $form['djs'] = array(
         '#type' => 'fieldset',
-        '#title' => t('DJs'),
+        '#title' => variable_get('station_schedule_dj_title', 'DJs'),
         '#weight' => 1,
         '#tree' => TRUE,
-        '#description' => t("Enter the names of users you'd like to add as DJs."),
+        '#description' => t("Enter the names of users you'd like to add as @dj-title.", array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs'))),
       );
       if ($node->djs) {
         foreach ((array)$node->djs as $uid => $username) {
@@ -896,10 +904,10 @@ function station_schedule_day_page($day) {
 
   if ($rows) {
     if (station_has_archive()) {
-      $cols = array(t('Time'), t('Listen'),  t('Program'), t('Genre'), t('DJs'));
+      $cols = array(t('Time'), t('Listen'),  t('Program'), t('Genre'), variable_get('station_schedule_dj_title', 'DJs'));
     }
     else {
-      $cols = array(t('Time'), t('Program'), t('Genre'), t('DJs'));
+      $cols = array(t('Time'), t('Program'), t('Genre'), variable_get('station_schedule_dj_title', 'DJs'));
     }
     $output = theme('table', $cols, $rows, array('class'=>'station-sch'));
   }

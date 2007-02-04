@@ -507,13 +507,13 @@ function station_schedule_program_get_at($gmt_timestamp) {
 
   // load the program id from the schedule
   $minute = station_minute_from_day_hour($day, $hour);
-  $node = _station_schedule_load_program_at($minute);
+  $schedule = station_schedule_load_at($minute);
+  $node = node_load($schedule->program_nid);
 
   // if there's an associated program, load it
   if ($node) {
     // set this so that if the show is scheduled for multiple times the caller
     // can easily figure out which one.
-    $node->current_time = $schedule->sid;
     $node->may_archive = $schedule->may_archive;
     // put this in so they can use a pretty url
     $node->node_url = url('node/'. $node->nid, NULL, NULL, TRUE);
@@ -538,8 +538,25 @@ function station_schedule_program_get_times($nid) {
   return $hours;
 }
 
+/**
+ * Load the schedule by its id.
+ * @param $sid schedule id
+ * @return schedule object
+ */
 function station_schedule_load($sid) {
   $result = db_query('SELECT * FROM {station_schedule} s WHERE s.sid = %d', $sid);
+  if ($s = db_fetch_object($result)) {
+    return $s;
+  }
+}
+
+/**
+ * Load the schedule by minute of the week.
+ * @param $minute the minute of the week...
+ * @return schedule object
+ */
+function station_schedule_load_at($minute) {
+  $result = db_query('SELECT * FROM {station_schedule} s WHERE s.start <= %d AND s.finish > %d', $minute, $minute);
   if ($s = db_fetch_object($result)) {
     return $s;
   }
@@ -564,14 +581,6 @@ function station_schedule_load_day($day) {
     $ret[] = $s;
   }
   return $ret;
-}
-
-function _station_schedule_load_program_at($minute) {
-  $nid = (int) db_result(db_query('SELECT s.program_nid FROM {station_schedule} s WHERE s.start <= %d AND s.finish > %d', $minute, $minute));
-  if ($nid) {
-    return node_load($nid);
-  }
-  return FALSE;
 }
 
 function station_schedule_admin_list() {
@@ -714,9 +723,9 @@ function station_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) 
   );
   $form['may_archive'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Saved in Station Archive'),
+    '#title' => t('Can be saved in Station Archive'),
     '#default_value' => $sch->may_archive,
-    '#description' => t('Checking this indicates that the Station Archive module should try and archive the audio played at this time. '),
+    '#description' => t('Checking this indicates that the Station Archive module can save audio recordings of the program at this timeslot to the archive.'),
   );
 
   $form['buttons']['submit'] = array(
@@ -922,12 +931,14 @@ function station_schedule_day_page($day) {
   foreach (station_schedule_load_day($day) as $hour) {
     if ($hour->program_nid) {
       $program = node_load($hour->program_nid);
-      $row['time'] = array('width' => 50,
+      $row['time'] = array('width' => 70,
         'data' => theme('station_hour_range', $hour->start, $hour->finish));
       if (station_has_archive()) {
         $listen = '';
-        foreach(station_schedule_links($program->nid, TRUE) as $link) {
-          $listen .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
+        if ($links = station_schedule_links($program->nid, TRUE)) {
+          foreach($links as $link) {
+            $listen .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
+          }
         }
         $row['listen'] = array('width' => 50, 'data' => $listen);
       }

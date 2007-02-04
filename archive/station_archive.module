@@ -508,6 +508,13 @@ function _station_archive_add_file($file) {
     $program_nid = 0;
     $program_title = variable_get('station_archive_unscheduled_title', t('DJ Auto mix'));
   }
+  elseif (!$program->may_archive) {
+    // The program scheduled at this time is marked as non-archivable. We'll
+    // delete the file and log it.
+    file_delete($file->filename);
+    watchdog('stationarchive', t('Deleted %program-title, it was marked as non-archivable.', array('%program-title' => $program->title)), WATCHDOG_NOTICE);
+    return TRUE;
+  }
   else {
     // we've got program information
     $program_nid = $program->nid;
@@ -530,7 +537,7 @@ function _station_archive_add_file($file) {
   $node->taxonomy = _station_archive_get_taxonomy($local_timestamp);
   // don't bother to check for promotion if there's no metadata
   $node->promote = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
-  // keep the timestamp as the filename so we can re-import again if needed but 
+  // keep the timestamp as the filename so we can re-import again if needed but
   // store a more readable filename for the user.
   $prettyname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).mp3");
   $node->audio_file->origname = $prettyname;

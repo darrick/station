@@ -210,6 +210,22 @@ function station_has_schedule() {
 }
 
 /**
+ * If there's an archive, return the URL.
+ *
+ * @return FALSE or string URL.
+ */
+function station_get_archive_url() {
+  if (module_exists('station_archive')) {
+    return 'station/archives/';
+  }
+  elseif ($url = variable_get('station_remote_archive_url', FALSE)) {
+    return $url . 'station/archives/';
+  }
+  return FALSE;
+}
+
+
+/**
  * Return an object for the current program from the local machine or RPC if
  * that's not available.
  *
@@ -328,40 +344,6 @@ function theme_station_block_current_program($program = NULL, $unscheduled_messa
   }
 
   return $output;
-}
-
-/**
- * Load listen links for a program.
- * @param $program program node object
- * @param $short bool true for short version of links
- */
-function station_listen_links($node, $short = FALSE)  {
-  $listen_url = 'station/archives/'. $node->nid;
-  $rss_url = 'station/archives/'. $node->nid .'/feed';
-
-  $listen_img = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
-  $rss_img = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
-
-  if (!module_exists('station_archive')) {
-    $archive_url = variable_get('station_remote_archive_url', FALSE);
-    $listen_url = url($archive_url . $listen_url);
-    $rss_url = url($archive_url . $rss_url);
-  }
-
-  return array(
-    'station_archive_listen' => array(
-      'href' => $listen_url,
-      'title' => theme('image', $listen_img, t('Listen')) . (($short) ? '' : ' '. t('Listen to previous')),
-      'attributes' => array('title' => t('Listen to previous broadcasts of this show')),
-       'html' => TRUE,
-    ),
-    'station_archive_rss' => array(
-      'href' => $rss_url,
-      'title' => theme('image', $rss_img, t('Podcast'))  . (($short) ? '' : ' '. t('Subscribe to podcast')),
-      'attributes' => array('title' => t('Grab this show with your podcast software')),
-      'html' => TRUE,
-    ),
-  );
 }
 
 /**

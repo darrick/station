@@ -175,12 +175,49 @@ function station_schedule_admin_settings() {
  */
 function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
   if ($type == 'node') {
-    if ($node->type == 'program') {
-      return station_listen_links($node);
+    switch ($node->type) {
+    case 'program':
+      return station_schedule_links($node->nid);
+    case 'station_playlist':
+      if (!$teaser && $node->program_nid) {
+        return station_schedule_links($node->program_nid);
+      }
     }
   }
-
   return array();
+}
+
+/**
+ * Load listen links for a program.
+ * @param $program_nid Node id of the program.
+ * @param $short bool true for short version of links
+ */
+function station_schedule_links($program_nid, $short = FALSE) {
+  $archive_url = station_get_archive_url();
+  $may_archive = db_result(db_query('SELECT COUNT(*) FROM {station_schedule} s WHERE s.program_nid = %s AND s.may_archive = 1', $program_nid));
+
+  if ($archive_url && $may_archive ) {
+    $listen_url = $archive_url . $program_nid;
+    $rss_url = $archive_url . $program_nid .'/feed';
+
+    $listen_img = drupal_get_path('module', 'station_schedule') .'/images/listen_tiny.gif';
+    $rss_img = drupal_get_path('module', 'station_schedule') .'/images/rss_tiny.gif';
+
+    return array(
+      'station_archive_listen' => array(
+        'href' => $listen_url,
+        'title' => theme('image', $listen_img, t('Listen')) . (($short) ? '' : ' '. t('Listen to previous')),
+        'attributes' => array('title' => t('Listen to previous broadcasts of this show')),
+        'html' => TRUE,
+      ),
+      'station_archive_rss' => array(
+        'href' => $rss_url,
+        'title' => theme('image', $rss_img, t('Podcast'))  . (($short) ? '' : ' '. t('Subscribe to podcast')),
+        'attributes' => array('title' => t('Grab this show with your podcast software')),
+        'html' => TRUE,
+      ),
+    );
+  }
 }
 
 /**
@@ -275,12 +312,6 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
       case 'load':
         // load the program's users under djs.
         $node->djs = _station_schedule_program_load_djs($node->nid);
-
-        // load program's schedule ids
-        $result = db_query('SELECT s.sid FROM {station_schedule} s WHERE s.program_nid = %d', $node->nid);
-        while ($s = db_fetch_object($result)) {
-          $node->scheduled_sids[] = $s->sid;
-        }
         break;
 
       case 'view':
@@ -483,6 +514,7 @@ function station_schedule_program_get_at($gmt_timestamp) {
     // set this so that if the show is scheduled for multiple times the caller
     // can easily figure out which one.
     $node->current_time = $schedule->sid;
+    $node->may_archive = $schedule->may_archive;
     // put this in so they can use a pretty url
     $node->node_url = url('node/'. $node->nid, NULL, NULL, TRUE);
     return $node;
@@ -498,7 +530,7 @@ function station_schedule_program_get_times($nid) {
   $i = 0;
   $hours = array();
   if ($nid) {
-    $result = db_query('SELECT s.sid, s.start, s.finish FROM {station_schedule} s WHERE s.program_nid = %s ORDER BY s.start', $nid);
+    $result = db_query('SELECT * FROM {station_schedule} s WHERE s.program_nid = %s ORDER BY s.start', $nid);
     while ($s = db_fetch_array($result)) {
       $hours[] = $s;
     }
@@ -633,6 +665,7 @@ function station_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) 
     $sch->sid = $id;
     $sch->start = (int) $start;
     $sch->finish = (int) $finish;
+    $sch->may_archive = TRUE;
   }
   else if ($op == 'edit') {
     if ($id && $sch = station_schedule_load($id)) {
@@ -679,6 +712,13 @@ function station_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) 
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program'
   );
+  $form['may_archive'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Saved in Station Archive'),
+    '#default_value' => $sch->may_archive,
+    '#description' => t('Checking this indicates that the Station Archive module should try and archive the audio played at this time. '),
+  );
+
   $form['buttons']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -727,13 +767,13 @@ function station_schedule_admin_form_submit($form_id, $form_values) {
   $program = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
 
   if ($form_values['sid']) {
-    db_query("UPDATE {station_schedule} SET program_nid = %d, start = %d, finish = %d WHERE sid = %d",
-      $program->nid, $start, $finish, $form_values['sid']);
+    db_query("UPDATE {station_schedule} SET program_nid = %d, start = %d, finish = %d, may_archive = %d WHERE sid = %d",
+      $program->nid, $start, $finish, $form_values['may_archive'], $form_values['sid']);
   }
   else {
     $sid = db_next_id('{station_schedule}_sid');
-    db_query("INSERT INTO {station_schedule} (sid, program_nid, start, finish) VALUES (%d, %d, %d, %d)",
-      $sid, $program->nid, $start, $finish);
+    db_query("INSERT INTO {station_schedule} (sid, program_nid, start, finish, may_archive) VALUES (%d, %d, %d, %d, %d)",
+      $sid, $program->nid, $start, $finish, $form_values['may_archive']);
   }
   drupal_goto('admin/content/schedule');
 }
@@ -886,7 +926,7 @@ function station_schedule_day_page($day) {
         'data' => theme('station_hour_range', $hour->start, $hour->finish));
       if (station_has_archive()) {
         $listen = '';
-        foreach(station_listen_links($program, TRUE) as $link) {
+        foreach(station_schedule_links($program->nid, TRUE) as $link) {
           $listen .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
         }
         $row['listen'] = array('width' => 50, 'data' => $listen);

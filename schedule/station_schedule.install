@@ -15,6 +15,7 @@ function station_schedule_install() {
           `program_nid` int(10) unsigned NOT NULL default '0',
           `start` int(10) unsigned NOT NULL default '0',
           `finish` int(10) unsigned NOT NULL default '0',
+          `may_archive` tinyint(1) NOT NULL default '1',
           PRIMARY KEY  (`sid`),
           KEY `station_schedule_start` (`start`),
           KEY `station_schedule_program` (`program_nid`)
@@ -205,3 +206,20 @@ function station_schedule_update_7() {
 function station_schedule_update_100() {
   return array();
 }
+
+/**
+ * Add an archiveable setting.
+ */
+function station_schedule_update_101() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql('ALTER TABLE {station_schedule}
+        ADD COLUMN `may_archive` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 AFTER `finish`;
+      ');
+    break;
+  }
+  return $ret;
+}
+

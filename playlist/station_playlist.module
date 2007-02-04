@@ -81,11 +81,10 @@ function station_playlist_admin_settings() {
  * the rights to edit a node.
  */
 function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
-  $links = array();
-
   if ($type == 'node') {
     switch ($node->type) {
       case 'program':
+        $links = array();
         if ($result = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} sp WHERE sp.program_nid = %d", $node->nid))) {
           $links['station_station_playlist_view'] = array(
             'title' => t('View all playlists'),
@@ -93,9 +92,7 @@ function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
           );
         }
 
-        if ($teaser) {
-        }
-        else {
+        if (!$teaser) {
           if (node_access('update', $node)) {
             $links['station_station_playlist_add'] = array(
               'title' => t('Add new playlist'),
@@ -103,24 +100,16 @@ function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
             );
           }
         }
-        break;
+        return $links;
 
       case 'station_playlist':
-        $links['station_program_program_view'] = array(
+        return array('station_program_program_view' => array(
           'title' => t('View program'),
           'href' => 'node/'. $node->program_nid,
-        );
-
-        if (!$teaser) {
-          $program = node_load($node->program_nid);
-          if ($program->nid) {
-            $links = array_merge($links, station_listen_links($program));
-          }
-        }
-        break;
+        ));
     }
   }
-  return $links;
+  return array();
 }
 
 

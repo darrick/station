@@ -201,10 +201,22 @@ function station_schedule_update_7() {
 }
 
 /**
- * Empty update to set a schema number for Drupal 5.0.
+ * Update to set the schema number for Drupal 5.0.
+ *
+ * Change the playlist node name from 4.7 to 5.0. We do this here because the
+ * station_schedule module was split up into sub modules as part of the upgrade
+ * and the station_playlist module isn't marked as installed, so the its
+ * updates won't be called.
  */
 function station_schedule_update_100() {
-  return array();
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("UPDATE {node} SET type = 'station_playlist' WHERE type='program_playlist';");
+    break;
+  }
+  return $ret;
 }
 
 /**

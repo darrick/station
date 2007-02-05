@@ -45,17 +45,10 @@ function station_playlist_uninstall() {
 }
 
 /**
- * Change node name from 4.7 for Drupal 5.0
+ * Empty update to set a schema number for Drupal 5.0.
  */
 function station_playlist_update_100() {
-  $ret = array();
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("UPDATE {node} SET type = 'station_playlist' WHERE type='program_playlist';");
-    break;
-  }
-  return $ret;
+  return array();
 }
 
 /**

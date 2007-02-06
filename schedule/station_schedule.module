@@ -501,23 +501,23 @@ function station_schedule_redirect_old($day = '', $hour = '') {
  *   scheduled.
  */
 function station_schedule_program_get_at($gmt_timestamp) {
+  // Load the schedule item based on the time.
   $ts = station_local_ts($gmt_timestamp);
   $day = date('w', $ts);
   $hour = date('G', $ts);
-
-  // load the program id from the schedule
   $minute = station_minute_from_day_hour($day, $hour);
   $schedule = station_schedule_load_at($minute);
-  $node = node_load($schedule->program_nid);
 
-  // if there's an associated program, load it
-  if ($node) {
-    // set this so that if the show is scheduled for multiple times the caller
-    // can easily figure out which one.
-    $node->may_archive = $schedule->may_archive;
-    // put this in so they can use a pretty url
-    $node->node_url = url('node/'. $node->nid, NULL, NULL, TRUE);
-    return $node;
+  // If there's an associated program, load it
+  if ($schedule->program_nid) {
+    if ($node = node_load($schedule->program_nid)) {
+      // set this so that if the show is scheduled for multiple times the caller
+      // can easily figure out which one.
+      $node->may_archive = $schedule->may_archive;
+      // put this in so they can use a pretty url
+      $node->node_url = url('node/'. $node->nid, NULL, NULL, TRUE);
+      return $node;
+    }
   }
   return new stdClass;
 }

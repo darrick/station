@@ -158,7 +158,7 @@ function station_program_view(&$node, $teaser = FALSE, $page = FALSE) {
   if ($teaser) {
     $node->content['genre'] = array(
       '#value' => $node->genre,
-      '#weight' => 0,
+      '#weight' => -2,
     );
   }
   else {

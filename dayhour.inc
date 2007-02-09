@@ -44,8 +44,8 @@ function station_valid_hour($hour) {
 /**
  * Get a numeric day of the week from a string or integer.
  *
- * @param   mixed integer from 1-7, or a, case in-sensitive, english day name.
- * @return  integer between 1 and 7 (sunday, monday, ... ,saturday)
+ * @param   mixed integer from 0-6, or a, case in-sensitive, english day name.
+ * @return  integer between 0 and 6 (sunday, monday, ... ,saturday)
  */
 function station_valid_day($day) {
   if (is_numeric($day)) {
@@ -133,7 +133,18 @@ function station_day_from_minute($minute) {
   return (int) (($minute) / 1440);
 }
 
-
+/**
+ * Return an array of time information for the minutes since midnight sunday.
+ * 'w' = Day of week (0-6)
+ * 'G' = 24 hour
+ * 'g' = 12 hour
+ * 'H' = 24 hour, 0 padded
+ * 'h' = 12 hour, 0 padded
+ * 'i' = minutes, 0 padded
+ * 'time' = h:i
+ * 'minutes' = minutes since midnight sunday
+ * 'a' = am/pm
+ */
 function station_time_from_minute($minutes) {
   $min = $minutes % 60;
   $day = (int) (($minutes) / 1440);

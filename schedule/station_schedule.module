@@ -240,7 +240,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
         $node = node_build_content($node, TRUE, FALSE);
         $items[] = array('title' => l($title, 'node/'. $nid),
           'class' => 'program',
-          'value' => $node->content['genre']['#value'] .t(' on '). $node->content['times']['#value'],
+          'value' => $node->content['genre']['#value'] . $node->content['times']['#value'],
         );
       }
       return array(t('Programs') => $items);
@@ -333,38 +333,26 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
 
         if ($teaser) {
           $node->content['djs'] = array(
-            '#value' => station_anded_list($djs) .' ',
-            '#weight' => -5,
+            '#value' => t(' with !djs', array('!djs' => station_anded_list($djs))),
+            '#weight' => -1,
           );
           $node->content['times'] = array(
-            '#value' => station_anded_list($times) .' ',
-            '#weight' => -4,
+            '#value' => $times ? t(' on @times.', array('@times' => station_anded_list($times))) : t(' is not currently scheduled.'),
+            '#weight' => 0,
           );
         }
         else {
-          if ($djs) {
-            $dj_info = '<ul><li>'. implode('</li><li>', $djs) .'</li></ul>';
-          }
-          else {
-            $dj_info = t('This program has no @dj-title.', array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs')));
-          }
+          $djs_title = variable_get('station_schedule_dj_title', 'DJs');
           $node->content['djs'] = array(
             '#type' => 'item',
-            '#title' => variable_get('station_schedule_dj_title', 'DJs'),
-            '#value' => $dj_info,
+            '#title' => $djs_title,
+            '#value' => $djs ? theme('item_list', $djs) : t('This program has no @dj-title.', array('@dj-title' => $djs_title)),
             '#weight' => -5,
           );
-
-          if ($times) {
-            $time_info = '<ul><li>'. implode('</li><li>', $times) .'</li></ul>';
-          }
-          else {
-            $time_info = t('This program is currently unscheduled');
-          }
           $node->content['times'] = array(
             '#type' => 'item',
             '#title' => t('Times'),
-            '#value' => $time_info,
+            '#value' => $times ? theme('item_list', $times) : t('This program is currently unscheduled.'),
             '#weight' => -4,
           );
         }

@@ -44,6 +44,36 @@ function station_schedule_views_tables() {
         'notafield' => TRUE,
         'handler' => 'station_handler_field_schedule_times',
       ),
+      'archive_links' => array(
+        'name' => t('Station Schedule: Archive listen page and RSS feed links'),
+        'help' => t("Links to both a page and feed for the program's archived audio."),
+        'sortable' => FALSE,
+        'notafield' => TRUE,
+        'handler' => array(
+          'station_handler_field_listen_links_short' => t('Icon'),
+          'station_handler_field_listen_links_long' => t('Icon and text'),
+        ),
+      ),
+      'archive_link_page' => array(
+        'name' => t('Station Schedule: Archive listen page link'),
+        'help' => t("Link to the program's archived audio page."),
+        'sortable' => FALSE,
+        'notafield' => TRUE,
+        'handler' => array(
+          'station_handler_field_listen_link_page_short' => t('Icon'),
+          'station_handler_field_listen_link_page_long' => t('Icon and text'),
+        ),
+      ),
+      'archive_link_rss' => array(
+        'name' => t('Station Schedule: Archive RSS feed link'),
+        'help' => t("Link to the program's archived audio feed."),
+        'sortable' => FALSE,
+        'notafield' => TRUE,
+        'handler' => array(
+          'station_handler_field_listen_link_rss_short' => t('Icon'),
+          'station_handler_field_listen_link_rss_long' => t('Icon and text'),
+        ),
+      ),
     ),
     'filters' => array(
       'is_scheduled' => array(
@@ -59,12 +89,41 @@ function station_schedule_views_tables() {
   return $tables;
 }
 
+function station_handler_field_schedule_times($fieldinfo, $fielddata, $value, $data) {
+  return station_anded_list(station_schedule_program_get_themed_times($data->nid));
+}
+
 function station_handler_field_schedule_djs($fieldinfo, $fielddata, $value, $data) {
   return station_anded_list(station_schedule_program_get_themed_djs($data->nid));
 }
 
-function station_handler_field_schedule_times($fieldinfo, $fielddata, $value, $data) {
-  return station_anded_list(station_schedule_program_get_themed_times($data->nid));
+function station_handler_field_listen_links_short($fieldinfo, $fielddata, $value, $data) {
+  $output = '';
+  foreach(station_schedule_archive_links($data->nid, TRUE) as $link) {
+    $output .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
+  }
+  return $output;
+}
+function station_handler_field_listen_link_page_short($fieldinfo, $fielddata, $value, $data) {
+  $links = station_schedule_archive_links($data->nid, TRUE);
+  return l($links['station_archive_listen']['title'], $links['station_archive_listen']['href'], NULL, NULL, NULL, TRUE, TRUE);
+}
+function station_handler_field_listen_link_rss_short($fieldinfo, $fielddata, $value, $data) {
+  $links = station_schedule_archive_links($data->nid, TRUE);
+  return l($links['station_archive_rss']['title'], $links['station_archive_rss']['href'], NULL, NULL, NULL, TRUE, TRUE);
+}
+
+function station_handler_field_listen_links_long($fieldinfo, $fielddata, $value, $data) {
+  $links = station_schedule_archive_links($data->nid, FALSE);
+  return theme('links', $links);
+}
+function station_handler_field_listen_link_page_long($fieldinfo, $fielddata, $value, $data) {
+  $links = station_schedule_archive_links($data->nid, FALSE);
+  return l($links['station_archive_listen']['title'], $links['station_archive_listen']['href'], NULL, NULL, NULL, TRUE, TRUE);
+}
+function station_handler_field_listen_link_rss_long($fieldinfo, $fielddata, $value, $data) {
+  $links = station_schedule_archive_links($data->nid, FALSE);
+  return l($links['station_archive_rss']['title'], $links['station_archive_rss']['href'], NULL, NULL, NULL, TRUE, TRUE);
 }
 
 function station_handler_filter_is_scheduled($op, $filterdata, $filterinfo, &$query) {

@@ -177,10 +177,10 @@ function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
   if ($type == 'node') {
     switch ($node->type) {
     case 'program':
-      return station_schedule_links($node->nid);
+      return station_schedule_archive_links($node->nid);
     case 'station_playlist':
       if (!$teaser && $node->program_nid) {
-        return station_schedule_links($node->program_nid);
+        return station_schedule_archive_links($node->program_nid);
       }
     }
   }
@@ -192,7 +192,7 @@ function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
  * @param $program_nid Node id of the program.
  * @param $short bool true for short version of links
  */
-function station_schedule_links($program_nid, $short = FALSE) {
+function station_schedule_archive_links($program_nid, $short = FALSE) {
   $archive_url = station_get_archive_url();
   $may_archive = db_result(db_query('SELECT COUNT(*) FROM {station_schedule} s WHERE s.program_nid = %s AND s.may_archive = 1', $program_nid));
 
@@ -256,7 +256,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
  * Implementation of hook_nodeapi().
  */
 function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == 'program'){
+  if ($node->type == 'program') {
     switch ($op) {
       case 'validate':
         // validate the usernames
@@ -930,10 +930,8 @@ function station_schedule_day_page($day) {
         'data' => theme('station_hour_range', $hour->start, $hour->finish));
       if (station_has_archive()) {
         $listen = '';
-        if ($links = station_schedule_links($program->nid, TRUE)) {
-          foreach($links as $link) {
-            $listen .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
-          }
+        foreach(station_schedule_archive_links($program->nid, TRUE) as $link) {
+          $listen .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
         }
         $row['listen'] = array('width' => 50, 'data' => $listen);
       }

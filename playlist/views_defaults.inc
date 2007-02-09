@@ -24,7 +24,7 @@ function station_playlist_views_default_views() {
   $view->use_pager = TRUE;
   $view->nodes_per_page = '20';
   $view->menu = TRUE;
-  $view->menu_title = 'playlists';
+  $view->menu_title = 'Playlists';
   $view->menu_tab = FALSE;
   $view->menu_tab_default = FALSE;
   $view->menu_tab_weight = '0';

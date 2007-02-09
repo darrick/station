@@ -325,11 +325,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         // make djs into links
         $djs = station_schedule_program_get_themed_djs($node->nid);
 
-        // load the program's scheduled times
-        $times = array();
-        foreach (station_schedule_program_get_times($node->nid) as $range) {
-          $times[] = theme('station_dayhour_range', $range['start'], $range['finish']);
-        }
+        $times = station_schedule_program_get_themed_times($node->nid);
 
         if ($teaser) {
           $node->content['djs'] = array(
@@ -380,7 +376,7 @@ function station_schedule_form_alter($form_id, &$form) {
           '#tree' => TRUE,
           '#description' => t("These are the times the program is currently scheduled."),
         );
-        $times = station_schedule_program_get_times($node->nid);
+        $times = _station_schedule_program_load_times($node->nid);
         foreach ($times as $time) {
           $form['schedule'][$time['sid']] = array(
             '#type' => 'item',
@@ -449,6 +445,33 @@ function station_schedule_program_get_themed_djs($program_nid) {
   return $djs;
 }
 
+/**
+ * Returns an array of hours the program is scheduled.
+ */
+function _station_schedule_program_load_times($nid) {
+  // load the program's scheduled times
+  $i = 0;
+  $hours = array();
+  if ($nid) {
+    $result = db_query('SELECT * FROM {station_schedule} s WHERE s.program_nid = %s ORDER BY s.start', $nid);
+    while ($s = db_fetch_array($result)) {
+      $hours[] = $s;
+    }
+  }
+  return $hours;
+}
+
+/**
+ * Returns a themed array of the times a program is scheduled.
+ */
+function station_schedule_program_get_themed_times($nid) {
+  // load the program's scheduled times
+  $times = array();
+  foreach (_station_schedule_program_load_times($nid) as $range) {
+    $times[] = theme('station_dayhour_range', $range['start'], $range['finish']);
+  }
+  return $times;
+}
 
 /**
  * Implementation of hook_xmlrpc().
@@ -508,22 +531,6 @@ function station_schedule_program_get_at($gmt_timestamp) {
     }
   }
   return new stdClass;
-}
-
-/**
- * Returns an array of hours the program is scheduled.
- */
-function station_schedule_program_get_times($nid) {
-  // load the program's scheduled times
-  $i = 0;
-  $hours = array();
-  if ($nid) {
-    $result = db_query('SELECT * FROM {station_schedule} s WHERE s.program_nid = %s ORDER BY s.start', $nid);
-    while ($s = db_fetch_array($result)) {
-      $hours[] = $s;
-    }
-  }
-  return $hours;
 }
 
 /**

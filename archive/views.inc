@@ -79,18 +79,18 @@ function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = 
   switch($op) {
     case 'summary':
       // add these up front to avoid a wacky bug with rewriting
-      $query->ensure_table('node', true);
+      $query->ensure_table('node');
       $query->add_field('nid', 'node');
       // now onto our regularly scheduled program
-      $query->ensure_table('station_archive', true);
-      $query->ensure_table('station_archive_program', true);
+      $query->ensure_table('station_archive');
+      $query->ensure_table('station_archive_program');
       $query->add_field('title', 'station_archive_program');
       $query->add_field('program_nid', 'station_archive_program');
       $query->add_where('station_archive_program.program_nid IS NOT NULL');
       $fieldinfo['field'] = "station_archive_program.title";
       return $fieldinfo;
     case 'sort':
-      $query->ensure_table('station_archive_program', true);
+      $query->ensure_table('station_archive_program');
       $query->add_orderby('station_archive_program', 'title', $argtype);
       break;
     case 'filter':

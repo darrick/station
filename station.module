@@ -181,11 +181,7 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 function station_page() {
-  return '';
-  $output = "station page placeholder<br />";
-  $output .= "archive: " . station_has_archive() ."<br />";
-  $output .= "schedule: " . station_has_schedule() ."<br />";
-  return $output;
+  return theme('menu_tree', menu_get_active_item());
 }
 
 
@@ -377,3 +373,49 @@ function station_local_ts($ts = FALSE) {
 function station_today() {
   return date('w', station_local_ts());
 }
+
+/**
+ * Function to send notices of station changes via hook_station_notices. 
+ */
+function _station_send_notice($type, $op, $data) {
+  module_invoke_all('station_notice', $type, $op, $data);
+}
+
+/**
+ * Implementation of hook_station_notices to display simple notices about 
+ * station changes.
+ * @param $type 'dj' or 'schedule'
+ * @param $op 'add', 'remove', 'change' - Change only applies to schedule 
+ * 		items.
+ * @param $data associative array with details like: nid, sid, uid.
+ */
+/*
+function station_station_notice($type, $op, $data) {
+  if ($type == 'dj') {
+    $uid = $data['uid'];
+    $nid = $data['nid'];
+	switch ($op) {
+	  case 'add':
+	    drupal_set_message("adding $uid to $nid");
+	    break;
+	  case 'remove':
+	    drupal_set_message("removing $uid from $nid");
+	    break;
+	}
+  } elseif ($type == 'schedule') {
+    $sid = $data['sid'];
+    $nid = $data['nid'];
+    switch ($op) {
+	  case 'add':
+	    drupal_set_message("adding $sid to $nid");
+	    break;
+	  case 'change':
+	    drupal_set_message("changing $sid on $nid");
+	    break;
+	  case 'remove':
+	    drupal_set_message("removing $sid from $nid");
+	    break;
+	}
+  }
+}
+*/

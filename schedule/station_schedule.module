@@ -288,6 +288,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
       case 'insert':
         // dj additions
         foreach ($node->djs as $uid => $username) {
+          _station_send_notice('dj', 'add', array('nid' => $node->nid, 'uid' => $uid));
           db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
         }
         break;
@@ -295,17 +296,29 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
       case 'update':
         // only schedule admins should be able to add or remove djs
         if (user_access('administer schedule')) {
+          $current_djs = _station_schedule_program_load_djs($node->nid);
+
           // dj removals
-          db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
+          $removals = array_diff_assoc($current_djs, $node->djs);
+          foreach ($removals as $uid => $username) {
+            _station_send_notice('dj', 'remove', array('nid' => $node->nid, 'uid' => $uid));
+            db_query('DELETE FROM {station_dj} WHERE uid = %d AND program_nid = %d', $uid, $node->nid);
+          }
 
           // dj additions
-          foreach ($node->djs as $uid => $username) {
+          $additions = array_diff_assoc($node->djs, $current_djs);
+          foreach ($additions as $uid => $username) {
+            _station_send_notice('dj', 'add', array('nid' => $node->nid, 'uid' => $uid));
             db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
           }
         }
         break;
 
       case 'delete':
+		$removals = _station_schedule_program_load_djs($node->nid);
+		foreach ($removals as $uid => $username) {
+		  _station_send_notice('dj', 'remove', array('nid' => $node->nid, 'uid' => $uid));  
+		}
         db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
         break;
 
@@ -771,11 +784,20 @@ function station_schedule_admin_form_submit($form_id, $form_values) {
   $program = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
 
   if ($form_values['sid']) {
+    $old_sch = station_schedule_load($form_values['sid']);
+    if ($old_sch->program_nid != $program->nid) {
+	  _station_send_notice('schedule', 'remove', array('nid' => $old_sch->program_nid, 'sid' => $form_values['sid']));
+	  _station_send_notice('schedule', 'add', array('nid' => $program->nid, 'sid' => $form_values['sid']));  
+    } 
+    elseif ($old_sch->start != $start || $old_sch->finish != $finish) {
+      _station_send_notice('schedule', 'change', array('nid' => $program->nid, 'sid' => $form_values['sid']));
+    }
     db_query("UPDATE {station_schedule} SET program_nid = %d, start = %d, finish = %d, may_archive = %d WHERE sid = %d",
       $program->nid, $start, $finish, $form_values['may_archive'], $form_values['sid']);
   }
   else {
     $sid = db_next_id('{station_schedule}_sid');
+    _station_send_notice('schedule', 'add', array('nid' => $program->nid, 'sid' => $sid));
     db_query("INSERT INTO {station_schedule} (sid, program_nid, start, finish, may_archive) VALUES (%d, %d, %d, %d, %d)",
       $sid, $program->nid, $start, $finish, $form_values['may_archive']);
   }
@@ -817,7 +839,6 @@ function station_schedule_admin_remove_submit($formid, $form) {
     return 'admin/content/schedule';
   }
 }
-
 
 /**
  * Print a week's schedule page

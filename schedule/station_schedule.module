@@ -142,17 +142,24 @@ function station_schedule_admin_settings() {
     '#default_value' => variable_get('station_schedule_increment', 60),
     '#options' => array(15 => t('15 Minutes'), 30 => t('30 Minutes'), 60 => t('1 Hour')),
     '#description' => t("This is the minimum increment that programs can be scheduled in. <strong>Watch out:</strong> Changing this to a larger value on an existing schedule will probably cause wierdness."),
-    '#required' => TRUE,
   );
 
   $form['station_schedule_dj_title'] = array(
     '#type' => 'textfield',
     '#title' => t('DJ title'),
     '#default_value' => variable_get('station_schedule_dj_title', 'DJs'),
-    '#description' => t("This setting lets you determine what you'd like to call the users associated with programs."),
+    '#description' => t("This setting lets you determine what you'd like to call the users associated with programs. It should be plural."),
     '#required' => TRUE,
   );
-
+  
+  $form['station_schedule_dj_role'] = array(
+    '#type' => 'select',
+    '#title' => t('DJs role'),
+    '#default_value' => variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID),
+    '#options' => user_roles(TRUE),
+    '#description' => t("This lets you restrict DJs to members of a specific role. If you don't want any restrictions, select <em>authenticated user</em>s."),
+  );
+  
   $form['station_schedule_program_node_type'] = array(
     '#type' => 'item',
     '#title' => t('Scheduled node type'),
@@ -263,13 +270,19 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
   if ($node->type == 'program') {
     switch ($op) {
       case 'validate':
-        // validate the usernames
+        $roles = user_roles(TRUE);
+        $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
+
+        // validate the users
         foreach ($node->djs as $key => $dj) {
           if ($dj['username']) {
             $user = user_load(array('name' => $dj['username']));
-
             if (!$user->uid) {
               form_set_error("djs][$key][username", t('You need to specify a valid user name.'));
+            }
+            if (!isset($user->roles[$dj_role])) {
+              form_set_error("djs][$key][username", t('%username is not a member of the %rolename role.', 
+                  array('%username' => $user->name, '%rolename' => $roles[$dj_role])));
             }
           }
         }
@@ -339,9 +352,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
           menu_set_location($breadcrumb);
         }
 
-        // make djs into links
         $djs = station_schedule_program_get_themed_djs($node->nid);
-
         $times = station_schedule_program_get_themed_times($node->nid);
 
         if ($teaser) {
@@ -408,12 +419,16 @@ function station_schedule_form_alter($form_id, &$form) {
           );
         }
       }
+      
+      $roles = user_roles(TRUE);
+      $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
       $form['djs'] = array(
         '#type' => 'fieldset',
         '#title' => variable_get('station_schedule_dj_title', 'DJs'),
         '#weight' => 1,
         '#tree' => TRUE,
-        '#description' => t("Enter the names of users you'd like to add as @dj-title.", array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs'))),
+        '#description' => t("Enter the names of users you'd like to add as @dj-title. The users must be members of the %role-name role.", 
+            array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs'), '%role-name' => $roles[$dj_role])),
       );
       if ($node->djs) {
         foreach ((array)$node->djs as $uid => $username) {

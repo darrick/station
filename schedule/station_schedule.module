@@ -66,10 +66,10 @@ function station_schedule_menu($may_cache) {
       'type' => MENU_CALLBACK
     );
     $items[] = array(
-      'path' => 'admin/content/schedule/delete',
-      'title' => t('Delete'),
+      'path' => 'admin/content/schedule/remove',
+      'title' => t('Remove schedule item'),
       'callback' => 'drupal_get_form',
-      'callback arguments' => array('station_schedule_admin_delete'),
+      'callback arguments' => array('station_schedule_admin_remove'),
       'type' => MENU_CALLBACK
     );
 
@@ -648,8 +648,8 @@ function station_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) 
   if ($post_op == t('Cancel')) {
     drupal_goto('admin/content/schedule');
   }
-  if ($post_op == t('Delete')) {
-    drupal_goto("admin/content/schedule/delete/$id");
+  if ($post_op == t('Remove')) {
+    drupal_goto("admin/content/schedule/remove/$id");
   }
 
   $day_options = station_day_name();
@@ -728,9 +728,9 @@ function station_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) 
     '#value' => t('Save'),
   );
   if ($sch->sid) {
-    $form['buttons']['delete'] = array(
+    $form['buttons']['remove'] = array(
       '#type' => 'button',
-      '#value' => t('Delete'),
+      '#value' => t('Remove'),
     );
   }
   $form['buttons']['cancel'] = array(
@@ -783,9 +783,9 @@ function station_schedule_admin_form_submit($form_id, $form_values) {
 }
 
 /**
- * Page to confirm the deletion of a schedule item.
+ * Page to confirm the removal of a schedule item.
  */
-function station_schedule_admin_delete($sid = '') {
+function station_schedule_admin_remove($sid = '') {
   $sch = station_schedule_load($sid);
   if (!$sch) {
     return 'admin/content/schedule';
@@ -796,12 +796,13 @@ function station_schedule_admin_delete($sid = '') {
   $time = theme('station_dayhour_range', $sch->start, $sch->finish);
 
   $form['sid'] = array('#type' => 'value', '#value' => $sch->sid);
+  $form['nid'] = array('#type' => 'value', '#value' => $sch->program_nid);
   return confirm_form(
     $form,
-    t('Are you sure you want to delete %title at %time?', array('%title' => $program->title, '%time' => $time)),
+    t('Are you sure you want to unschedule %title at %time?', array('%title' => $program->title, '%time' => $time)),
     $_GET['destination'] ? $_GET['destination'] : 'admin/content/schedule',
-    t('This action cannot be undone.'),
-    t('Delete'),
+    t('This action cannot be undone, but you can always re-add the program to the schedule.'),
+    t('Remove'),
     t('Cancel')
   );
 }
@@ -809,8 +810,9 @@ function station_schedule_admin_delete($sid = '') {
 /**
  * Delete a schedule item.
  */
-function station_schedule_admin_delete_submit($formid, $form) {
+function station_schedule_admin_remove_submit($formid, $form) {
   if ($form['confirm']) {
+    _station_send_notice('schedule', 'remove', array('nid' => $form['nid'], 'sid' => $form['sid']));
     db_query("DELETE FROM {station_schedule} WHERE sid = %d", $form['sid']);
     return 'admin/content/schedule';
   }

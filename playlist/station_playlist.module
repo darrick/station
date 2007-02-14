@@ -328,8 +328,8 @@ function station_playlist_submit(&$node) {
   }
 
   // title
-  $node->title = t('@program-title playlist for @date',
-    array('@program-title' => $node->program_title, '@date' => implode('-', $node->program_date)));
+  $node->title = t('!program-title playlist for !date',
+    array('!program-title' => $node->program_title, '!date' => implode('-', $node->program_date)));
 
   // convert the date into a timestamp
   $node->timestamp = mktime(0, 0, 0, $node->program_date['month'], $node->program_date['day'], $node->program_date['year']);

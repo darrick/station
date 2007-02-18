@@ -454,7 +454,7 @@ function _station_archive_delete_old_nodes() {
 function _station_archive_import_files() {
   // locate new mp3s in the import directory
   if ($dirpath = variable_get('station_archive_import_dir', drupal_get_path('module', 'station_archive') .'/import')) {
-    $files = file_scan_directory($dirpath, '[0-9]+\.mp3$');
+    $files = file_scan_directory($dirpath, '[0-9]+\.(mp3|ogg)$');
     foreach ($files as $file) {
       // try to avoid php's script timeout with a bunch of large files or
       // a slow machine
@@ -484,7 +484,9 @@ function _station_archive_import_files() {
  */
 function _station_archive_add_file($file) {
   // extract the timestamp from the filename (should be simply timestamp.mp3)
-  $gmt_timestamp = (integer) $file->name;
+  $basename = explode('.', $file->basename);
+  $gmt_timestamp = $basename[0];
+  $file_format = $basename[1];
   // get a timestamp that's correct for the timezone
   $local_timestamp = station_local_ts($gmt_timestamp);
   $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
@@ -539,7 +541,7 @@ function _station_archive_add_file($file) {
   $node->promote = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
   // keep the timestamp as the filename so we can re-import again if needed but
   // store a more readable filename for the user.
-  $prettyname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).mp3");
+  $prettyname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).$file_format");
   $node->audio_file->origname = $prettyname;
 
   // ... and save it

@@ -48,7 +48,8 @@ $length = ($endTime - time()) + (int) $settings['overlap_seconds'];
 
 // Download the stream
 $stream_url = $settings['stream_url'];
-exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$startTime}.mp3 --quiet");
+$file_format = strtolower($settings['file_format']);
+exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$startTime}.{$file_format} --quiet");
 
 // stream ripper creates the .cue file. we'll use its absence as a signal
 // to the module that it's safe to import a file.

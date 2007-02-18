@@ -613,6 +613,16 @@ function _station_archive_get_vid() {
 }
 
 /**
+ * Implementation of hook_taxonomy(). Delete our vocabulary variable if the 
+ * vocabulary is deleted. 
+ */
+function station_archive($op, $type, $object = NULL) {
+  if ($op == 'delete' && $type == 'vocabulary' && $object->vid == _station_archive_get_vid())  {
+    variable_del('station_archive_vid');
+  }
+}
+
+/**
  * Give a string with hours return an array of vocabulary term ids for the
  * given hours.
  *

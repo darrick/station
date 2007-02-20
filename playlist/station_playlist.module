@@ -291,9 +291,7 @@ function theme_station_playlist_track_form($form) {
 }
 
 // use this hook to convert form elements to node values
-function station_playlist_validate(&$node) {
-  global $form_values;
-
+function station_playlist_validate(&$node, &$form) {
   // convert the programs title into a node id
   if (isset($node->program_title)) {
     $prog = node_load(array('type' => 'program', 'title' => $node->program_title));
@@ -315,8 +313,8 @@ function station_playlist_validate(&$node) {
   }
 
   // set the title so it shows up in the preview
-  $form_values['title'] = t('@program-title playlist for @date',
-    array('@program-title' => $node->program_title, '@date' => implode('-', $node->program_date)));
+  form_set_value($form['title'], t('!program-title playlist for !date',
+      array('!program-title' => $node->program_title, '!date' => implode('-', $node->program_date))));
 }
 
 function station_playlist_submit(&$node) {
@@ -326,10 +324,6 @@ function station_playlist_submit(&$node) {
       $node->program_nid = $prog->nid;
     }
   }
-
-  // title
-  $node->title = t('!program-title playlist for !date',
-    array('!program-title' => $node->program_title, '!date' => implode('-', $node->program_date)));
 
   // convert the date into a timestamp
   $node->timestamp = mktime(0, 0, 0, $node->program_date['month'], $node->program_date['day'], $node->program_date['year']);

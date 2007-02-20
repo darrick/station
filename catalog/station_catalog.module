@@ -31,9 +31,9 @@ function station_catalog_menu($may_cache) {
     );
 
     $items[] = array(
-      'path' => 'station/catalog',
+      'path' => 'station/catalog/search',
       'title' => t('Catalog'),
-      'callback' => 'station_catalog_page',
+      'callback' => 'station_catalog_search_page',
       'access' => user_access('access content'),
       'type' => MENU_NORMAL_ITEM,
     );
@@ -95,7 +95,7 @@ function station_catalog_album_access($op, $node) {
 /**
  * Build a form for program nodes.
  */
-function station_catalog_album_form(&$node) {
+function station_catalog_album_form($node) {
   $form['number'] = array(
     '#type' => 'textfield', '#title' => t('Number'),
     '#default_value' => $node->number,
@@ -130,7 +130,7 @@ function station_catalog_album_form(&$node) {
   return $form;
 }
 
-function station_catalog_album_validate(&$node) {
+function station_catalog_album_validate(&$node, &$form) {
   if (!is_numeric($node->number)) {
     form_set_error('number', 'Must be a numeric value');
   }
@@ -145,15 +145,12 @@ function station_catalog_album_validate(&$node) {
     if ($node = db_fetch_object($query)) {
       form_set_error(
         'number',
-        t('Another album <a href="%link">%title</a> already has this number.', array('%link' => url('node/'. $node->nid), '%title' => theme('placeholder', $node->title)))
+        t('Another album <a href="@link">%title</a> already has this number.', array('@link' => url('node/'. $node->nid), '%title' => $node->title))
       );
     }
   }
-}
-
-function station_catalog_album_submit(&$node) {
-  // build the title
-  $node->title = $node->artist .' - '. $node->album;
+  
+  form_set_value($form['title'], $node->artist .' - '. $node->album);
 }
 
 function station_catalog_album_load($node) {
@@ -165,7 +162,7 @@ function station_catalog_album_insert($node) {
 }
 
 function station_catalog_album_delete($node) {
-  db_query('DELETE FROM {station_catalog} WHERE nid = %d', $node->nid);
+  db_query("DELETE FROM {station_catalog} WHERE nid = %d", $node->nid);
 }
 
 function station_catalog_album_update($node) {
@@ -202,4 +199,72 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
   );
   //musicbrainz_request('artist', array('name' => $node->artist));
   return $node;
+}
+
+
+function station_catalog_search_page($field = '', $value ='') {
+  $output = drupal_get_form('station_catalog_search_form', $field, $value);
+  $output .= station_catalog_search($field, $value);
+  return $output;
+}
+
+function station_catalog_search_form($field = '', $value ='') {
+  $form['field'] = array(
+    '#type' => 'select',
+    '#title' => 'Search by',
+    '#options' => array(
+      '-' => t('Select one...'),
+      'number' => t('Number'), 
+      'artist' => t('Artist'), 
+      'album' => t('Album'), 
+      'label' => t('Label')
+    ),
+    '#default_value' => $field,
+    '#required' => TRUE,
+  );
+  $form['value'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Search for',
+    '#default_value' => $value,
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => t('Submit')
+  );
+  return $form;
+}
+
+function theme_station_catalog_search_form($form) {
+  $rows = array(
+    drupal_render($form['field']),
+    drupal_render($form['value']),
+    drupal_render($form['submit']),
+  );
+  return theme('table', $rows, array()) . drupal_render($form);
+}
+
+function station_catalog_search_form_submit($form_id, $form_values) {
+  // make sure it's an allowed search field
+  if (in_array($form_values['field'], array('number', 'artist', 'title', 'album', 'label'))) {
+    return 'station/catalog/search/' . $form_values['field'] .'/'. $form_values['value'];
+  }
+  return 'station/catalog/search';
+}
+
+function station_catalog_search($field, $value) {
+  if (in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
+    $rows = array();
+    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY %s', $field, $value, $field, 0, 10);
+    while ($item = db_fetch_object($result)) {
+      $rows[] = array($item->number, $item->artist, $item->album, $item->label);
+    }
+    if ($rows) {
+      $heading = array(t('Number'), t('Artist'), t('Album'), t('Label'));
+      return theme('table', $heading, $rows);
+    }
+    else {
+      return t("No matches were found.");
+    }
+  }
 }

@@ -214,6 +214,7 @@ function station_schedule_update_100() {
     case 'mysql':
     case 'mysqli':
       $ret[] = update_sql("UPDATE {node} SET type = 'station_playlist' WHERE type='program_playlist';");
+      $ret[] = update_sql("UPDATE {node_type} SET type = 'station_playlist' WHERE type='program_playlist';");
     break;
   }
   return $ret;

@@ -37,6 +37,13 @@ function station_catalog_menu($may_cache) {
       'access' => user_access('access content'),
       'type' => MENU_NORMAL_ITEM,
     );
+    
+    $items[] = array(
+      'path' => 'station/catalog/js_search',
+      'callback' => 'station_catalog_search_js',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
   }
 
   return $items;
@@ -58,7 +65,7 @@ function station_catalog_admin_settings() {
  */
 function station_catalog_node_info() {
   return array(
-    'album' => array(
+    'station_album' => array(
       'name' => t('Album'),
       'module' => 'station_catalog_album',
       'description' => t("An album in the station's library."),
@@ -142,14 +149,14 @@ function station_catalog_album_validate(&$node, &$form) {
     else {
       $query = db_query('SELECT sc.nid, n.title FROM station_catalog sc INNER JOIN node n ON sc.nid = n.nid WHERE sc.number = %d', $node->number);
     }
-    if ($node = db_fetch_object($query)) {
+    if ($other_node = db_fetch_object($query)) {
       form_set_error(
         'number',
-        t('Another album <a href="@link">%title</a> already has this number.', array('@link' => url('node/'. $node->nid), '%title' => $node->title))
+        t('Another album <a href="@link">%title</a> already has this number.', array('@link' => url('node/'. $other_node->nid), '%title' => $other_node->title))
       );
     }
   }
-  
+
   form_set_value($form['title'], $node->artist .' - '. $node->album);
 }
 
@@ -179,6 +186,12 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
     menu_set_location($breadcrumb);
   }
 
+  $node->content['number'] = array(
+    '#type' => 'item',
+    '#title' => t('Number'),
+    '#value' => $node->number,
+    '#weight' => -6,
+  );
   $node->content['artist'] = array(
     '#type' => 'item',
     '#title' => t('Artist'),
@@ -203,8 +216,28 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
 
 
 function station_catalog_search_page($field = '', $value ='') {
+  drupal_add_js(drupal_get_path('module', 'station_catalog') .'/station_catalog.js' , 'module', 'header', FALSE, TRUE);
+
+  $output .= '<div id="station-catalog-search">';
   $output = drupal_get_form('station_catalog_search_form', $field, $value);
-  $output .= station_catalog_search($field, $value);
+  
+  $heading = array(t('Number'), t('Artist'), t('Album'), t('Label'));
+  $rows = array();
+  if (in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
+    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY %s', $field, $value, $field, 0, 10);
+    while ($item = db_fetch_object($result)) {
+      $rows[] = array($item->number, $item->artist, $item->album, $item->label);
+    }
+  }
+  if ($rows) {
+    $matches = theme('table', $heading, $rows);
+  }
+  else {
+    $matches = t("No matches were found.");
+  }
+    
+  $output .= '<div id="station-catalog-search-results">' .$matches. '</div>';
+  $output .= '</div>';
   return $output;
 }
 
@@ -252,19 +285,14 @@ function station_catalog_search_form_submit($form_id, $form_values) {
   return 'station/catalog/search';
 }
 
-function station_catalog_search($field, $value) {
-  if (in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
-    $rows = array();
-    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY %s', $field, $value, $field, 0, 10);
+function station_catalog_search_js($field = '', $value ='') {
+  $matches = array();
+  if ($value && in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
+    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY number', $field, $value, 0, 30);
     while ($item = db_fetch_object($result)) {
-      $rows[] = array($item->number, $item->artist, $item->album, $item->label);
-    }
-    if ($rows) {
-      $heading = array(t('Number'), t('Artist'), t('Album'), t('Label'));
-      return theme('table', $heading, $rows);
-    }
-    else {
-      return t("No matches were found.");
+     $matches[] = $item;
     }
   }
+  print drupal_to_js($matches);
+  exit();
 }

@@ -40,3 +40,18 @@ function station_catalog_uninstall() {
 function station_catalog_update_100() {
   return array();
 }
+
+/**
+ * Change the album node name from 4.7 to 5.0. 
+ */
+function station_catalog_update_101() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("UPDATE {node} SET type = 'station_album' WHERE type='album';");
+      $ret[] = update_sql("UPDATE {node_type} SET type = 'station_album' WHERE type='album';");
+    break;
+  }
+  return $ret;
+}

@@ -2,6 +2,9 @@
 
 // $Id$
 
+// there are 1440 minutes in a day (60minute * 24hours = 1day)
+define('MINUTES_IN_DAY', 1440);
+
 /**
  * Turn an mixed into a valid hour.
  *
@@ -27,10 +30,10 @@ function station_valid_hour($hour) {
       $hour = (integer) $parts[1];
       // 12am and 12pm are special cases
       if ($hour == 12) {
-          $hour += 12;
+        $hour += 12;
       }
       if ($parts[2] == 'pm') {
-          $hour += 12;
+        $hour += 12;
       }
     }
   }
@@ -130,7 +133,7 @@ function station_minute_from_day_hour($day, $hour) {
  * @return day of the week
  */
 function station_day_from_minute($minute) {
-  return (int) (($minute) / 1440);
+  return (int) (($minute) / MINUTES_IN_DAY);
 }
 
 /**
@@ -147,8 +150,8 @@ function station_day_from_minute($minute) {
  */
 function station_time_from_minute($minutes) {
   $min = $minutes % 60;
-  $day = (int) (($minutes) / 1440);
-  $hour24 = (int) (($minutes % 1440) / 60);
+  $day = (int) (($minutes) / MINUTES_IN_DAY);
+  $hour24 = (int) (($minutes % MINUTES_IN_DAY) / 60);
   if (!($hour12 = $hour24 % 12)) {
     $hour12 = 12;
   }

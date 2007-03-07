@@ -54,7 +54,7 @@ function station_schedule_views_default_views() {
     array (
       'tablename' => 'station_djs',
       'field' => 'djs',
-      'label' => 'DJs',
+      'label' => variable_get('station_schedule_dj_title', 'DJs'),
     ),
     array (
       'tablename' => 'station_schedule',
@@ -145,7 +145,7 @@ function station_schedule_views_default_views() {
     array (
       'tablename' => 'station_djs',
       'field' => 'djs',
-      'label' => 'DJs',
+      'label' => variable_get('station_schedule_dj_title', 'DJs'),
     ),
   );
   $view->filter = array (

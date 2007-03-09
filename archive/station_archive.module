@@ -441,7 +441,7 @@ function station_archive_cron() {
  */
 function _station_archive_delete_old_nodes() {
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
-  $result = db_query('SELECT n.nid, n.title FROM node n INNER JOIN station_archive sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
+  $result = db_query('SELECT n.nid, n.title FROM {node} n INNER JOIN {station_archive} sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
   while ($node = db_fetch_object($result)) {
     watchdog('stationarchive', t('Removing %title from the archive.', array('%title' => $node->title)), WATCHDOG_NOTICE);
     node_delete($node->nid);

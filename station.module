@@ -375,18 +375,18 @@ function station_today() {
 }
 
 /**
- * Function to send notices of station changes via hook_station_notices. 
+ * Function to send notices of station changes via hook_station_notices.
  */
 function _station_send_notice($type, $op, $data) {
   module_invoke_all('station_notice', $type, $op, $data);
 }
 
 /**
- * Implementation of hook_station_notices to display simple notices about 
+ * Implementation of hook_station_notices to display simple notices about
  * station changes.
  * @param $type 'dj' or 'schedule'
- * @param $op 'add', 'remove', 'change' - Change only applies to schedule 
- * 		items.
+ * @param $op 'add', 'remove', 'change' - Change only applies to schedule
+ *    items.
  * @param $data associative array with details like: nid, sid, uid.
  */
 /*
@@ -394,28 +394,28 @@ function station_station_notice($type, $op, $data) {
   if ($type == 'dj') {
     $uid = $data['uid'];
     $nid = $data['nid'];
-	switch ($op) {
-	  case 'add':
-	    drupal_set_message("adding $uid to $nid");
-	    break;
-	  case 'remove':
-	    drupal_set_message("removing $uid from $nid");
-	    break;
-	}
+    switch ($op) {
+      case 'add':
+        drupal_set_message("adding $uid to $nid");
+        break;
+      case 'remove':
+        drupal_set_message("removing $uid from $nid");
+        break;
+    }
   } elseif ($type == 'schedule') {
     $sid = $data['sid'];
     $nid = $data['nid'];
     switch ($op) {
-	  case 'add':
-	    drupal_set_message("adding $sid to $nid");
-	    break;
-	  case 'change':
-	    drupal_set_message("changing $sid on $nid");
-	    break;
-	  case 'remove':
-	    drupal_set_message("removing $sid from $nid");
-	    break;
-	}
+      case 'add':
+        drupal_set_message("adding $sid to $nid");
+        break;
+      case 'change':
+        drupal_set_message("changing $sid on $nid");
+        break;
+      case 'remove':
+        drupal_set_message("removing $sid from $nid");
+        break;
+    }
   }
 }
 */

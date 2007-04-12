@@ -76,8 +76,9 @@ function station_program_access($op, $node) {
     case 'update':
       // TODO: figure out how to allow the schedule's decide who can edit...
       $djs = _station_schedule_program_load_djs($node->nid);
-      // if they're a DJ, check they should be able to do it.
-      if (isset($djs[$user->uid])) {
+
+      // Node owner and DJs can edit the program.
+      if ($node->uid == $user->uid || isset($djs[$user->uid])) {
         return user_access('edit own program');
       }
       break;

@@ -144,10 +144,10 @@ function station_catalog_album_validate(&$node, &$form) {
   if ($node->number) {
     // look for duplicate numbers
     if ($node->nid) {
-      $query = db_query('SELECT sc.nid, n.title FROM station_catalog sc INNER JOIN node n ON sc.nid = n.nid WHERE sc.number = %d AND sc.nid <> %d', $node->number, $node->nid);
+      $query = db_query('SELECT sc.nid, n.title FROM {station_catalog} sc INNER JOIN {node} n ON sc.nid = n.nid WHERE sc.number = %d AND sc.nid <> %d', $node->number, $node->nid);
     }
     else {
-      $query = db_query('SELECT sc.nid, n.title FROM station_catalog sc INNER JOIN node n ON sc.nid = n.nid WHERE sc.number = %d', $node->number);
+      $query = db_query('SELECT sc.nid, n.title FROM {station_catalog} sc INNER JOIN {node} n ON sc.nid = n.nid WHERE sc.number = %d', $node->number);
     }
     if ($other_node = db_fetch_object($query)) {
       form_set_error(

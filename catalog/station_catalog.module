@@ -1,0 +1,298 @@
+<?php
+
+define('STATION_CATALOG_CVS_ID', '$Id$');
+
+#require_once(drupal_get_path('module', 'station_catalog') .'/musicbrainz.inc');
+
+if (module_exists('views')) {
+#  require_once(drupal_get_path('module', 'station_catalog') .'/views.inc');
+#  require_once(drupal_get_path('module', 'station_catalog') .'/views_defaults.inc');
+}
+
+
+function station_catalog_help($section='') {
+  switch ($section) {
+    case 'admin/settings/station/catalog':
+      return t("These settings allow you to configure the station catalog.");
+    default:
+      return null;
+  }
+}
+
+function station_catalog_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/station/catalog',
+      'title' => t('Catalog'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => 'station_catalog_admin_settings',
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_LOCAL_TASK
+    );
+
+    $items[] = array(
+      'path' => 'station/catalog/search',
+      'title' => t('Catalog'),
+      'callback' => 'station_catalog_search_page',
+      'access' => user_access('access content'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+    
+    $items[] = array(
+      'path' => 'station/catalog/js_search',
+      'callback' => 'station_catalog_search_js',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+
+  return $items;
+}
+
+
+function station_catalog_admin_settings() {
+  $form = array();
+  $form['module_cvs_id'] = array(
+    '#type' => 'item',
+    '#value' => '<pre>'. STATION_CATALOG_CVS_ID .'</pre>',
+  );
+  return $form;
+}
+
+
+/**
+ * Implementation of hook_node_info().
+ */
+function station_catalog_node_info() {
+  return array(
+    'station_album' => array(
+      'name' => t('Album'),
+      'module' => 'station_catalog_album',
+      'description' => t("An album in the station's library."),
+    )
+  );
+}
+
+/**
+ * Valid permissions for this module
+ * @return array An array of valid permissions for the station module
+ */
+function station_catalog_perm() {
+  return array(
+    'view catalog',
+    'administer catalog',
+  );
+}
+
+function station_catalog_album_access($op, $node) {
+  global $user;
+
+  switch ($op) {
+    case 'view':
+      return user_access('view catalog');
+
+    case 'update':
+    case 'delete':
+    case 'create':
+    default:
+      return user_access('administer catalog');
+  }
+}
+
+/**
+ * Build a form for program nodes.
+ */
+function station_catalog_album_form($node) {
+  $form['number'] = array(
+    '#type' => 'textfield', '#title' => t('Number'),
+    '#default_value' => $node->number,
+    '#required' => TRUE,
+  );
+  $form['artist'] = array(
+    '#type' => 'textfield', '#title' => t('Artist'),
+    '#default_value' => $node->artist,
+    '#required' => TRUE,
+    '#maxlength' => 255,
+  );
+  $form['album'] = array(
+    '#type' => 'textfield', '#title' => t('Album'),
+    '#default_value' => $node->album,
+    '#required' => TRUE,
+    '#maxlength' => 255,
+  );
+  $form['label'] = array(
+    '#type' => 'textfield', '#title' => t('Label'),
+    '#default_value' => $node->label,
+    '#required' => TRUE,
+    '#maxlength' => 255,
+  );
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Description'),
+    '#default_value' => $node->body,
+    '#rows' => 10,
+  );
+  $form['body_filter']['format'] = filter_form($node->format);
+
+  return $form;
+}
+
+function station_catalog_album_validate(&$node, &$form) {
+  if (!is_numeric($node->number)) {
+    form_set_error('number', 'Must be a numeric value');
+  }
+  if ($node->number) {
+    // look for duplicate numbers
+    if ($node->nid) {
+      $query = db_query('SELECT sc.nid, n.title FROM {station_catalog} sc INNER JOIN {node} n ON sc.nid = n.nid WHERE sc.number = %d AND sc.nid <> %d', $node->number, $node->nid);
+    }
+    else {
+      $query = db_query('SELECT sc.nid, n.title FROM {station_catalog} sc INNER JOIN {node} n ON sc.nid = n.nid WHERE sc.number = %d', $node->number);
+    }
+    if ($other_node = db_fetch_object($query)) {
+      form_set_error(
+        'number',
+        t('Another album <a href="@link">%title</a> already has this number.', array('@link' => url('node/'. $other_node->nid), '%title' => $other_node->title))
+      );
+    }
+  }
+
+  form_set_value($form['title'], $node->artist .' - '. $node->album);
+}
+
+function station_catalog_album_load($node) {
+  return db_fetch_object(db_query('SELECT number, artist, album, label FROM {station_catalog} WHERE nid = %d', $node->nid));
+}
+
+function station_catalog_album_insert($node) {
+  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, label) VALUES (%d, %d, '%s', '%s', '%s')", $node->nid, $node->number, $node->artist, $node->album, $node->label);
+}
+
+function station_catalog_album_delete($node) {
+  db_query("DELETE FROM {station_catalog} WHERE nid = %d", $node->nid);
+}
+
+function station_catalog_album_update($node) {
+  db_query("UPDATE {station_catalog} SET album = '%s', artist = '%s', label = '%s' WHERE nid = %d", $node->album, $node->artist, $node->label, $node->nid);
+}
+
+function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+
+  if ($page) {
+    $breadcrumb = array();
+    $breadcrumb[] = array('path' => 'station/catalog', 'title' => t('Catalog'));
+    $breadcrumb[] = array('path' => 'node/'. $node->nid);
+    menu_set_location($breadcrumb);
+  }
+
+  $node->content['number'] = array(
+    '#type' => 'item',
+    '#title' => t('Number'),
+    '#value' => $node->number,
+    '#weight' => -6,
+  );
+  $node->content['artist'] = array(
+    '#type' => 'item',
+    '#title' => t('Artist'),
+    '#value' => $node->artist,
+    '#weight' => -5,
+  );
+  $node->content['album'] = array(
+    '#type' => 'item',
+    '#title' => t('Album'),
+    '#value' => $node->album,
+    '#weight' => -4,
+  );
+  $node->content['label'] = array(
+    '#type' => 'item',
+    '#title' => t('Label'),
+    '#value' => $node->label,
+    '#weight' => -3,
+  );
+  //musicbrainz_request('artist', array('name' => $node->artist));
+  return $node;
+}
+
+
+function station_catalog_search_page($field = '', $value ='') {
+  drupal_add_js(drupal_get_path('module', 'station_catalog') .'/station_catalog.js' , 'module', 'header', FALSE, TRUE);
+
+  $output .= '<div id="station-catalog-search">';
+  $output = drupal_get_form('station_catalog_search_form', $field, $value);
+  
+  $heading = array(t('Number'), t('Artist'), t('Album'), t('Label'));
+  $rows = array();
+  if (in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
+    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY %s', $field, $value, $field, 0, 10);
+    while ($item = db_fetch_object($result)) {
+      $rows[] = array($item->number, $item->artist, $item->album, $item->label);
+    }
+  }
+  if ($rows) {
+    $matches = theme('table', $heading, $rows);
+  }
+  else {
+    $matches = t("No matches were found.");
+  }
+    
+  $output .= '<div id="station-catalog-search-results">' .$matches. '</div>';
+  $output .= '</div>';
+  return $output;
+}
+
+function station_catalog_search_form($field = '', $value ='') {
+  $form['field'] = array(
+    '#type' => 'select',
+    '#title' => 'Search by',
+    '#options' => array(
+      '-' => t('Select one...'),
+      'number' => t('Number'), 
+      'artist' => t('Artist'), 
+      'album' => t('Album'), 
+      'label' => t('Label')
+    ),
+    '#default_value' => $field,
+    '#required' => TRUE,
+  );
+  $form['value'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Search for',
+    '#default_value' => $value,
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => t('Submit')
+  );
+  return $form;
+}
+
+function theme_station_catalog_search_form($form) {
+  $rows = array(
+    drupal_render($form['field']),
+    drupal_render($form['value']),
+    drupal_render($form['submit']),
+  );
+  return theme('table', $rows, array()) . drupal_render($form);
+}
+
+function station_catalog_search_form_submit($form_id, $form_values) {
+  // make sure it's an allowed search field
+  if (in_array($form_values['field'], array('number', 'artist', 'title', 'album', 'label'))) {
+    return 'station/catalog/search/' . $form_values['field'] .'/'. $form_values['value'];
+  }
+  return 'station/catalog/search';
+}
+
+function station_catalog_search_js($field = '', $value ='') {
+  $matches = array();
+  if ($value && in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
+    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY number', $field, $value, 0, 30);
+    while ($item = db_fetch_object($result)) {
+     $matches[] = $item;
+    }
+  }
+  print drupal_to_js($matches);
+  exit();
+}

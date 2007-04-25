@@ -402,7 +402,8 @@ function station_station_notice($type, $op, $data) {
         drupal_set_message("removing $uid from $nid");
         break;
     }
-  } elseif ($type == 'schedule') {
+  }
+  elseif ($type == 'schedule') {
     $sid = $data['sid'];
     $nid = $data['nid'];
     switch ($op) {

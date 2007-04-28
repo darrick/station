@@ -42,6 +42,9 @@ function station_playlist_install() {
 function station_playlist_uninstall() {
   db_query('DROP TABLE {station_playlist}');
   db_query('DROP TABLE {station_playlist_track}');
+
+  variable_del('station_playlist_title_dateformat');
+  variable_del('station_playlist_program_dateformat');
 }
 
 /**

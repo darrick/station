@@ -67,11 +67,29 @@ function station_playlist_perm() {
 
 function station_playlist_admin_settings() {
   $form = array();
+  $form['dates'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date formats'),
+    '#tree' => FALSE,
+    '#description' => t("See PHP's <a href='!date-url'>date()</a> function for more information date formatting. No hour or minute infomation is collected, so it will not be displayed correctly if you attempt to use those in the format.", array('!date-url' => url('http://php.net/date'))),
+  );
+  $form['dates']['station_playlist_title_dateformat'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date format in playlist title'),
+    '#default_value' => variable_get('station_playlist_title_dateformat', 'm/d/Y'),
+    '#description' => t("The playlist's date is put into the title as a string. This setting lets you control how it is formatted."),
+  );
+  $form['dates']['station_playlist_program_dateformat'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date format on program node'),
+    '#default_value' => variable_get('station_playlist_program_dateformat', 'F j, Y'),
+    '#description' => t("The playlist's date is also displayed on the the program node. This setting lets you control how it is formatted."),
+  );
   $form['module_cvs_id'] = array(
     '#type' => 'item',
     '#value' => '<pre>'. STATION_PLAYLIST_CVS_ID .'</pre>',
   );
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
@@ -167,6 +185,10 @@ function station_playlist_form(&$node) {
     $node->program_title = $program->title;
   }
 
+  $form['program_nid'] = array(
+    '#type' => 'value',
+    '#value' => $node->program_nid,
+  );
   $form['program_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Program'),
@@ -175,6 +197,10 @@ function station_playlist_form(&$node) {
     '#autocomplete_path' => 'station/autocomplete/program',
     '#required' => TRUE,
     '#description' => t('The name of the program. If you filled in for someone else, enter the name of their program.'),
+  );
+  $form['timestamp'] = array(
+    '#type' => 'value',
+    '#value' => $node->timestamp,
   );
   $form['program_date'] = array(
     '#type' => 'date',
@@ -297,9 +323,9 @@ function station_playlist_validate(&$node, &$form) {
     $prog = node_load(array('type' => 'program', 'title' => $node->program_title));
     if ($prog) {
       $node->program_nid = $prog->nid;
+      form_set_value($form['program_nid'], $node->program_nid);
     }
   }
-
   if (!isset($node->program_nid)) {
     form_set_error('program_title', t('A valid program name must be provided.'));
   }
@@ -312,21 +338,15 @@ function station_playlist_validate(&$node, &$form) {
     }
   }
 
-  // set the title so it shows up in the preview
-  form_set_value($form['title'], t('!program-title playlist for !date',
-      array('!program-title' => $node->program_title, '!date' => implode('-', $node->program_date))));
-}
-
-function station_playlist_submit(&$node) {
-  // convert the programs title into a node id
-  if (isset($node->program_title)) {
-    if ($prog = node_load(array('type' => 'program', 'title' => $node->program_title))) {
-      $node->program_nid = $prog->nid;
-    }
-  }
-
   // convert the date into a timestamp
   $node->timestamp = mktime(0, 0, 0, $node->program_date['month'], $node->program_date['day'], $node->program_date['year']);
+  form_set_value($form['timestamp'], $node->timestamp);
+
+  // set the title
+  form_set_value($form['title'], t('!program-title playlist for !date', array(
+    '!program-title' => $node->program_title,
+    '!date' => format_date($node->timestamp, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')),
+  )));
 }
 
 /**
@@ -476,7 +496,7 @@ function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
         if (!$teaser) {
           // playlists
           $time = time();
-          $time_format = 'F j, Y';
+          $time_format = variable_get('station_playlist_program_dateformat', 'F j, Y');
 
           // pull all future playlists
           $future_lists = array();

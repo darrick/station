@@ -26,8 +26,11 @@ function station_schedule_views_default_views() {
   $view->menu = TRUE;
   $view->menu_title = 'Programs';
   $view->menu_tab = TRUE;
-  $view->menu_tab_default = TRUE;
   $view->menu_tab_weight = '0';
+  $view->menu_tab_default = TRUE;
+  $view->menu_tab_default_parent = NULL;
+  $view->menu_parent_tab_weight = '0';
+  $view->menu_parent_title = '';
   $view->sort = array (
     array (
       'tablename' => 'node',
@@ -117,8 +120,11 @@ function station_schedule_views_default_views() {
   $view->menu = TRUE;
   $view->menu_title = 'Unscheduled';
   $view->menu_tab = TRUE;
-  $view->menu_tab_default = FALSE;
   $view->menu_tab_weight = '1';
+  $view->menu_tab_default = FALSE;
+  $view->menu_tab_default_parent = NULL;
+  $view->menu_parent_tab_weight = '0';
+  $view->menu_parent_title = '';
   $view->sort = array (
     array (
       'tablename' => 'node',

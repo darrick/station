@@ -114,7 +114,7 @@ function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
           if (node_access('update', $node)) {
             $links['station_station_playlist_add'] = array(
               'title' => t('Add new playlist'),
-              'href' => 'node/add/station_playlist/'. $node->nid,
+              'href' => 'node/add/station-playlist/'. $node->nid,
             );
           }
         }

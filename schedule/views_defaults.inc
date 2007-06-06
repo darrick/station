@@ -24,13 +24,14 @@ function station_schedule_views_default_views() {
   $view->use_pager = TRUE;
   $view->nodes_per_page = '50';
   $view->menu = TRUE;
-  $view->menu_title = 'Programs';
+  $view->menu_title = 'Scheduled';
   $view->menu_tab = TRUE;
   $view->menu_tab_weight = '0';
   $view->menu_tab_default = TRUE;
   $view->menu_tab_default_parent = NULL;
+  $view->menu_tab_default_parent_type = 'normal';
   $view->menu_parent_tab_weight = '0';
-  $view->menu_parent_title = '';
+  $view->menu_parent_title = 'Programs';
   $view->sort = array (
     array (
       'tablename' => 'node',
@@ -106,7 +107,7 @@ function station_schedule_views_default_views() {
 );
   $view->view_args_php = '';
   $view->page = TRUE;
-  $view->page_title = 'Unscheduled programs';
+  $view->page_title = 'Programs';
   $view->page_header = '';
   $view->page_header_format = '1';
   $view->page_footer = '';

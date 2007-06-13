@@ -69,6 +69,9 @@ function station_catalog_node_info() {
       'name' => t('Album'),
       'module' => 'station_catalog_album',
       'description' => t("An album in the station's library."),
+      'has_title' => FALSE,
+      'has_body' => TRUE,
+      'body_label' => t('Description'),
     )
   );
 }
@@ -104,35 +107,42 @@ function station_catalog_album_access($op, $node) {
  */
 function station_catalog_album_form($node) {
   $form['number'] = array(
-    '#type' => 'textfield', '#title' => t('Number'),
+    '#type' => 'textfield',
+    '#title' => t('Number'),
     '#default_value' => $node->number,
     '#required' => TRUE,
   );
   $form['artist'] = array(
-    '#type' => 'textfield', '#title' => t('Artist'),
+    '#type' => 'textfield',
+    '#title' => t('Artist'),
     '#default_value' => $node->artist,
     '#required' => TRUE,
     '#maxlength' => 255,
   );
   $form['album'] = array(
-    '#type' => 'textfield', '#title' => t('Album'),
+    '#type' => 'textfield',
+    '#title' => t('Album'),
     '#default_value' => $node->album,
     '#required' => TRUE,
     '#maxlength' => 255,
   );
   $form['label'] = array(
-    '#type' => 'textfield', '#title' => t('Label'),
+    '#type' => 'textfield',
+    '#title' => t('Label'),
     '#default_value' => $node->label,
     '#required' => TRUE,
     '#maxlength' => 255,
   );
-  $form['body_filter']['body'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Description'),
-    '#default_value' => $node->body,
-    '#rows' => 10,
-  );
-  $form['body_filter']['format'] = filter_form($node->format);
+  if ($type->has_body) {
+    $form['body_filter']['body'] = array(
+      '#type' => 'textarea',
+      '#title' => check_plain($type->body_label),
+      '#default_value' => $node->body,
+      '#rows' => 10,
+      '#required' => ($type->min_word_count > 0),
+    );
+    $form['body_filter']['format'] = filter_form($node->format);
+  }
 
   return $form;
 }

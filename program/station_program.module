@@ -121,8 +121,8 @@ function station_program_form(&$node) {
   if ($type->has_body) {
     $form['body_filter']['body'] = array(
       '#type' => 'textarea',
-      '#title' => t('Body'),
-      '#default_value' => check_plain($type->body_label),
+      '#title' => check_plain($type->body_label),
+      '#default_value' => $node->body,
       '#rows' => 10,
       '#required' => ($type->min_word_count > 0),
       '#description' => t("Free form description of the show."),

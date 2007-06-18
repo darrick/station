@@ -3,4 +3,3 @@ name = Station Playlist
 description = Provides a program playlist node type.
 dependencies = station station_program views
 package = Station
-version = "$Name$"

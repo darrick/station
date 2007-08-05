@@ -225,6 +225,7 @@ function station_schedule_archive_links($program_nid, $short = FALSE) {
       ),
     );
   }
+  return array();
 }
 
 /**

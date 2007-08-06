@@ -35,3 +35,33 @@ function station_program_uninstall() {
 function station_program_update_100() {
   return array();
 }
+
+/**
+ * Rename the permissions.
+ * 
+ * First update for the 5.1 branch, using the update naming convention layed
+ * out in: http://drupal.org/node/114774#update-n
+ */
+function station_program_update_5100() {
+  $ret = array();
+
+  // Setup arrays holding regexps to match and the corresponding
+  // strings to replace them with, for use with preg_replace().
+  $old_perms = array(
+    '/edit own program/', 
+  );
+  $new_perms = array(
+    'edit own program content', 
+  );
+
+  // Now, loop over all the roles, and do the necessary transformations.
+  $query = db_query("SELECT rid, perm FROM {permission} ORDER BY rid");
+  while ($role = db_fetch_object($query)) {
+    $fixed_perm = preg_replace($old_perms, $new_perms, $role->perm);
+    if ($fixed_perm != $role->perm) {
+      $ret[] = update_sql("UPDATE {permission} SET perm = '$fixed_perm' WHERE rid = $role->rid");
+    }
+  }
+
+  return $ret;
+}

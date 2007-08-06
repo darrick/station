@@ -50,7 +50,8 @@ function station_program_node_info() {
 
 function station_program_perm() {
   return array(
-    'edit own program',
+    'edit program content',
+    'edit own program content',
     'administer programs',
   );
 }
@@ -74,18 +75,24 @@ function station_program_access($op, $node) {
       break;
 
     case 'update':
-      // TODO: figure out how to allow the schedule's decide who can edit...
-      $djs = _station_schedule_program_load_djs($node->nid);
+      if (user_access('edit program content')) {
+        return TRUE;
+      }
 
-      // Node owner and DJs can edit the program.
+      // Node owner and DJs can also edit the program.
+      $djs = _station_schedule_program_load_djs($node->nid);
       if ($node->uid == $user->uid || isset($djs[$user->uid])) {
-        return user_access('edit own program');
+        return user_access('edit own program content');
       }
       break;
 
     case 'delete':
     case 'create':
     default:
+      // If the schedule is enabled, defer to that permision.
+      if (module_exists('station_schedule')) {
+        return user_access('administer schedule');
+      }
       return user_access('administer programs');
   }
 }

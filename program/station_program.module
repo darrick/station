@@ -7,6 +7,9 @@ if (module_exists('views')) {
   require_once(drupal_get_path('module', 'station_program') .'/views_defaults.inc');
 }
 
+/**
+ * Implementation of hook_help().
+ */
 function station_program_help($section='') {
   switch ($section) {
     case 'admin/settings/station/program':
@@ -16,6 +19,9 @@ function station_program_help($section='') {
   }
 }
 
+/**
+ * Implementation of hook_menu().
+ */
 function station_program_menu($may_cache) {
   if ($may_cache) {
     $items[] = array(
@@ -38,6 +44,9 @@ function station_program_menu($may_cache) {
   return $items;
 }
 
+/**
+ * Implementation of hook_node_info().
+ */
 function station_program_node_info() {
   return array(
     'program' => array(
@@ -48,6 +57,9 @@ function station_program_node_info() {
   );
 }
 
+/**
+ * Implementation of hook_perm().
+ */
 function station_program_perm() {
   return array(
     'edit program content',
@@ -65,7 +77,9 @@ function station_program_admin_settings() {
   return $form;
 }
 
-
+/**
+ * Implementation of hook_access().
+ */
 function station_program_access($op, $node) {
   global $user;
 
@@ -97,6 +111,9 @@ function station_program_access($op, $node) {
   }
 }
 
+/**
+ * Implementation of hook_form().
+ */
 function station_program_form(&$node) {
   $type = node_get_types('type', $node);
 
@@ -140,6 +157,9 @@ function station_program_form(&$node) {
   return $form;
 }
 
+/**
+ * Implementation of hook_validate().
+ */
 function station_program_validate(&$node) {
   // check the url
   if ($node->url) {
@@ -149,22 +169,37 @@ function station_program_validate(&$node) {
   }
 }
 
+/**
+ * Implementation of hook_load().
+ */
 function station_program_load($node) {
   return db_fetch_object(db_query('SELECT genre, url FROM {station_program} WHERE vid = %d', $node->vid));
 }
 
+/**
+ * Implementation of hook_insert().
+ */
 function station_program_insert($node) {
   db_query("INSERT INTO {station_program} (nid, vid, genre, url) VALUES (%d, %d, '%s', '%s')", $node->nid, $node->vid, $node->genre, $node->url);
 }
 
+/**
+ * Implementation of hook_delete().
+ */
 function station_program_delete($node) {
   db_query('DELETE FROM {station_program} WHERE nid = %d', $node->nid);
 }
 
+/**
+ * Implementation of hook_update().
+ */
 function station_program_update($node) {
   db_query("UPDATE {station_program} SET genre = '%s', url = '%s' WHERE vid = %d", $node->genre, $node->url, $node->vid);
 }
 
+/**
+ * Implementation of hook_view().
+ */
 function station_program_view(&$node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   if ($teaser) {

@@ -649,27 +649,27 @@ function station_schedule_admin_list() {
 function theme_station_schedule_admin_nonitem($start, $finish) {
   $class = 'station-sch-box station-sch-unscheduled';
   $height = ($finish - $start);
-  $link = "admin/content/schedule/add/0/{$start}/{$finish}";
+  $link = url("admin/content/schedule/add/0/{$start}/{$finish}");
 
-  $output = "<div class='{$class}' style='height:{$height}px;'>";
-  $output .= '<div class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</div>';
-  $output .= t('Unscheduled');
-  $output .= "</div>\n";
+  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
+  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
+  $output .= '<span class="station-sch-title">'. t('Unscheduled') .'</span>';
+  $output .= "</a></div>\n";
 
-  return l($output, $link, NULL, NULL, NULL, NULL, TRUE);
+  return $output;
 }
 
 function theme_station_schedule_admin_item($sid, $start, $finish, $program) {
   $class = 'station-sch-box station-sch-scheduled';
   $height = ($finish - $start);
-  $link = 'admin/content/schedule/edit/'. $sid;
+  $link = url('admin/content/schedule/edit/'. $sid);
 
-  $output = "<div class='{$class}' style='height:{$height}px;'>";
-  $output .= '<div class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</div>';
-  $output .= check_plain($program->title);
-  $output .= "</div>\n";
+  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
+  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
+  $output .= '<span class="station-sch-title">'. check_plain($program->title) .'</span>';
+  $output .= "</a></div>\n";
 
-  return l($output, $link, NULL, NULL, NULL, NULL, TRUE);
+  return $output;
 }
 
 /**
@@ -926,7 +926,7 @@ function theme_station_schedule_spacer($start, $finish) {
   $class = 'station-sch-box station-sch-unscheduled';
   $height = ($finish - $start);
   $output = "<div class='{$class}' style='height:{$height}px;'>";
-  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
+  $output .= "<span class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</span>";
   $output .= "</div>\n";
   return $output;
 }
@@ -934,16 +934,17 @@ function theme_station_schedule_spacer($start, $finish) {
 function theme_station_schedule_item($start, $finish, $program) {
   $class = 'station-sch-box station-sch-scheduled';
   $height = ($finish - $start);
-  $output = "<div class='{$class}' style='height:{$height}px;'>\n";
-  $output .= "<div class='station-sch-time'>". theme('station_hour_range', $start, $finish) ."</div>";
-  $output .= check_plain($program->title);
+  $link = url('node/'. $program->nid);
+
+  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
+  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
+  $output .= '<span class="station-sch-title">'. check_plain($program->title) .'</span>';
   if ($program->djs) {
     $djs = _station_schedule_program_load_djs($program->nid);
-    $djs = check_plain(implode(', ', $djs));
-    $output .= "<div class='station-sch-djs'>{$djs}</div>";
+    $output .= '<span class="station-sch-djs">'. check_plain(implode(', ', $djs)) .'</span>';
   }
-  $output .= "</div>\n";
-  return l($output, 'node/'. $program->nid, NULL, NULL, NULL, NULL, TRUE);
+  $output .= "</a></div>\n";
+  return $output;
 }
 
 

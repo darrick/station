@@ -48,8 +48,18 @@
 .station-sch-scheduled {
   text-align: center;
 }
+/* turn inline links into blocks */
+.station-sch-scheduled a, .station-sch-unscheduled a {
+  display: block;
+}
+/* on hover force underlining (but not the DJ names) and colour the whole block */
+.station-sch-scheduled a:hover, .station-sch-unscheduled a:hover { 
+  background-color: #eee;
+  text-decoration: none;
+}
 .station-sch-djs {
   font-size: xx-small;
+  display: block;
 }
 .station-sch-now-hour, .station-sch-now-day {
 }

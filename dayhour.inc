@@ -6,10 +6,12 @@
 define('MINUTES_IN_DAY', 1440);
 
 /**
- * Turn an mixed into a valid hour.
+ * Turn a string into a valid hour.
  *
- * @param   mixed   we try our hardest to convert any thing
- * @return  integer between 0 and 23.
+ * @param $hour
+ *   String containing an hour. e.g. 0-24, 0-12 am/pm, noon, midnight
+ * @return
+ *   An integer between 0 and 23.
  */
 function station_valid_hour($hour) {
   if (!is_numeric($hour)) {
@@ -47,8 +49,10 @@ function station_valid_hour($hour) {
 /**
  * Get a numeric day of the week from a string or integer.
  *
- * @param   mixed integer from 0-6, or a, case in-sensitive, english day name.
- * @return  integer between 0 and 6 (sunday, monday, ... ,saturday)
+ * @param $day
+ *   An integer from 0-6, or a case in-sensitive, English day name.
+ * @return
+ *   An nteger between 0 and 6 (Sunday, Monday, ... , Saturday).
  */
 function station_valid_day($day) {
   if (is_numeric($day)) {
@@ -70,8 +74,11 @@ function station_valid_day($day) {
 /**
  * Return an array of the names of the days of the week.
  *
- * @param integer optional day of the week. Sunday = 0
- * @return array|string array if $index isn't specified
+ * @param $day
+ *   An optional integer for the day of the week, zero being Sunday.
+ * @return
+ *   If $day is specified a string, othereise an array of the names of all the
+ *   days in the week.
  */
 function station_day_name($day = null) {
   static $days;
@@ -98,9 +105,12 @@ function station_day_name($day = null) {
 /**
  * Return a formated hour string.
  *
- * @param integer $hour between 0 and 23.
- * @see station_valid_hour() to sanitize hour input.
- * @return string
+ * @param $hour
+ *   An integer between 0 and 23.
+ *   input.
+ * @return
+ *   String, 1-12 am/pm.
+ * @see station_valid_hour() to sanitize hour strings.
  */
 function station_hour_name($hour = 0) {
   if ($hour < 12) {
@@ -118,10 +128,14 @@ function station_hour_name($hour = 0) {
 }
 
 /**
- * Convert a day hour tuple into minutes.
- * @param $day 1-7
- * @param $hour 0-23
- * @return integer minutes.
+ * Given a day and hour, compute the number of minutes since midnight Sunday.
+ *
+ * @param $day
+ *   Integer from 0 to 6.
+ * @param $hour
+ *   Integer from 0 to 23.
+ * @return
+ *   Integer specifying the number of minutes.
  */
 function station_minute_from_day_hour($day, $hour) {
   return (($day * 24) + $hour) * 60;
@@ -129,24 +143,32 @@ function station_minute_from_day_hour($day, $hour) {
 
 /**
  * Day of the week from minutes.
- * @param $minutes since midnight sunday
- * @return day of the week
+ *
+ * @param $minutes
+ *   Integer with the number of minutes since midnight Sunday.
+ * @return
+ *   Integer day of the week, zero being Sunday.
  */
 function station_day_from_minute($minute) {
   return (int) (($minute) / MINUTES_IN_DAY);
 }
 
 /**
- * Return an array of time information for the minutes since midnight sunday.
- * 'w' = Day of week (0-6)
- * 'G' = 24 hour
- * 'g' = 12 hour
- * 'H' = 24 hour, 0 padded
- * 'h' = 12 hour, 0 padded
- * 'i' = minutes, 0 padded
- * 'time' = h:i
- * 'minutes' = minutes since midnight sunday
- * 'a' = am/pm
+ * Compute time information for a minute in the week.
+ *
+ * @param $minutes
+ *   Integer specifying minutes since midnight on Sunday.
+ * @return
+ *   An array with the following keys:
+ *     'w'       - Day of week (0-6).
+ *     'G'       - 24 hour.
+ *     'g'       - 12 hour.
+ *     'H'       - 24 hour, 0 padded.
+ *     'h'       - 12 hour, 0 padded.
+ *     'i'       - minutes, 0 padded.
+ *     'time'    - zero-padded 12 hour, minutes.
+ *     'minutes' - minutes since midnight Sunday.
+ *     'a'       - am/pm.
  */
 function station_time_from_minute($minutes) {
   $min = $minutes % 60;
@@ -171,12 +193,15 @@ function station_time_from_minute($minutes) {
 }
 
 /**
- * Format a range of minutes into a day hour string, i.e. Sunday 11pm - Monday 1am
+ * Format a range of minutes into a day hour string, e.g. 
+ * "Sunday 11pm - Monday 1am".
+ * 
  * @param $start
- *   minutes
+ *   Integer specifying minutes.
  * @param $finish
- *   minutes
- * @return formatted string
+ *   Integer specifying minutes.
+ * @return 
+ *   Formatted string.
  */
 function theme_station_dayhour_range($start, $finish) {
   $start = station_time_from_minute($start);
@@ -205,12 +230,14 @@ function theme_station_dayhour_range($start, $finish) {
 }
 
 /**
- * Format a range of minutes into a hour string, i.e. 1am-3pm
+ * Format a range of minutes into a hour string, e.g. "1am-3pm".
+ *
  * @param $start
- *   minutes
+ *   Integer specifying minutes.
  * @param $finish
- *   minutes
- * @return formatted string
+ *   Integer specifying minutes.
+ * @return 
+ *   Formatted string.
  */
 function theme_station_hour_range($start, $finish) {
   $start = station_time_from_minute($start);

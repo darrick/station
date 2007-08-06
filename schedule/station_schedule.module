@@ -243,7 +243,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
 
   case 'view':
     if ($user->programs) {
-      foreach($user->programs as $nid => $title) {
+      foreach((array) $user->programs as $nid => $title) {
         $node = node_load($nid);
         $node = node_build_content($node, TRUE, FALSE);
         $items[] = array('title' => l($title, 'node/'. $nid),
@@ -257,7 +257,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
 
   case 'delete':
     db_query('DELETE FROM {station_dj} WHERE uid = %d', $user->uid);
-    foreach ($user->programs as $nid => $title) {
+    foreach ((array) $user->programs as $nid => $title) {
       _station_send_notice('dj', 'remove', array('nid' => $nid, 'uid' => $user->uid));
     }
     break;

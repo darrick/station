@@ -11,14 +11,22 @@ function station_schedule_install() {
     case 'mysqli':
       db_query("
         CREATE TABLE {station_schedule} (
-          `sid` int(11) unsigned NOT NULL default '0',
-          `program_nid` int(10) unsigned NOT NULL default '0',
-          `start` int(10) unsigned NOT NULL default '0',
-          `finish` int(10) unsigned NOT NULL default '0',
-          `may_archive` tinyint(1) NOT NULL default '1',
-          PRIMARY KEY  (`sid`),
-          KEY `station_schedule_start` (`start`),
-          KEY `station_schedule_program` (`program_nid`)
+          `nid` int unsigned NOT NULL default '0',
+          `increment` int unsigned NOT NULL default '0',
+          PRIMARY KEY(`nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      db_query("
+        CREATE TABLE {station_schedule_item} (
+          `iid` int unsigned NOT NULL default '0',
+          `schedule_nid` int unsigned NOT NULL default '0',
+          `program_nid` int unsigned NOT NULL default '0',
+          `start` int unsigned NOT NULL default '0',
+          `finish` int unsigned NOT NULL default '0',
+          `may_archive` tinyint NOT NULL default '1',
+          PRIMARY KEY  (`iid`),
+          KEY `station_schedule_start` (`schedule_nid`, `start`),
+          KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
       db_query("
@@ -37,9 +45,8 @@ function station_schedule_install() {
  */
 function station_schedule_uninstall() {
   db_query('DROP TABLE {station_schedule}');
+  db_query('DROP TABLE {station_schedule_item}');
   db_query('DROP TABLE {station_dj}');
-
-  variable_del('station_schedule_increment');
 }
 
 /**
@@ -236,3 +243,66 @@ function station_schedule_update_101() {
   return $ret;
 }
 
+/**
+ * Rename station_schedule to station_schedule_item and rename sid to iid. Add
+ * a new schedule_nid field that refers to the schedule. Then create a
+ * station_schedule table and update all schedule items to be a member of it.
+ */
+function station_schedule_update_5200() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // Rename {station_schedule} to {station_schedule_item}, sid to iid and
+      // add schedule_nid so we can join to the new {station_schedule}.
+      $ret[] = update_sql('ALTER TABLE {station_schedule}
+        RENAME TO {station_schedule_item},
+        CHANGE COLUMN `sid` `iid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+        ADD COLUMN `schedule_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0 FIRST
+      ');
+
+      // Move the sequence.
+      db_query('LOCK TABLES {sequences} WRITE');
+      $ret[] = update_sql("DELETE FROM {sequences} WHERE name = '{station_schedule_item}_iid'"); 
+      $ret[] = update_sql("UPDATE {sequences} SET name = '{station_schedule_item}_iid' WHERE name = '{station_schedule}_sid'");
+      db_query('UNLOCK TABLES');
+
+      // Create the table for schedule nodes.
+      $ret[] = update_sql("
+        CREATE TABLE {station_schedule} (
+          `nid` int unsigned NOT NULL default '0',
+          `increment` int unsigned NOT NULL default '0',
+          PRIMARY KEY(`nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      
+      // Create a new node for the existing schedule.
+      $user = user_load(array('uid' => 1));
+      $node = new stdClass();
+      $node->type = 'station_schedule';
+      $node->uid = $user->uid;
+      $node->name = $user->name;
+      $node->title = t('Default');
+      $node->status = 1;
+      $node->station_schedule['increment'] = variable_get('station_schedule_increment', 60); 
+      $node = node_submit($node);
+      node_save($node);
+
+      // Don't need this anymore.
+      variable_del('station_schedule_increment');
+
+      // Make the new schedule the default.
+      variable_set('station_schedule_default', $node->nid);
+      $ret[] = update_sql("UPDATE {station_schedule_item} SET schedule_nid = ". (int) $node->nid);
+
+      // Fix the keys.
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} DROP INDEX `station_schedule_start`');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} DROP INDEX `station_schedule_program`');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item}
+        ADD INDEX `station_schedule_start` (`schedule_nid`, `start`),
+        ADD INDEX `station_schedule_program` (`schedule_nid`, `program_nid`)
+      ');
+    break;
+  }
+  return $ret;
+}

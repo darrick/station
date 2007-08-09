@@ -25,8 +25,8 @@ function station_schedule_views_tables() {
     ),
   );
 
-  $tables['station_schedule'] = array(
-    'name' => 'station_schedule',
+  $tables['station_schedule_item'] = array(
+    'name' => 'station_schedule_item',
     'join' => array(
       'left' => array(
         'table' => 'node',
@@ -144,10 +144,10 @@ function station_handler_filter_is_scheduled($op, $filterdata, $filterinfo, &$qu
     $query->ensure_table('node');
     $query->add_field('nid', 'node');
     if ($filterdata['operator']) {
-      $query->add_where('EXISTS (SELECT * FROM {station_schedule} WHERE {station_schedule}.program_nid = node.nid)');
+      $query->add_where('EXISTS (SELECT * FROM {station_schedule_item} WHERE {station_schedule_item}.program_nid = node.nid)');
     }
     else {
-      $query->add_where('NOT EXISTS (SELECT * FROM {station_schedule} WHERE {station_schedule}.program_nid = node.nid)');
+      $query->add_where('NOT EXISTS (SELECT * FROM {station_schedule_item} WHERE {station_schedule_item}.program_nid = node.nid)');
     }
     break;
   }
@@ -169,7 +169,7 @@ function station_handler_filter_now_playing($op, $filterdata, $filterinfo, &$que
     $query->ensure_table('node');
     $query->add_field('nid', 'node');
     $minute = '***CURRENT_STATION_MINUTE***';
-    $query->add_where('EXISTS (SELECT * FROM {station_schedule} WHERE {station_schedule}.program_nid = node.nid AND {station_schedule}.start <= %d AND {station_schedule}.finish > %d)', $minute, $minute);
+    $query->add_where('EXISTS (SELECT * FROM {station_schedule_item} WHERE {station_schedule_item}.program_nid = node.nid AND {station_schedule_item}.start <= %d AND {station_schedule_item}.finish > %d)', $minute, $minute);
     break;
   }
   return;

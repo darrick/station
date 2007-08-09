@@ -9,7 +9,7 @@ function station_help($section='') {
     case 'admin/settings/station':
       return t('Configure the core station settings. These settings are used by all of the station modules.');
   }
-  return null;
+  return NULL;
 }
 
 function station_menu($may_cache) {
@@ -22,22 +22,24 @@ function station_menu($may_cache) {
       'callback arguments' => array('station_admin_settings'),
       'description' => t('Change settings for the Station module.'),
       'access' => user_access('administer site configuration'),
-      'type' => MENU_NORMAL_ITEM);
-
+      'type' => MENU_NORMAL_ITEM,
+    );
     $items[] = array(
       'path' => 'admin/settings/station/main',
       'title' => t('Core'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('station_admin_settings'),
       'type' => MENU_DEFAULT_LOCAL_TASK,
-      'weight' => '-10');
+      'weight' => '-10',
+    );
 
     $items[] = array(
       'path' => 'station',
       'title' => t('Station'),
       'callback' => 'station_page',
       'access' => user_access('access content'),
-      'type' => MENU_NORMAL_ITEM);
+      'type' => MENU_NORMAL_ITEM
+    );
   }
   return $items;
 }
@@ -348,7 +350,7 @@ function station_block_current_program() {
  * Theme the current program block.
  *
  * @param $program
- *   program node object
+ *   Program node object.
  * @param $unscheduled_message
  *   message to display if no program is scheduled, i.e. when $program is null
  * @param $high_url

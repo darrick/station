@@ -12,7 +12,7 @@ function station_archive_help($section = '') {
     case 'admin/settings/station/archive':
       return t("These settings let you configure the way the station's webstream is archived into audio nodes. Audio is imported into the archive as part of Drupal's cron task. You'll need to ensure that that is properly configured. ");
     default:
-      return null;
+      return NULL;
   }
 }
 
@@ -615,8 +615,8 @@ function _station_archive_get_vid() {
 }
 
 /**
- * Implementation of hook_taxonomy(). Delete our vocabulary variable if the 
- * vocabulary is deleted. 
+ * Implementation of hook_taxonomy(). Delete our vocabulary variable if the
+ * vocabulary is deleted.
  */
 function station_archive($op, $type, $object = NULL) {
   if ($op == 'delete' && $type == 'vocabulary' && $object->vid == _station_archive_get_vid())  {

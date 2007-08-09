@@ -80,7 +80,7 @@ function station_valid_day($day) {
  *   If $day is specified a string, othereise an array of the names of all the
  *   days in the week.
  */
-function station_day_name($day = null) {
+function station_day_name($day = NULL) {
   static $days;
   if (!isset($days)) {
     $days = array(
@@ -94,7 +94,7 @@ function station_day_name($day = null) {
     );
   }
 
-  if ($day === null) {
+  if ($day === NULL) {
     return $days;
   }
   else {

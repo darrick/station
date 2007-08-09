@@ -40,3 +40,4 @@ function _station_var_rename($from, $to) {
 function station_update_100() {
   return array();
 }
+

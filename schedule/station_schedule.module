@@ -750,9 +750,8 @@ function station_schedule_load_item_at($schedule_nid, $minute) {
 }
 
 function station_schedule_load_day($schedule_nid, $day) {
-  // there are 1440 minutes in a day (60minute * 24hours = 1day)
-  $start = $day * 1440;
-  $finish = $start + 1440;
+  $start = $day * MINUTES_IN_DAY;
+  $finish = $start + MINUTES_IN_DAY;
 
   $ret = array();
   $result = db_query('SELECT * FROM {station_schedule_item} i WHERE i.schedule_nid = %d AND i.finish > %d AND i.start < %d ORDER BY i.start', $schedule_nid, $start, $finish);
@@ -781,8 +780,8 @@ function station_schedule_item_list($schedule) {
   for ($i = 0; $i < 7; $i++) {
     $cell = '';
     // find the minute that the day starts and finishes
-    $day_start = $i * 1440;
-    $day_finish = $day_start + 1440;
+    $day_start = $i * MINUTES_IN_DAY;
+    $day_finish = $day_start + MINUTES_IN_DAY;
     $last_finish = $day_start;
     foreach (station_schedule_load_day($schedule->nid, $i) as $item) {
       // display blocks for unscheduled time periods
@@ -901,7 +900,7 @@ function station_schedule_item_edit_form($op, $schedule, $id = NULL, $start = 0,
   );
   $form['start_minutes'] = array(
     '#type' => 'select',
-    '#default_value' => $schedule_item->start % 1440,
+    '#default_value' => $schedule_item->start % MINUTES_IN_DAY,
     '#options' => $minute_options,
   );
   $form['finish_day'] = array(
@@ -913,7 +912,7 @@ function station_schedule_item_edit_form($op, $schedule, $id = NULL, $start = 0,
   );
   $form['finish_minutes'] = array(
     '#type' => 'select',
-    '#default_value' => $schedule_item->finish % 1440,
+    '#default_value' => $schedule_item->finish % MINUTES_IN_DAY,
     '#options' => $minute_options,
   );
   $form['program_title'] = array(
@@ -950,8 +949,8 @@ function station_schedule_item_edit_form($op, $schedule, $id = NULL, $start = 0,
 }
 
 function station_schedule_item_edit_form_validate($form_id, $form_values) {
-  $start = ($form_values['start_day'] * 1440) + $form_values['start_minutes'];
-  $finish = ($form_values['finish_day'] * 1440) + $form_values['finish_minutes'];
+  $start = ($form_values['start_day'] * MINUTES_IN_DAY) + $form_values['start_minutes'];
+  $finish = ($form_values['finish_day'] * MINUTES_IN_DAY) + $form_values['finish_minutes'];
 
   if ($start >= $finish) {
     form_set_error('finish', t("The program must start before it finishes."));
@@ -975,8 +974,10 @@ function station_schedule_item_edit_form_validate($form_id, $form_values) {
 
 function station_schedule_item_edit_form_submit($form_id, $form_values) {
   $schedule_nid = $form_values['schedule_nid'];
-  $start = ($form_values['start_day'] * 1440) + $form_values['start_minutes'];
-  $finish = ($form_values['finish_day'] * 1440) + $form_values['finish_minutes'];
+
+  $start = ($form_values['start_day'] * MINUTES_IN_DAY) + $form_values['start_minutes'];
+  $finish = ($form_values['finish_day'] * MINUTES_IN_DAY) + $form_values['finish_minutes'];
+
   $program = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
 
   if ($form_values['iid']) {
@@ -1061,8 +1062,8 @@ function station_schedule_week_page($schedule_nid) {
   for ($i = 0; $i < 7; $i++) {
     $cell = '';
     // find the minute that the day starts and finishes
-    $day_start = $i * 1440;
-    $day_finish = $day_start + 1440;
+    $day_start = $i * MINUTES_IN_DAY;
+    $day_finish = $day_start + MINUTES_IN_DAY;
     $last_finish = $day_start;
     foreach (station_schedule_load_day($schedule_nid, $i) as $s) {
       // display blocks for unscheduled time before this program

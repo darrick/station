@@ -236,12 +236,12 @@ function station_get_archive_url() {
 }
 
 /**
- * 
- * @return Array keyed to nid of schedules or FALSE on error. 
+ *
+ * @return Array keyed to nid of schedules or FALSE on error.
  */
 function station_get_schedules() {
   if (module_exists('station_schedule')) {
-    $schedules = station_schedule_get_list(); 
+    $schedules = station_schedule_get_list();
   }
   else {
     // If they haven't provided a URL we can't retreive any data.
@@ -431,7 +431,6 @@ function _station_send_notice($type, $op, $data) {
  */
 function station_station_notice($type, $op, $data) {
   if ($type == 'dj') {
-    $sid = $data['schedule_nid'];
     $pid = $data['program_nid'];
     $uid = $data['uid'];
     switch ($op) {

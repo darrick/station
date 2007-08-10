@@ -1,0 +1,5 @@
+; $Id$
+name = Station Catalog
+description = Module to track albums in a radio station's library. 
+dependencies = station views
+package = Station

@@ -1,0 +1,462 @@
+<?php
+
+define('STATION_CVS_ID', '$Id$');
+
+require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
+
+function station_help($section='') {
+  switch ($section) {
+    case 'admin/settings/station':
+      return t('Configure the core station settings. These settings are used by all of the station modules.');
+  }
+  return NULL;
+}
+
+function station_menu($may_cache) {
+  $items = array();
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/station',
+      'title' => t('Station'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_admin_settings'),
+      'description' => t('Change settings for the Station module.'),
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+    $items[] = array(
+      'path' => 'admin/settings/station/main',
+      'title' => t('Core'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('station_admin_settings'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => '-10',
+    );
+
+    $items[] = array(
+      'path' => 'station',
+      'title' => t('Station'),
+      'callback' => 'station_page',
+      'access' => user_access('access content'),
+      'type' => MENU_NORMAL_ITEM
+    );
+  }
+  return $items;
+}
+
+
+/**
+ * the modules settings form
+ */
+function station_admin_settings() {
+  $form['station_stream'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Webstream settings'),
+    '#description' => t('The station module expects that your station has a high and low bandwidth webstreams.'),
+  );
+  $form['station_stream']['station_stream_high_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('High-bandwith URL'),
+    '#default_value' => variable_get('station_stream_high_url', ''),
+    '#description' => t('The URL of the station\'s high-bandwith webstream.'),
+  );
+  $form['station_stream']['station_stream_low_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Low-bandwith URL'),
+    '#default_value' => variable_get('station_stream_low_url', ''),
+    '#description' => t('The URL of the station\'s low-bandwith webstream.'),
+  );
+
+  $form['station_remote'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Sub-module Integration'),
+    '#description' => t('The Station module is designed to allow different modules to be run on different servers. So the archive could be on a dedicated machine while the schedule runs on your primary webserver.'),
+  );
+
+  if (!module_exists('station_archive')) {
+    $form['station_remote']['station_remote_archive_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Station Archive remote URL'),
+      '#default_value' => variable_get('station_remote_archive_url', ''),
+      '#description' => t("The archive module is not enabled on this machine. If you have it installed up on a different Drupal server, enter the URL here. If this is blank no archive links will be provided. Please include the trailing slash: i.e. http://example.com/"),
+    );
+  }
+  else {
+    $form['station_remote']['archive_status'] = array(
+      '#type' => 'item',
+      '#title' => t('Station Archive module is enabled'),
+      '#value' => t("The Station Archive module is enabled on this machine. This can be used by the Station Schedule module to provide users links to a program's archived audio."),
+    );
+  }
+
+  if (!module_exists('station_schedule')) {
+    $form['station_remote']['station_remote_schedule_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Station Schedule remote URL'),
+      '#default_value' => variable_get('station_remote_schedule_url', ''),
+      '#description' => t("The station schedule module is not enabled on this machine. The Station module can connect to another Drupal server running the station schedule module and retrieve information on scheduled programs via XML-RPC. If this is left blank, no connection will be attempted but things may not work. Omit the trailing slash, i.e.: http://example.com or http://example.com/drupal"),
+    );
+    if ($schedules = station_get_schedules()) {
+      $options = array();
+      foreach (station_get_schedules() as $nid => $schedule) {
+        $options[$nid] = $schedule['title'];
+      }
+      $form['station_remote']['station_remote_schedule_nid'] = array(
+        '#type' => 'select',
+        '#title' => t('Schedule'),
+        '#default_value' => variable_get('station_remote_schedule_nid', 0),
+        '#options' => $options,
+        '#description' => t("This you select the schedule that will be used as the default for backwards compatibility."),
+      );
+    }
+    $form['station_remote']['station_remote_schedule_offset'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Station Schedule remote minute adjustment'),
+      '#default_value' => variable_get('station_remote_schedule_offset', 0),
+      '#description' => t("If the clocks on your two servers aren't accurately synchronized the archive will end up with the wrong names for programs. This number of minutes (positive or negative) will be added to the time before checking the schedule."),
+    );
+  }
+  else {
+    $form['station_remote']['schedule_status'] = array(
+      '#type' => 'item',
+      '#title' => t('Station Schedule module is enabled'),
+      '#value' => t('The Station Schedule module is enabled on this machine. This information can be used by the Now Playing block and Station Archive module.'),
+    );
+  }
+
+  $form['module_cvs_id'] = array(
+    '#type' => 'item',
+    '#value' => '<pre>'. STATION_CVS_ID .'</pre>',
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Checks that the RPC endpoint is valid.
+ */
+function station_admin_settings_validate($form_id, $edit) {
+  if (!module_exists('station_schedule')) {
+    // check station url
+    if ($url = $edit['station_remote_schedule_url']) {
+      $url = check_url($url .'/xmlrpc.php');
+      $ret = xmlrpc($url, 'station.program.get.at', time(), 0);
+      if (xmlrpc_error_msg()) {
+        form_set_error('station_remote_schedule_url',
+          t('You must provide a a valid URL for a Drupal site with the station schedule module installed.<br />Specific error: %xmlrpc-error', array('%xmlrpc-error' => xmlrpc_error_msg()))
+        );
+      }
+    }
+
+    // check that the offset is an integer
+    $offset = $edit['station_remote_schedule_offset'];
+    if (!(is_numeric($offset) && intval($offset) == $offset)) {
+      form_set_error('station_remote_schedule_offset', t('The offset must be an integer.'));
+    }
+  }
+}
+
+
+function station_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+  case 'view':
+    if (user_access('access content')) {
+      switch ($delta) {
+        case 0:
+          $block['subject'] = t('On Air');
+          $block['content'] = station_block_current_program();
+          break;
+      }
+    }
+    return $block;
+
+  case 'list':
+    $blocks[0]['info'] = t('Station: Current Program');
+    return $blocks;
+
+  case 'configure':
+    $form = array();
+    if ($delta == 0) {
+      $form['station_block_unschedule'] = array(
+        '#type' => 'textfield',
+        '#title' => t('No scheduled programming message'),
+        '#size' => 60,
+        '#description' => t('This string will appear when no program is currently scheduled.'),
+        '#default_value' =>
+          variable_get('station_block_unschedule',  t("We're on autopilot.")),
+      );
+    }
+    return $form;
+  case 'save':
+    if ($delta == 0) {
+      variable_set('station_block_unschedule', $edit['station_block_unschedule']);
+    }
+    return;
+  }
+}
+
+function station_page() {
+  return theme('menu_tree', menu_get_active_item());
+}
+
+
+/**
+ * Determine if we have a station archive module running locally or access to a
+ * remote one.
+ *
+ * @return boolean
+ */
+function station_has_archive() {
+  return (module_exists('station_archive') || variable_get('station_remote_archive_url', FALSE));
+}
+
+/**
+ * Determine if we have a station schedule module running locally or access to a
+ * remote one.
+ *
+ * @return boolean
+ */
+function station_has_schedule() {
+  return (module_exists('station_schedule') || variable_get('station_remote_schedule_url', FALSE));
+}
+
+/**
+ * If there's an archive, return the URL.
+ *
+ * @return FALSE or string URL.
+ */
+function station_get_archive_url() {
+  if (module_exists('station_archive')) {
+    return 'station/archives/';
+  }
+  elseif ($url = variable_get('station_remote_archive_url', FALSE)) {
+    return $url . 'station/archives/';
+  }
+  return FALSE;
+}
+
+/**
+ * 
+ * @return Array keyed to nid of schedules or FALSE on error. 
+ */
+function station_get_schedules() {
+  if (module_exists('station_schedule')) {
+    $schedules = station_schedule_get_list(); 
+  }
+  else {
+    // If they haven't provided a URL we can't retreive any data.
+    $url = variable_get('station_remote_schedule_url', '');
+    if (!$url) {
+      return FALSE;
+    }
+
+    $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
+    if (xmlrpc_errno()) {
+      watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+      return FALSE;
+    }
+  }
+  return $schedules;
+}
+
+/**
+ * Return an object for the current program from the local machine or RPC if
+ * that's not available.
+ *
+ * @param $time
+ *   A GMT timestamp.
+ * @param $schedule_nid
+ *   Schedule Id, 0 will load the default schedule.
+ * @return
+ *   FALSE if there was an error loading the data, NULL if nothing could be
+ *   found, or, a program object if everything worked out.
+ */
+function station_get_program_at($timestamp, $schedule_nid = 0) {
+  // Use the locally schedule if one is available
+  if (module_exists('station_schedule')) {
+    $program = station_schedule_program_get_at($timestamp, $schedule_nid);
+    if ($program->nid) {
+      return $program;
+    }
+  }
+  else {
+    // Try to connect to a remote schedule via XMLRPC for program information.
+    // The info will be cached to cut down on repeated RPC calls.
+
+    // If they haven't provided a url we can't retreive any data
+    $url = variable_get('station_remote_schedule_url', '');
+    if (!$url) {
+      return FALSE;
+    }
+
+    // add in our magic offset
+    $timestamp += 60 * variable_get('station_remote_schedule_offset', 0);
+
+    // round the time to the nearest 15 minute increment so we can do some
+    // caching
+    $parts = getdate($timestamp);
+    $minutes = $parts['minutes'];
+    if ($minutes < 15)
+      $minutes = 0;
+    else if ($minutes < 30)
+      $minutes = 15;
+    else if ($minutes < 45)
+      $minutes = 30;
+    else
+      $minutes = 45;
+    $timestamp = mktime($parts['hours'], $minutes, 0, $parts['mon'], $parts['mday'], $parts['year']);
+
+    // try to grab it from the cache
+    $cacheid = 'station_remote:program_at_'. $timestamp;
+    if ($cache = cache_get($cacheid, 'cache')) {
+      $program = unserialize($cache->data);
+    }
+    else {
+      // if it isn't cached get the program info from the server
+      $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp, $schedule_nid);
+      if (xmlrpc_errno()) {
+        watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+        return FALSE;
+      }
+      // save it to the cache
+      cache_set($cacheid, 'cache', serialize($program), CACHE_TEMPORARY);
+    }
+
+    // program returned by XMLRPC is an array
+    if ($program['nid']) {
+      return (object) $program;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Return HTML body of the block listing the current program.
+ *
+ * @return string
+ */
+function station_block_current_program() {
+  // current program
+  $program = station_get_program_at(time(), 0);
+  $unschedule_message = check_plain(variable_get('station_block_unschedule',  t("We're on autopilot.")));
+  $high = check_url(variable_get('station_stream_high_url', ''));
+  $low = check_url(variable_get('station_stream_low_url', ''));
+
+  return theme('station_block_current_program', $program, $unschedule_message, $high, $low);
+}
+
+/**
+ * Theme the current program block.
+ *
+ * @param $program
+ *   Program node object.
+ * @param $unscheduled_message
+ *   message to display if no program is scheduled, i.e. when $program is null
+ * @param $high_url
+ *   optional, high-bandwidth webstream URL
+ * @param $low_url
+ *   optional, low-bandwith webstream URL
+ * @return string
+ */
+function theme_station_block_current_program($program = NULL, $unscheduled_message ='', $high_url = NULL, $low_url = NULL) {
+  // program or unscheduled...
+  if ($program) {
+    $output = l($program->title, $program->node_url) .'<br />';
+  }
+  else {
+    $output = $unscheduled_message .'<br />';
+  }
+
+  // webstream links
+  if ($high_url || $low_url) {
+    $output .= t('Tune in: ');
+    if ($high_url) {
+      $output .= ' '. l(t('High'), $high_url);
+    }
+    if ($low_url) {
+      $output .= ' '. l(t('Low'), $low_url);
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Convert an array to a comma separates list with an add between the last terms.
+ *
+ * @param $array array of items
+ */
+function station_anded_list($array) {
+  switch (count($array)) {
+    case 0:
+      return '';
+    case 1:
+      return array_pop($array);
+    default:
+      $last = array_pop($array);
+      return implode(', ', $array) . t(' and ') . $last;
+  }
+}
+
+/**
+ * Return a timezone corrected timestamp.
+ */
+function station_local_ts($ts = FALSE) {
+  $ts = ($ts === FALSE) ? time() : $ts;
+  return ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
+}
+
+/**
+ * Return the timezone corrected day of the week (1-7).
+ */
+function station_today() {
+  return date('w', station_local_ts());
+}
+
+/**
+ * Function to send notices of station changes via hook_station_notices.
+ */
+function _station_send_notice($type, $op, $data) {
+  module_invoke_all('station_notice', $type, $op, $data);
+}
+
+/**
+ * Implementation of hook_station_notices to display simple notices about
+ * station changes.
+ * @param $type 'dj' or 'schedule'
+ * @param $op 'add', 'remove', 'change' - Change only applies to schedule
+ *    items.
+ * @param $data associative array with details like: nid, sid, uid.
+ */
+function station_station_notice($type, $op, $data) {
+  if ($type == 'dj') {
+    $sid = $data['schedule_nid'];
+    $pid = $data['program_nid'];
+    $uid = $data['uid'];
+    switch ($op) {
+      case 'add':
+        drupal_set_message("$sid adding $uid to $nid");
+        break;
+      case 'remove':
+        drupal_set_message("$sid removing $uid from $nid");
+        break;
+    }
+  }
+  elseif ($type == 'schedule') {
+    $iid = $data['iid'];
+    $sid = $data['schedule_nid'];
+    $pid = $data['program_nid'];
+    switch ($op) {
+      case 'add':
+        drupal_set_message("$sid adding $iid to $pid");
+        break;
+      case 'change':
+        drupal_set_message("$sid changing $iid on $pid");
+        break;
+      case 'remove':
+        drupal_set_message("$sid removing $iid from $pid");
+        break;
+    }
+  }
+}

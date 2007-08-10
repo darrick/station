@@ -1,0 +1,67 @@
+<?php
+
+// $Id$
+
+/**
+ * Install the initial schema.
+ */
+function station_program_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("
+        CREATE TABLE {station_program} (
+          `nid` int(10) unsigned NOT NULL default '0',
+          `vid` int(10) unsigned NOT NULL default '0',
+          `genre` varchar(200) NOT NULL default '',
+          `url` varchar(255) default NULL ,
+          PRIMARY KEY  (`nid`,`vid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function station_program_uninstall() {
+  db_query('DROP TABLE {station_program}');
+}
+
+/**
+ * Empty update to set a schema number for Drupal 5.0.
+ */
+function station_program_update_100() {
+  return array();
+}
+
+/**
+ * Rename the permissions.
+ * 
+ * First update for the 5.1 branch, using the update naming convention layed
+ * out in: http://drupal.org/node/114774#update-n
+ */
+function station_program_update_5100() {
+  $ret = array();
+
+  // Setup arrays holding regexps to match and the corresponding
+  // strings to replace them with, for use with preg_replace().
+  $old_perms = array(
+    '/edit own program/', 
+  );
+  $new_perms = array(
+    'edit own program content', 
+  );
+
+  // Now, loop over all the roles, and do the necessary transformations.
+  $query = db_query("SELECT rid, perm FROM {permission} ORDER BY rid");
+  while ($role = db_fetch_object($query)) {
+    $fixed_perm = preg_replace($old_perms, $new_perms, $role->perm);
+    if ($fixed_perm != $role->perm) {
+      $ret[] = update_sql("UPDATE {permission} SET perm = '$fixed_perm' WHERE rid = $role->rid");
+    }
+  }
+
+  return $ret;
+}

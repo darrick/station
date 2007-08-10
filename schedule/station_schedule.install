@@ -1,0 +1,321 @@
+<?php
+
+// $Id$
+
+/**
+ * Install the initial schema.
+ */
+function station_schedule_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("
+        CREATE TABLE {station_schedule} (
+          `nid` int unsigned NOT NULL default '0',
+          `increment` int unsigned NOT NULL default '0',
+          PRIMARY KEY(`nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      db_query("
+        CREATE TABLE {station_schedule_item} (
+          `iid` int unsigned NOT NULL default '0',
+          `schedule_nid` int unsigned NOT NULL default '0',
+          `program_nid` int unsigned NOT NULL default '0',
+          `start` int unsigned NOT NULL default '0',
+          `finish` int unsigned NOT NULL default '0',
+          `may_archive` tinyint NOT NULL default '1',
+          PRIMARY KEY  (`iid`),
+          KEY `station_schedule_start` (`schedule_nid`, `start`),
+          KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      db_query("
+        CREATE TABLE {station_dj} (
+          `uid` int(10) unsigned NOT NULL default '0' COMMENT 'User Id',
+          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program Id',
+          PRIMARY KEY  (`uid`,`program_nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function station_schedule_uninstall() {
+  db_query('DROP TABLE {station_schedule}');
+  db_query('DROP TABLE {station_schedule_item}');
+  db_query('DROP TABLE {station_dj}');
+
+  variable_del('station_schedule_redirect_old_urls');
+  variable_del('station_schedule_default');
+  variable_del('station_schedule_dj_role');
+  variable_del('station_schedule_dj_title');
+}
+
+/**
+ * Update the tables to UTF-8
+ */
+function station_schedule_update_2() {
+  return _system_update_utf8(array(
+    'station_dj', 'station_program', 'station_schedule',
+  ));
+}
+
+/**
+ * Add playlist tables.
+ */
+function station_schedule_update_3() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql(
+<<<MYSQL_UPDATE
+        CREATE TABLE {station_playlist} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program node id',
+          `timestamp` int(11) NOT NULL default '0' COMMENT 'Timestamp of show'
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+MYSQL_UPDATE
+      );
+      $ret[] = update_sql(
+<<<MYSQL_UPDATE
+        CREATE TABLE {station_playlist_track} (
+          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
+          `weight` tinyint(4) unsigned NOT NULL default '0' COMMENT 'Ordering weight',
+          `artist` varchar(128) NOT NULL default '',
+          `album` varchar(128) NOT NULL default '',
+          `title` varchar(128) NOT NULL default '',
+          KEY `station_playlist_artist` (`artist`),
+          KEY `station_playlist_nid_weight` (`nid`,`weight`),
+          KEY `station_playlist_title` (`title`),
+          KEY `station_playlist_album` (`title`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+MYSQL_UPDATE
+      );
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Add a label to the playlist table.
+ */
+function station_schedule_update_4() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql(
+<<<MYSQL_UPDATE
+        ALTER TABLE {station_playlist_track}
+          MODIFY COLUMN `artist` VARCHAR(255) CHARACTER SET utf8 NOT NULL DEFAULT '',
+          MODIFY COLUMN `album` VARCHAR(255) CHARACTER SET utf8 NOT NULL DEFAULT '',
+          MODIFY COLUMN `title` VARCHAR(255) CHARACTER SET utf8 NOT NULL DEFAULT '',
+          ADD COLUMN `label` VARCHAR(255) NOT NULL DEFAULT '' AFTER `title`,
+          ADD INDEX `station_playlist_label`(`label`);
+MYSQL_UPDATE
+      );
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Remove the onam field from station_schedule
+ */
+function station_schedule_update_5() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_schedule} DROP COLUMN `onam`;");
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Refactor the schedule table
+ */
+function station_schedule_update_6() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // remove unscheduled times.
+      $ret[] = update_sql('DELETE FROM {station_schedule} WHERE program_nid = 0 OR program_nid IS NULL;');
+      // add our new fields and indexes
+      $ret[] = update_sql("ALTER TABLE {station_schedule}
+        ADD COLUMN `start` INTEGER UNSIGNED NOT NULL DEFAULT 0 AFTER `program_nid`,
+        ADD COLUMN `finish` INTEGER UNSIGNED NOT NULL DEFAULT 0 AFTER `start`,
+        ADD INDEX `station_schedule_start`(`start`);
+      ");
+      // drop the old indexes
+      $ret[] = update_sql("ALTER TABLE {station_schedule}
+        DROP INDEX `station_schedule_day`,
+        DROP INDEX `station_schedule_hour`;
+      ");
+      // drop old fields
+      $ret[] = update_sql("ALTER TABLE {station_schedule}
+        DROP COLUMN `archived`;
+      ");
+      $ret[] = update_sql("ALTER TABLE {station_schedule}
+        DROP COLUMN `day`,
+        DROP COLUMN `hour`;
+      ");
+
+      // set start and finish minutes
+      $ret[] = update_sql('UPDATE {station_schedule} SET start = (sid - 1) * 60, finish = start + 60');
+
+      // loop through and merge adjacent programs into a single row.
+      $adjacent_query = 'SELECT s.sid AS first_sid, t.sid AS second_sid, s.start, t.finish FROM {station_schedule} s INNER JOIN {station_schedule} t ON s.finish = t.start AND s.program_nid = t.program_nid LIMIT 1';
+      $result = db_query($adjacent_query);
+      while ($s = db_fetch_object($result)) {
+        $ret[] = update_sql('UPDATE {station_schedule} SET finish = '. (int)$s->finish .' WHERE sid = '. (int)$s->first_sid);
+        $ret[] = update_sql('DELETE FROM {station_schedule} WHERE sid = '. (int)$s->second_sid);
+        $result = db_query($adjacent_query);
+      }
+
+      // we aren't allowing an sid = 0 (it gets confused with false) so make it something bigger
+      $max = (int) db_result(db_query('SELECT MAX(sid)+1 FROM {station_schedule}'));
+      $ret[] = update_sql("UPDATE {station_schedule} SET sid = $max WHERE sid = 0");
+
+      // add our sequence
+      $ret[] = update_sql("INSERT INTO {sequences} (name, id) VALUES ('{station_schedule}_sid', $max)");
+
+      break;
+  }
+
+  return $ret;
+}
+
+/**
+ * Fix album index.
+ */
+function station_schedule_update_7() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql('ALTER TABLE {station_playlist_track}
+        DROP INDEX `station_playlist_album`,
+        ADD INDEX `station_playlist_album` (`album`)');
+    break;
+  }
+  return $ret;
+}
+
+/**
+ * Update to set the schema number for Drupal 5.0.
+ *
+ * Change the playlist node name from 4.7 to 5.0. We do this here because the
+ * station_schedule module was split up into sub modules as part of the upgrade
+ * and the station_playlist module isn't marked as installed, so the its
+ * updates won't be called.
+ */
+function station_schedule_update_100() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("UPDATE {node} SET type = 'station_playlist' WHERE type='program_playlist';");
+      $ret[] = update_sql("UPDATE {node_type} SET type = 'station_playlist' WHERE type='program_playlist';");
+    break;
+  }
+  return $ret;
+}
+
+/**
+ * Add an archiveable setting.
+ */
+function station_schedule_update_101() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql('ALTER TABLE {station_schedule}
+        ADD COLUMN `may_archive` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 AFTER `finish`;
+      ');
+    break;
+  }
+  return $ret;
+}
+
+/**
+ * Rename station_schedule to station_schedule_item and rename sid to iid. Add
+ * a new schedule_nid field that refers to the schedule. Then create a
+ * station_schedule table and update all schedule items to be a member of it.
+ */
+function station_schedule_update_5200() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // Rename {station_schedule} to {station_schedule_item}, sid to iid and
+      // add schedule_nid so we can join to the new {station_schedule}.
+      $ret[] = update_sql('ALTER TABLE {station_schedule}
+        RENAME TO {station_schedule_item},
+        CHANGE COLUMN `sid` `iid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+        ADD COLUMN `schedule_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0 FIRST
+      ');
+
+      // Move the sequence.
+      db_query('LOCK TABLES {sequences} WRITE');
+      $ret[] = update_sql("DELETE FROM {sequences} WHERE name = '{station_schedule_item}_iid'");
+      $ret[] = update_sql("UPDATE {sequences} SET name = '{station_schedule_item}_iid' WHERE name = '{station_schedule}_sid'");
+      db_query('UNLOCK TABLES');
+
+      // Create the table for schedule nodes.
+      $ret[] = update_sql("
+        CREATE TABLE {station_schedule} (
+          `nid` int unsigned NOT NULL default '0',
+          `increment` int unsigned NOT NULL default '0',
+          PRIMARY KEY(`nid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      ");
+
+      // Create a new node for the existing schedule.
+      $user = user_load(array('uid' => 1));
+      $node = new stdClass();
+      $node->type = 'station_schedule';
+      $node->uid = $user->uid;
+      $node->name = $user->name;
+      $node->title = t('Default');
+      $node->status = 1;
+      $node->station_schedule['increment'] = variable_get('station_schedule_increment', 60);
+      $node = node_submit($node);
+      node_save($node);
+
+      // Don't need this anymore.
+      variable_del('station_schedule_increment');
+
+      // Make the new schedule the default.
+      variable_set('station_schedule_default', $node->nid);
+      $ret[] = update_sql("UPDATE {station_schedule_item} SET schedule_nid = ". (int) $node->nid);
+
+      // Fix the keys.
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} DROP INDEX `station_schedule_start`');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} DROP INDEX `station_schedule_program`');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item}
+        ADD INDEX `station_schedule_start` (`schedule_nid`, `start`),
+        ADD INDEX `station_schedule_program` (`schedule_nid`, `program_nid`)
+      ');
+    break;
+  }
+  return $ret;
+}
+
+/**
+ * Existing sites will want to preserve the old URLs by default.
+ */
+function station_schedule_update_5201() {
+  variable_set('station_schedule_redirect_old_urls', 1);
+  return array();
+}

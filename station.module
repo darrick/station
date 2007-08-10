@@ -96,19 +96,6 @@ function station_admin_settings() {
       '#default_value' => variable_get('station_remote_schedule_url', ''),
       '#description' => t("The station schedule module is not enabled on this machine. The Station module can connect to another Drupal server running the station schedule module and retrieve information on scheduled programs via XML-RPC. If this is left blank, no connection will be attempted but things may not work. Omit the trailing slash, i.e.: http://example.com or http://example.com/drupal"),
     );
-    if ($schedules = station_get_schedules()) {
-      $options = array();
-      foreach (station_get_schedules() as $nid => $schedule) {
-        $options[$nid] = $schedule['title'];
-      }
-      $form['station_remote']['station_remote_schedule_nid'] = array(
-        '#type' => 'select',
-        '#title' => t('Schedule'),
-        '#default_value' => variable_get('station_remote_schedule_nid', 0),
-        '#options' => $options,
-        '#description' => t("This you select the schedule that will be used as the default for backwards compatibility."),
-      );
-    }
     $form['station_remote']['station_remote_schedule_offset'] = array(
       '#type' => 'textfield',
       '#title' => t('Station Schedule remote minute adjustment'),
@@ -140,7 +127,7 @@ function station_admin_settings_validate($form_id, $edit) {
     // check station url
     if ($url = $edit['station_remote_schedule_url']) {
       $url = check_url($url .'/xmlrpc.php');
-      $ret = xmlrpc($url, 'station.program.get.at', time(), 0);
+      $ret = xmlrpc($url, 'station.program.get.at', time());
       if (xmlrpc_error_msg()) {
         form_set_error('station_remote_schedule_url',
           t('You must provide a a valid URL for a Drupal site with the station schedule module installed.<br />Specific error: %xmlrpc-error', array('%xmlrpc-error' => xmlrpc_error_msg()))
@@ -235,29 +222,6 @@ function station_get_archive_url() {
   return FALSE;
 }
 
-/**
- * 
- * @return Array keyed to nid of schedules or FALSE on error. 
- */
-function station_get_schedules() {
-  if (module_exists('station_schedule')) {
-    $schedules = station_schedule_get_list(); 
-  }
-  else {
-    // If they haven't provided a URL we can't retreive any data.
-    $url = variable_get('station_remote_schedule_url', '');
-    if (!$url) {
-      return FALSE;
-    }
-
-    $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
-    if (xmlrpc_errno()) {
-      watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
-      return FALSE;
-    }
-  }
-  return $schedules;
-}
 
 /**
  * Return an object for the current program from the local machine or RPC if
@@ -265,16 +229,14 @@ function station_get_schedules() {
  *
  * @param $time
  *   A GMT timestamp.
- * @param $schedule_nid
- *   Schedule Id, 0 will load the default schedule.
  * @return
  *   FALSE if there was an error loading the data, NULL if nothing could be
  *   found, or, a program object if everything worked out.
  */
-function station_get_program_at($timestamp, $schedule_nid = 0) {
+function station_get_program_at($timestamp) {
   // Use the locally schedule if one is available
   if (module_exists('station_schedule')) {
-    $program = station_schedule_program_get_at($timestamp, $schedule_nid);
+    $program = station_schedule_program_get_at($timestamp);
     if ($program->nid) {
       return $program;
     }
@@ -313,7 +275,7 @@ function station_get_program_at($timestamp, $schedule_nid = 0) {
     }
     else {
       // if it isn't cached get the program info from the server
-      $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp, $schedule_nid);
+      $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp);
       if (xmlrpc_errno()) {
         watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
         return FALSE;
@@ -338,7 +300,7 @@ function station_get_program_at($timestamp, $schedule_nid = 0) {
  */
 function station_block_current_program() {
   // current program
-  $program = station_get_program_at(time(), 0);
+  $program = station_get_program_at(time());
   $unschedule_message = check_plain(variable_get('station_block_unschedule',  t("We're on autopilot.")));
   $high = check_url(variable_get('station_stream_high_url', ''));
   $low = check_url(variable_get('station_stream_low_url', ''));
@@ -350,7 +312,7 @@ function station_block_current_program() {
  * Theme the current program block.
  *
  * @param $program
- *   Program node object.
+ *   program node object
  * @param $unscheduled_message
  *   message to display if no program is scheduled, i.e. when $program is null
  * @param $high_url
@@ -429,34 +391,34 @@ function _station_send_notice($type, $op, $data) {
  *    items.
  * @param $data associative array with details like: nid, sid, uid.
  */
+/*
 function station_station_notice($type, $op, $data) {
   if ($type == 'dj') {
-    $sid = $data['schedule_nid'];
-    $pid = $data['program_nid'];
     $uid = $data['uid'];
+    $nid = $data['nid'];
     switch ($op) {
       case 'add':
-        drupal_set_message("$sid adding $uid to $nid");
+        drupal_set_message("adding $uid to $nid");
         break;
       case 'remove':
-        drupal_set_message("$sid removing $uid from $nid");
+        drupal_set_message("removing $uid from $nid");
         break;
     }
   }
   elseif ($type == 'schedule') {
-    $iid = $data['iid'];
-    $sid = $data['schedule_nid'];
-    $pid = $data['program_nid'];
+    $sid = $data['sid'];
+    $nid = $data['nid'];
     switch ($op) {
       case 'add':
-        drupal_set_message("$sid adding $iid to $pid");
+        drupal_set_message("adding $sid to $nid");
         break;
       case 'change':
-        drupal_set_message("$sid changing $iid on $pid");
+        drupal_set_message("changing $sid on $nid");
         break;
       case 'remove':
-        drupal_set_message("$sid removing $iid from $pid");
+        drupal_set_message("removing $sid from $nid");
         break;
     }
   }
 }
+*/

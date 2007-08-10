@@ -46,49 +46,46 @@ function station_schedule_menu($may_cache) {
       'type' => MENU_LOCAL_TASK
     );
 
-    $items[] = array(
-      'path' => 'schedule',
-      'callback' => 'station_schedule_redirect_old',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-
-    $items[] = array(
-      'path' => 'station/schedule',
-      'title' => t('Schedule'),
-      'callback' => 'station_schedule_today_page',
-      'callback arguments' => array(station_schedule_get_default()),
-      'access' => user_access('access content'),
-      'type' => MENU_NORMAL_ITEM,
-    );
-    $items[] = array(
-      'path' => 'station/schedule/week',
-      'title' => t('Full week'),
-      'callback' => 'station_schedule_week_page',
-      'callback arguments' => array(station_schedule_get_default()),
-      'type' => MENU_LOCAL_TASK,
-      'weight' => 10,
-    );
-  }
-  else {
-    // days of the week schedule...
-    $today = station_today();
-    foreach (station_day_name() as $day => $dayname) {
+    if (variable_get('station_schedule_redirect_old_urls', 0)) {
       $items[] = array(
-        'path' => 'station/schedule/' . strtolower($dayname),
-        'title' => t(substr($dayname, 0, 3)),
-        'callback' => 'station_schedule_day_page',
-        'callback arguments' => array(station_schedule_get_default(), $day),
-        'type' => ($today == $day) ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
-        'weight' => $day,
+        'path' => 'schedule',
+        'callback' => 'station_schedule_redirect_old',
+        'access' => user_access('access content'),
+        'type' => MENU_CALLBACK,
+      );
+      $items[] = array(
+        'path' => 'station/schedule',
+        'callback' => 'station_schedule_redirect_old',
+        'access' => user_access('access content'),
+        'type' => MENU_CALLBACK,
       );
     }
-
+  }
+  else {
     // Admininister schedule nodes.
     if (arg(0) == 'node' && is_numeric(arg(1))) {
       $nid = (int) arg(1);
       $node = node_load($nid);
       if ($node->type == 'station_schedule') {
+        $items[] = array(
+          'path' => "node/$nid/view/week",
+          'title' => t('Week'),
+          'callback' => 'station_schedule_week_page',
+          'callback arguments' => array($nid),
+          'type' => MENU_LOCAL_TASK,
+          'weight' => 10,
+        );
+        foreach (station_day_name() as $day => $dayname) {
+          $items[] = array(
+            'path' => "node/$nid/view/". strtolower($dayname),
+            'title' => t(substr($dayname, 0, 3)),
+            'callback' => 'station_schedule_day_page',
+            'callback arguments' => array($nid, $day),
+            'type' => ($today == $day) ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
+            'weight' => $day,
+          );
+        }
+
         $items[] = array(
           'path' => "node/$nid/schedule",
           'title' => t('Alter schedule'),
@@ -246,11 +243,41 @@ function station_schedule_update($node) {
 }
 
 function station_schedule_admin_settings() {
+  $form['djs'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('DJ settings'),
+  );
+  $form['djs']['station_schedule_dj_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('DJ title'),
+    '#default_value' => variable_get('station_schedule_dj_title', 'DJs'),
+    '#description' => t("This setting lets you determine what you'd like to call the users associated with programs. It should be plural."),
+    '#required' => TRUE,
+  );
+  $form['djs']['station_schedule_dj_role'] = array(
+    '#type' => 'select',
+    '#title' => t('DJs role'),
+    '#default_value' => variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID),
+    '#options' => user_roles(TRUE),
+    '#description' => t("This lets you restrict DJs to members of a specific role. If you don't want any restrictions, select <em>authenticated user</em>s."),
+  );
+
+  $form['bc'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Backwards compatibility'),
+  );
   $schedules = array();
   foreach (station_schedule_get_list() as $nid => $schedule) {
     $schedules[$nid] = $schedule['title'];
   }
-  $form['station_schedule_default'] = array(
+  $form['bc']['station_schedule_redirect_old_urls'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Redirect old links'),
+    '#default_value' => variable_get('station_schedule_redirect_old_urls', 0),
+    '#options' => $schedules,
+    '#description' => t("Checking this will ensure that the station module continues to redirect old <code>/schedule</code> and <code>/station/schedule</code> links."),
+  );
+  $form['bc']['station_schedule_default'] = array(
     '#type' => 'select',
     '#title' => t('Default schedule'),
     '#default_value' => variable_get('station_schedule_default', 0),
@@ -258,22 +285,6 @@ function station_schedule_admin_settings() {
     '#description' => t("This you select the schedule that will be used as the default for backwards compatibility."),
   );
 
-  $form['station_schedule_dj_title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('DJ title'),
-    '#default_value' => variable_get('station_schedule_dj_title', 'DJs'),
-    '#description' => t("This setting lets you determine what you'd like to call the users associated with programs. It should be plural."),
-    '#required' => TRUE,
-  );
-  
-  $form['station_schedule_dj_role'] = array(
-    '#type' => 'select',
-    '#title' => t('DJs role'),
-    '#default_value' => variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID),
-    '#options' => user_roles(TRUE),
-    '#description' => t("This lets you restrict DJs to members of a specific role. If you don't want any restrictions, select <em>authenticated user</em>s."),
-  );
-  
   $form['station_schedule_program_node_type'] = array(
     '#type' => 'item',
     '#title' => t('Scheduled node type'),
@@ -396,7 +407,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
               form_set_error("djs][$key][username", t('You need to specify a valid user name.'));
             }
             if (!isset($user->roles[$dj_role])) {
-              form_set_error("djs][$key][username", t('%username is not a member of the %rolename role.', 
+              form_set_error("djs][$key][username", t('%username is not a member of the %rolename role.',
                   array('%username' => $user->name, '%rolename' => $roles[$dj_role])));
             }
           }
@@ -493,7 +504,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
             $schedule = node_load($schedule_nid);
             $node->content['times'][$schedule_nid] = array(
               '#type' => 'item',
-              '#title' => t('Listen on @schedule at', array('@schedule' => $schedule->title)),
+              '#title' => t('Listen on <a href="!link">@title</a> at', array('@title' => $schedule->title, '!link' => url('node/'. $schedule_nid))),
               '#value' => $times ? theme('item_list', $times) : t('This program is currently unscheduled.'),
             );
           }
@@ -535,13 +546,15 @@ function station_schedule_form_alter($form_id, &$form) {
         }
         // Don't encourage adding unpublished stuff to the schedule.
         if ($node->status != 0) {
-          $form['schedule']['new'] = array(
-            '#type' => 'item',
-            '#value' => l(t('Add to the schedule'), "node/{$schedule_nid}/schedule/add/{$node->nid}"),
-          );
+          foreach (station_schedule_get_list() as $schedule_nid => $schedule) {
+            $form['schedule']['new_'. $schedule_nid] = array(
+              '#type' => 'item',
+              '#value' => l(t('Add to @title schedule', array('@title' => $schedule['title'])), "node/{$schedule_nid}/schedule/add/{$node->nid}"),
+            );
+          }
         }
       }
-      
+
       $roles = user_roles(TRUE);
       $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
       $form['djs'] = array(
@@ -549,7 +562,7 @@ function station_schedule_form_alter($form_id, &$form) {
         '#title' => variable_get('station_schedule_dj_title', 'DJs'),
         '#weight' => 1,
         '#tree' => TRUE,
-        '#description' => t("Enter the names of users you'd like to add as @dj-title. The users must be members of the %role-name role.", 
+        '#description' => t("Enter the names of users you'd like to add as @dj-title. The users must be members of the %role-name role.",
             array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs'), '%role-name' => $roles[$dj_role])),
       );
       if ($node->djs) {
@@ -650,10 +663,12 @@ function station_schedule_xmlrpc() {
 }
 
 /**
- * Function to redirect old /schedule/* links to /station/schedule/*
+ * Function to redirect old /schedule/* links and /station/schedule/*
+ * node/$default/*.
  */
 function station_schedule_redirect_old($day = '', $hour = '') {
-  $path = 'station/schedule';
+  $nid = variable_get('station_schedule_default', 0);
+  $path = "node/$nid/view";
   if ($day) {
     $path .= "/$day";
     if ($hour) {
@@ -670,13 +685,6 @@ function station_schedule_get_list() {
     $schedules[$o['nid']] = $o;
   }
   return $schedules;
-}
-
-/**
- * Return the default schedule id.
- */
-function station_schedule_get_default() {
-  return variable_get('station_schedule_default', 0);
 }
 
 /**
@@ -697,7 +705,7 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid = 0) {
   $day = date('w', $ts);
   $hour = date('G', $ts);
   $minute = station_minute_from_day_hour($day, $hour);
-  $schedule_nid = $schedule_nid ? (int) $schedule_nid : station_schedule_get_default();
+  $schedule_nid = $schedule_nid ? (int) $schedule_nid : variable_get('station_schedule_default', 0);
   $schedule_item = station_schedule_load_item_at($schedule_nid, $minute);
 
   // If there's an associated program, load it
@@ -853,7 +861,7 @@ function station_schedule_item_edit_form($op, $schedule, $id = NULL, $start = 0,
     $schedule_item->start = (int) $start;
     $schedule_item->finish = (int) $finish;
     $schedule_item->may_archive = TRUE;
-    
+
     drupal_set_title(t('Add item to %title', array('%title' => $schedule->title)));
   }
   else if ($op == 'edit') {
@@ -879,7 +887,7 @@ function station_schedule_item_edit_form($op, $schedule, $id = NULL, $start = 0,
     $i = str_pad($minute % 60, 2, '0', STR_PAD_LEFT);
     $minute_options[$minute] = $h .':'. $i;
   }
-  
+
 
   $form['schedule_nid'] = array(
     '#type' => 'value',

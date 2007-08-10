@@ -47,6 +47,11 @@ function station_schedule_uninstall() {
   db_query('DROP TABLE {station_schedule}');
   db_query('DROP TABLE {station_schedule_item}');
   db_query('DROP TABLE {station_dj}');
+
+  variable_del('station_schedule_redirect_old_urls');
+  variable_del('station_schedule_default');
+  variable_del('station_schedule_dj_role');
+  variable_del('station_schedule_dj_title');
 }
 
 /**
@@ -263,7 +268,7 @@ function station_schedule_update_5200() {
 
       // Move the sequence.
       db_query('LOCK TABLES {sequences} WRITE');
-      $ret[] = update_sql("DELETE FROM {sequences} WHERE name = '{station_schedule_item}_iid'"); 
+      $ret[] = update_sql("DELETE FROM {sequences} WHERE name = '{station_schedule_item}_iid'");
       $ret[] = update_sql("UPDATE {sequences} SET name = '{station_schedule_item}_iid' WHERE name = '{station_schedule}_sid'");
       db_query('UNLOCK TABLES');
 
@@ -275,7 +280,7 @@ function station_schedule_update_5200() {
           PRIMARY KEY(`nid`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
-      
+
       // Create a new node for the existing schedule.
       $user = user_load(array('uid' => 1));
       $node = new stdClass();
@@ -284,7 +289,7 @@ function station_schedule_update_5200() {
       $node->name = $user->name;
       $node->title = t('Default');
       $node->status = 1;
-      $node->station_schedule['increment'] = variable_get('station_schedule_increment', 60); 
+      $node->station_schedule['increment'] = variable_get('station_schedule_increment', 60);
       $node = node_submit($node);
       node_save($node);
 
@@ -305,4 +310,12 @@ function station_schedule_update_5200() {
     break;
   }
   return $ret;
+}
+
+/**
+ * Existing sites will want to preserve the old URLs by default.
+ */
+function station_schedule_update_5201() {
+  variable_set('station_schedule_redirect_old_urls', 1);
+  return array();
 }

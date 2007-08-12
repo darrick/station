@@ -336,7 +336,7 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
 
       case 'view':
         // if it's in the archives, set the menu appropriately
-        if ($page && isset($node->station_archive)) {
+        if ($page && !$teaser && isset($node->station_archive)) {
           $breadcrumb[] = array('path' => 'station', 'title' => t('Station'));
           $breadcrumb[] = array('path' => 'station/archives', 'title' => t('Archives'));
           $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);

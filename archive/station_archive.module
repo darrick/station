@@ -314,9 +314,17 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
 
       case 'update':
         if (isset($node->station_archive) && user_access('administer archive')) {
-          // update the association of the audio and program node ids
-          db_query("UPDATE {station_archive} SET program_nid = %d, permanent = %d WHERE audio_nid = %d",
-            $node->station_archive['program_nid'], $node->station_archive['permanent'], $node->nid);
+          // If there was an existing import time use that, if not use the
+          // current time.
+          $imported = db_result(db_query('SELECT imported AS imported FROM {station_archive} WHERE audio_nid = %d', $node->nid));
+          $imported = !empty($imported) ? $imported : time();
+
+          // Remove any existing records and if this is in the archive, create
+          // a new record.
+          db_query("DELETE FROM {station_archive} WHERE audio_nid = %d", $node->nid);
+          if ($node->station_archive['archived']) {
+            db_query("INSERT INTO {station_archive} (audio_nid, program_nid, imported, permanent) VALUES (%d, %d, %d, %d)", $node->nid, $node->station_archive['program_nid'], $imported, $node->station_archive['permanent']);
+          }
         }
         break;
 
@@ -328,24 +336,53 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
         break;
 
       case 'load':
-        $row = db_fetch_array(db_query("SELECT sa.program_nid, sap.title AS program_title, sa.imported, sa.permanent FROM {station_archive} sa LEFT OUTER JOIN {station_archive_program} sap ON sa.program_nid = sap.program_nid WHERE sa.audio_nid = %d", $node->nid));
+        // Sneak the '1 AS archived' in so we've got a value to indicate that
+        // this node is in the archive. 
+        $row = db_fetch_array(db_query("SELECT 1 AS archived, sa.program_nid, sap.title AS program_title, sa.imported, sa.permanent FROM {station_archive} sa LEFT OUTER JOIN {station_archive_program} sap ON sa.program_nid = sap.program_nid WHERE sa.audio_nid = %d", $node->nid));
         if ($row) {
           return array('station_archive' => $row);
         }
         break;
 
       case 'view':
-        // if it's in the archives, set the menu appropriately
+        // If it's in the archives, set the menu appropriately
         if ($page && !$teaser && isset($node->station_archive)) {
           $breadcrumb[] = array('path' => 'station', 'title' => t('Station'));
           $breadcrumb[] = array('path' => 'station/archives', 'title' => t('Archives'));
           $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);
           $breadcrumb[] = array('path' => 'node/'. $node->nid);
           menu_set_location($breadcrumb);
+
+          // Provide information to admins on the import and deletion dates.
+          if (user_access('administer archive')) {
+            $node->content['station_archive'] = array(
+              '#type' => 'fieldset',
+              '#title' => t('Station Archive Admin Info'),
+              '#collapsible' => TRUE,
+              '#collapsed' => TRUE,
+              station_archive_node_info_form($node),
+            );
+          }
         }
+
         break;
     }
   }
+}
+
+/**
+ * Get an array containing information about programs.
+ *
+ * @return
+ *   An array keyed by program ID, with each program stored as an object.
+ */
+function station_archive_get_programs() {
+  $programs = array();
+  $result = db_query('SELECT sap.program_nid AS nid, sap.title FROM {station_archive_program} sap ORDER BY sap.title');
+  while ($obj = db_fetch_object($result)) {
+    $programs[$obj->nid] = $obj;
+  }
+  return $programs;
 }
 
 
@@ -357,59 +394,91 @@ function station_archive_form_alter($form_id, &$form) {
   if ($form_id == 'audio_node_form') {
     $node = $form['#node'];
 
-    if (isset($node->station_archive)) {
+    if (isset($node->station_archive) || user_access('administer archive')) {
       $form['station_archive'] = array(
         '#type' => 'fieldset',
         '#title' => t('Station Archive'),
         '#collapsible'=> TRUE,
         '#weight' => -5,
         '#tree' => TRUE,
+        station_archive_node_info_form($node),
       );
       if (user_access('administer archive')) {
-        $result = db_query('SELECT sap.program_nid AS nid, sap.title FROM {station_archive_program} sap ORDER BY sap.title');
-        while ($obj = db_fetch_object($result)) {
-          $options[$obj->nid] = $obj->title;
+        $program_options = array();
+        foreach (station_archive_get_programs() as $nid => $program) {
+          $program_options[$nid] = $program->title;
         }
+
+        $form['station_archive']['archived'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('In Station Archive'),
+          '#default_value' => $node->station_archive['archived'],
+          '#description' => t("If this is checked, this then the station archive module will associate this with a program."),
+          '#weight' => -1,
+        );
         $form['station_archive']['program_nid'] = array(
           '#type' => 'select',
           '#title' => t('Recording of'),
           '#default_value' => $node->station_archive['program_nid'],
-          '#options' => $options,
+          '#options' => $program_options,
           '#description' => t('Select the program that this audio is a recording of.')
         );
-        $form['station_archive']['permanent'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('In permanent archive'),
-          '#default_value' => $node->station_archive['permanent'],
-          '#description' => t("If this is checked, this recording will not be deleted during the Station Archive's clean up of old recordings.")
+        $form['station_archive']['refresh'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Reload program information'),
+          '#description' => t("This lets you refresh the information about which program was playing at this time. This can be useful when the program information was incorrectly retreived or retreived before changes were made to the schedule."),
         );
         // put a reload button on the form so the admin can refresh program
         // information that was retreived incorrectly or before changes were
         // made to the schedule. this is processed in station_archive_nodeapi()
         // under the $op == 'prepare'.
-        $form['station_archive']['reload'] = array(
+        $form['station_archive']['refresh']['reload'] = array(
           '#type' => 'button',
           '#value' => t('Reload Program'),
         );
+        $form['station_archive']['permanent'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('In permanent archive'),
+          '#default_value' => $node->station_archive['permanent'],
+          '#description' => t("If this is checked, this recording will not be deleted during the Station Archive's clean up of old recordings."),
+        );
       }
-      $form['station_archive']['imported'] = array(
-        '#type' => 'item',
-        '#title' => t('Imported on'),
-        '#value' => format_date($node->station_archive['imported'], 'large'),
-        '#description' => t('This is the date the audio was actually imported to the archive.')
-      );
-      if (variable_get('station_archive_cleanup_old', 1)) {
+    }
+  }
+}
+
+function station_archive_node_info_form($node) {
+  if (isset($node->station_archive)) {
+    $form['station_archive']['imported'] = array(
+      '#type' => 'item',
+      '#title' => t('Imported on'),
+      '#value' => format_date($node->station_archive['imported'], 'large'),
+      '#description' => t('This is the date the audio was actually imported to the archive.'),
+      '#weight' => 0,
+    );
+    if (variable_get('station_archive_cleanup_old', 1)) {
+      if ($node->station_archive['permanent']) {
+        $form['station_archive']['deletion'] = array(
+          '#type' => 'item',
+          '#title' => t('Deletion not scheduled'),
+          '#description' => t("This audio is currently in the permanent archive and will not be removed as part of the normal cleanup process."),
+          '#weight' => 1,
+        );
+      }
+      else {
         $max_age = variable_get('station_archive_max_age', 604800);
         $delete = $node->station_archive['imported'] + $max_age;
         $form['station_archive']['deletion'] = array(
           '#type' => 'item',
           '#title' => t('Deletion scheduled for'),
           '#value' => format_date($delete, 'large'),
-          '#description' => t("The administrator has specified that archived recordings will be removed after being posted for %interval.", array('%interval' => format_interval($max_age)))
+          '#description' => t("The administrator has specified that archived recordings will be removed after being posted for %interval.", array('%interval' => format_interval($max_age))),
+          '#weight' => 1,
         );
       }
     }
   }
+  return $form;
 }
 
 /**

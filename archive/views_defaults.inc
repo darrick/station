@@ -12,7 +12,7 @@ function station_archive_views_default_views() {
 );
   $view->view_args_php = '';
   $view->page = TRUE;
-  $view->page_title = 'archives';
+  $view->page_title = 'Archive';
   $view->page_header = '';
   $view->page_header_format = '1';
   $view->page_footer = '';
@@ -26,8 +26,12 @@ function station_archive_views_default_views() {
   $view->menu = TRUE;
   $view->menu_title = 'Archive';
   $view->menu_tab = FALSE;
-  $view->menu_tab_default = FALSE;
   $view->menu_tab_weight = '0';
+  $view->menu_tab_default = FALSE;
+  $view->menu_tab_default_parent = NULL;
+  $view->menu_tab_default_parent_type = 'tab';
+  $view->menu_parent_tab_weight = '0';
+  $view->menu_parent_title = '';
   $view->sort = array (
     array (
       'tablename' => 'node',

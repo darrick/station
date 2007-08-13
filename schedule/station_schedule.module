@@ -1163,7 +1163,7 @@ function station_schedule_day_page($node, $day) {
       }
       $row['program'] = array('width' => 240, 'data' => l($program->title, 'node/' . $program->nid));
       $row['genre'] = array('width' => 240, 'data' => check_plain($program->genre));
-      $row['djs'] = array('width' => 200, 'data' => implode(', ', station_schedule_program_get_themed_djs($program->nid)));
+      $row['djs'] = array('width' => 200, 'data' => implode(', ', station_schedule_program_get_themed_djs($program)));
 
       $rows[] = $row;
     }

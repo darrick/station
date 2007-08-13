@@ -682,7 +682,13 @@ function station_schedule_xmlrpc() {
       'station.schedule.get.list',
       'station_schedule_get_list',
       array('array'),
-      t('Fetch a list of scheules.')
+      t('Fetch a list of schedules on this site.')
+    ),
+    array(
+      'station.program.get.list',
+      'station_schedule_get_program_list',
+      array('array'),
+      t('Fetch a list of programs on this site.')
     ),
   );
 }
@@ -723,6 +729,25 @@ function station_schedule_get_list() {
   return $schedules;
 }
 
+/**
+ * Return a list of schedules on this site.
+ *
+ * @return
+ *   Array of schedules.
+ */
+function station_schedule_get_program_list() {
+  static $schedules;
+
+  if (!isset($schedules)) {
+    $schedules = array();
+    $result = db_query("SELECT n.nid, n.title FROM {node} n WHERE n.type = 'station_program'");
+    while ($o = db_fetch_array($result)) {
+      $schedules[$o['nid']] = $o;
+    }
+  }
+
+  return $schedules;
+}
 /**
  * Get the program playing at a certain time. If no time is provide, use the
  * current time.

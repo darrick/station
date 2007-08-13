@@ -520,6 +520,8 @@ function station_archive_cron() {
     _station_archive_import_files();
   }
 
+  _station_archive_update_program_list();
+
   // restore the old user so we don't screw something else up in the cron run
   $user = $olduser;
 }
@@ -562,6 +564,35 @@ function _station_archive_import_files() {
         }
       }
     }
+  }
+}
+
+/**
+ * Update the entries in the {station_archive_program} table.
+ *
+ * Views uses the {station_archive_program} to group audio nodes to what may be
+ * remote programs. This function keeps it up to date. 
+ */
+function _station_archive_update_program_list() {
+  // Use the local schedule if one is available.
+  if (module_exists('station_schedule')) {
+    $programs = station_schedule_get_program_list();
+  }
+  else {
+    // Try to connect to a remote schedule via XMLRPC for program information.
+    // If they haven't provided a url we can't retreive any data.
+    if (!$url = variable_get('station_remote_schedule_url', '')) {
+      return FALSE;
+    }
+    $programs = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.list');
+    if (xmlrpc_errno()) {
+      watchdog('station_archive', t('Failed to load program listing remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+      return FALSE;
+    }
+  }
+  foreach ($programs as $program) {
+    db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program_nid);
+    db_query("INSERT INTO {station_archive_program} (program_nid, title) VALUES (%d, '%s')", $program['nid'], $program['title']);
   }
 }
 
@@ -643,9 +674,6 @@ function _station_archive_add_file($file) {
 
   // record an association of the audio and program node ids and the time it was imported.
   db_query("INSERT INTO {station_archive} (audio_nid, program_nid, imported) VALUES (%d, %d, %d)", $node->nid, $program_nid, time());
-  // save a copy of the program title for views to use
-  db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program_nid);
-  db_query("INSERT INTO {station_archive_program} (program_nid, title) VALUES (%d, '%s')", $program_nid, $program_title);
 
   watchdog('stationarchive', t('Added %title to the archive.', array('%title' => $program_title)), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
 

@@ -541,7 +541,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
  */
 function station_schedule_form_alter($form_id, &$form) {
   // We only alter audio node edit forms
-  if ($form_id == 'program_node_form') {
+  if ($form_id == 'station_program_node_form') {
     $node = $form['#node'];
 
     if (user_access('administer schedule')) {

@@ -489,6 +489,13 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
       case 'load':
         // load the program's users under djs.
         $node->djs = _station_schedule_program_load_djs($node->nid);
+
+        $node->times = array();
+        $result = db_query('SELECT * FROM {station_schedule_item} s WHERE s.program_nid = %d ORDER BY s.schedule_nid, s.start', $node->nid);
+        while ($item = db_fetch_array($result)) {
+          $node->times[$item['schedule_nid']][] = $item;
+        }
+
         break;
 
       case 'view':
@@ -499,16 +506,22 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
           menu_set_location($breadcrumb);
         }
 
-        $djs = station_schedule_program_get_themed_djs($node->nid);
-        $times_by_schedule = station_schedule_program_get_themed_times($node->nid);
+        $djs = station_schedule_program_get_themed_djs($node);
+        $ret[$schedule_nid][] = theme('station_dayhour_range', $time['start'], $time['finish']);
+        $schedules = station_schedule_get_list();
+        $times_by_schedule = station_schedule_program_get_themed_times($node);
 
         if ($teaser) {
+          $scheduled = array();
+          foreach ($times_by_schedule as $schedule_nid => $times) {
+            $scheduled[] = t('@title @times', array('@title' => $schedules[$schedule_nid]['title'], '@times' => station_anded_list($times)));
+          }
           $node->content['djs'] = array(
             '#value' => t(' with !djs', array('!djs' => station_anded_list($djs))),
             '#weight' => -1,
           );
           $node->content['times'] = array(
-            '#value' => $times ? t(' on @times.', array('@times' => station_anded_list($times))) : t(' is not currently scheduled.'),
+            '#value' => $scheduled ? t(' on @scheduling.', array('@scheduling' => station_anded_list($scheduled))) : t(' is not currently scheduled.'),
             '#weight' => 0,
           );
         }
@@ -522,10 +535,9 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
           );
           $node->content['times']['#weight'] = -4;
           foreach ($times_by_schedule as $schedule_nid => $times) {
-            $schedule = node_load($schedule_nid);
             $node->content['times'][$schedule_nid] = array(
               '#type' => 'item',
-              '#title' => t('Listen on <a href="!link">@title</a> at', array('@title' => $node->title, '!link' => url('node/'. $schedule_nid))),
+              '#title' => t('Listen on <a href="!link">@title</a> at', array('@title' => $schedules[$schedule_nid]['title'], '!link' => url('node/'. $schedule_nid))),
               '#value' => $times ? theme('item_list', $times) : t('This program is currently unscheduled.'),
             );
           }
@@ -549,28 +561,37 @@ function station_schedule_form_alter($form_id, &$form) {
       if ($node->nid) {
         $form['schedule'] = array(
           '#type' => 'fieldset',
-          '#title' => t('Schedule'),
+          '#title' => t('Station Schedule'),
           '#weight' => 1,
           '#tree' => TRUE,
           '#description' => t("These are the times the program is currently scheduled."),
+          '#collapsible' => TRUE,
         );
 
-        foreach (_station_schedule_program_load_times($node->nid) as $schedule_nid => $times) {
-          $schedule = node_load($schedule_nid);
-          $form['schedule'][$schedule_nid]['#title'] = $node->title;
+        // Don't encourage adding unpublished stuff to the schedule.
+        if ($node->status != 0) {
+          foreach (station_schedule_get_list() as $schedule_nid => $schedule) {
+            $form['schedule'][$schedule_nid] = array(
+              '#type' => 'fieldset',
+              '#title' => $schedule['title'],
+            );
+            $form['schedule'][$schedule_nid]['unscheduled'] = array(
+              '#type' => 'item',
+              '#value' => t('This program is not on this schedule.'),
+            );
+            $form['schedule'][$schedule_nid]['new_'. $schedule_nid] = array(
+              '#type' => 'item',
+              '#value' => l(t('Add to this schedule'), "node/{$schedule_nid}/schedule/add/{$node->nid}"),
+              '#weight' => 20,
+            );
+          }
+        }
+        foreach ($node->times as $schedule_nid => $times) {
+          unset($form['schedule'][$schedule_nid]['unscheduled']);
           foreach ($times as $time) {
             $form['schedule'][$schedule_nid][$time['iid']] = array(
               '#type' => 'item',
               '#value' => l(theme('station_dayhour_range', $time['start'], $time['finish']), "node/{$schedule_nid}/schedule/edit/{$time['iid']}"),
-            );
-          }
-        }
-        // Don't encourage adding unpublished stuff to the schedule.
-        if ($node->status != 0) {
-          foreach (station_schedule_get_list() as $schedule_nid => $schedule) {
-            $form['schedule']['new_'. $schedule_nid] = array(
-              '#type' => 'item',
-              '#value' => l(t('Add to @title schedule', array('@title' => $schedule['title'])), "node/{$schedule_nid}/schedule/add/{$node->nid}"),
             );
           }
         }
@@ -623,10 +644,10 @@ function _station_schedule_program_load_djs($program_nid) {
 /**
  * Returns an array of themed DJs.
  */
-function station_schedule_program_get_themed_djs($program_nid) {
+function station_schedule_program_get_themed_djs($program_node) {
   // make djs into links
   $djs = array();
-  foreach (_station_schedule_program_load_djs($program_nid) as $uid => $name) {
+  foreach ($program_node->djs as $uid => $name) {
     $user = user_load(array('uid' => $uid));
     $djs[] = theme('username', $user);
   }
@@ -634,30 +655,11 @@ function station_schedule_program_get_themed_djs($program_nid) {
 }
 
 /**
- * Returns an array of hours the program is scheduled.
- *
- * TODO: this should be moved into a hook_nodeapi($op = 'load') for program nodes.
- */
-function _station_schedule_program_load_times($nid) {
-  // load the program's scheduled times
-  $i = 0;
-  $times = array();
-  if ($nid) {
-    $result = db_query('SELECT * FROM {station_schedule_item} s WHERE s.program_nid = %s ORDER BY s.schedule_nid, s.start', $nid);
-    while ($item = db_fetch_array($result)) {
-      $times[$item['schedule_nid']][] = $item;
-    }
-  }
-  return $times;
-}
-
-/**
  * Returns a themed array of the times a program is scheduled.
  */
-function station_schedule_program_get_themed_times($nid) {
-  // load the program's scheduled times
+function station_schedule_program_get_themed_times($program_node) {
   $ret = array();
-  foreach (_station_schedule_program_load_times($nid) as $schedule_nid => $times) {
+  foreach ($program_node->times as $schedule_nid => $times) {
     foreach ($times as $time) {
       $ret[$schedule_nid][] = theme('station_dayhour_range', $time['start'], $time['finish']);
     }
@@ -701,12 +703,23 @@ function station_schedule_redirect_old($day = '', $hour = '') {
   drupal_goto($path);
 }
 
+/**
+ * Return a list of schedules on this site.
+ *
+ * @return
+ *   Array of schedules.
+ */
 function station_schedule_get_list() {
-  $schedules = array();
-  $result = db_query("SELECT n.nid, n.title, ss.increment FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
-  while ($o = db_fetch_array($result)) {
-    $schedules[$o['nid']] = $o;
+  static $schedules;
+
+  if (!isset($schedules)) {
+    $schedules = array();
+    $result = db_query("SELECT n.nid, n.title, ss.increment FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
+    while ($o = db_fetch_array($result)) {
+      $schedules[$o['nid']] = $o;
+    }
   }
+
   return $schedules;
 }
 

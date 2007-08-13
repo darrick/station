@@ -1125,8 +1125,7 @@ function theme_station_schedule_item($start, $finish, $program) {
   $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
   $output .= '<span class="station-sch-title">'. check_plain($program->title) .'</span>';
   if ($program->djs) {
-    $djs = _station_schedule_program_load_djs($program->nid);
-    $output .= '<span class="station-sch-djs">'. check_plain(implode(', ', $djs)) .'</span>';
+    $output .= '<span class="station-sch-djs">'. check_plain(implode(', ', $program->djs)) .'</span>';
   }
   $output .= "</a></div>\n";
   return $output;

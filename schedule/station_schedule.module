@@ -421,15 +421,15 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
 
         // validate the users
-        foreach ($node->djs as $key => $dj) {
-          if ($dj['username']) {
-            $user = user_load(array('name' => $dj['username']));
+        foreach ($node->djs as $key => $name) {
+          if (!empty($name)) {
+            $user = user_load(array('name' => $name));
             if (!$user->uid) {
-              form_set_error("djs][$key][username", t('You need to specify a valid user name.'));
+              form_set_error("djs][$key", t('You need to specify a valid user name.'));
             }
             if (!isset($user->roles[$dj_role])) {
-              form_set_error("djs][$key][username", t('%username is not a member of the %rolename role.',
-                  array('%username' => $user->name, '%rolename' => $roles[$dj_role])));
+              form_set_error("djs][$key", t('%username is not a member of the %rolename role.',
+                  array('%username' => $name, '%rolename' => $roles[$dj_role])));
             }
           }
         }
@@ -439,9 +439,9 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         // make a copy of the djs and put them back in the expected form
         $djs = (array) $node->djs;
         $node->djs = array();
-        foreach ($djs as $key => $dj) {
-          if ($dj['username']) {
-            $user = user_load(array('name' => $dj['username']));
+        foreach ($djs as $key => $name) {
+          if (!empty($name)) {
+            $user = user_load(array('name' => $name));
             if ($user->uid) {
               $node->djs[$user->uid] = $user->name;
             }
@@ -609,7 +609,7 @@ function station_schedule_form_alter($form_id, &$form) {
       );
       if ($node->djs) {
         foreach ((array)$node->djs as $uid => $username) {
-          $form['djs'][$uid]['username'] = array(
+          $form['djs'][$uid] = array(
             '#type' => 'textfield', '#maxlength' => 60,
             '#autocomplete_path' => 'user/autocomplete',
             '#default_value' => $username,
@@ -618,7 +618,7 @@ function station_schedule_form_alter($form_id, &$form) {
       }
       // add some blank username textfields
       for ($i = 0; $i < 4; $i++) {
-        $form['djs']['new'. $i]['username'] = array(
+        $form['djs']['new'. $i] = array(
           '#type' => 'textfield', '#maxlength' => 60,
           '#autocomplete_path' => 'user/autocomplete',
         );
@@ -647,9 +647,11 @@ function _station_schedule_program_load_djs($program_nid) {
 function station_schedule_program_get_themed_djs($program_node) {
   // make djs into links
   $djs = array();
-  foreach ($program_node->djs as $uid => $name) {
-    $user = user_load(array('uid' => $uid));
-    $djs[] = theme('username', $user);
+  foreach ((array) $program_node->djs as $uid => $name) {
+    if (!empty($name)) {
+      $user = user_load(array('name' => $name));
+      $djs[] = theme('username', $user);
+    }
   }
   return $djs;
 }
@@ -659,7 +661,7 @@ function station_schedule_program_get_themed_djs($program_node) {
  */
 function station_schedule_program_get_themed_times($program_node) {
   $ret = array();
-  foreach ($program_node->times as $schedule_nid => $times) {
+  foreach ((array) $program_node->times as $schedule_nid => $times) {
     foreach ($times as $time) {
       $ret[$schedule_nid][] = theme('station_dayhour_range', $time['start'], $time['finish']);
     }

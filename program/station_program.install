@@ -65,3 +65,18 @@ function station_program_update_5100() {
 
   return $ret;
 }
+
+/**
+ * Change the program node name to station_program.
+ */
+function station_program_update_5200() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("UPDATE {node} SET type = 'station_program' WHERE type='program';");
+      $ret[] = update_sql("UPDATE {node_type} SET type = 'station_program' WHERE type='program';");
+    break;
+  }
+  return $ret;
+}

@@ -73,7 +73,7 @@ function station_schedule_views_default_views() {
       'operator' => 'OR',
       'options' => '',
       'value' => array (
-  0 => 'program',
+  0 => 'station_program',
 ),
     ),
     array (
@@ -163,7 +163,7 @@ function station_schedule_views_default_views() {
       'operator' => 'OR',
       'options' => '',
       'value' => array (
-  0 => 'program',
+  0 => 'station_program',
 ),
     ),
     array (

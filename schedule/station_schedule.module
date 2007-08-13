@@ -309,7 +309,7 @@ function station_schedule_admin_settings() {
   $form['station_schedule_program_node_type'] = array(
     '#type' => 'item',
     '#title' => t('Scheduled node type'),
-    '#value' => t('The schedule is using the %type node provided by the %module module.', array('%type' => 'program', '%module' => node_get_types('module', 'program'))),
+    '#value' => t('The schedule is using the %type node provided by the %module module.', array('%type' => 'station_program', '%module' => node_get_types('module', 'station_program'))),
   );
 
   $form['module_cvs_id'] = array(
@@ -329,7 +329,7 @@ function station_schedule_admin_settings() {
 function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
   if ($type == 'node') {
     switch ($node->type) {
-    case 'program':
+    case 'station_program':
       return station_schedule_archive_links($node->nid);
     case 'station_playlist':
       if (!$teaser && $node->program_nid) {
@@ -414,7 +414,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
  * Implementation of hook_nodeapi().
  */
 function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == 'program') {
+  if ($node->type == 'station_program') {
     switch ($op) {
       case 'validate':
         $roles = user_roles(TRUE);
@@ -968,7 +968,7 @@ function station_schedule_item_edit_form_validate($form_id, $form_values) {
   }
 
   // check for a valid program title
-  if (!$prog = node_load(array('title' => $form_values['program_title'], 'type' => 'program'))) {
+  if (!$prog = node_load(array('title' => $form_values['program_title'], 'type' => 'station_program'))) {
     form_set_error('program_title', t('You need to specify a valid program name.'));
   }
 }
@@ -979,7 +979,7 @@ function station_schedule_item_edit_form_submit($form_id, $form_values) {
   $start = ($form_values['start_day'] * MINUTES_IN_DAY) + $form_values['start_minutes'];
   $finish = ($form_values['finish_day'] * MINUTES_IN_DAY) + $form_values['finish_minutes'];
 
-  $program = node_load(array('type' => 'program', 'title' => $form_values['program_title']));
+  $program = node_load(array('type' => 'station_program', 'title' => $form_values['program_title']));
 
   if ($form_values['iid']) {
     $old_sch = station_schedule_load_item($form_values['iid']);

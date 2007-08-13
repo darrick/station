@@ -260,7 +260,8 @@ function station_schedule_delete($node) {
  * Implementation of hook_update().
  */
 function station_schedule_update($node) {
-  db_query("UPDATE {station_schedule} SET increment = %d WHERE nid = %d", $node->settings['increment'], $node->nid);
+  db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid);
+  db_query("INSERT INTO {station_schedule} (nid, increment) VALUES (%d, %d)", $node->nid, $node->settings['increment']);
 }
 
 function station_schedule_admin_settings() {

@@ -838,7 +838,7 @@ function theme_station_schedule_admin_item($node, $item) {
   $link = url("node/{$node->nid}/schedule/edit/{$item->iid}");
 
   $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
-  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
+  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $item->start, $item->finish) .'</span>';
   $output .= '<span class="station-sch-title">'. check_plain($item->program->title) .'</span>';
   $output .= "</a></div>\n";
 

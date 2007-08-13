@@ -7,6 +7,9 @@ if (module_exists('views')) {
   require_once(drupal_get_path('module', 'station_archive') .'/views_defaults.inc');
 }
 
+/**
+ * Implementation of hook_help().
+ */
 function station_archive_help($section = '') {
   switch ($section) {
     case 'admin/settings/station/archive':
@@ -16,6 +19,9 @@ function station_archive_help($section = '') {
   }
 }
 
+/**
+ * Implementation of hook_menu().
+ */
 function station_archive_menu($may_cache) {
   $items = array();
   if ($may_cache) {
@@ -60,6 +66,9 @@ function station_archive_menu($may_cache) {
   return $items;
 }
 
+/**
+ * Implementation of hook_perm().
+ */
 function station_archive_perm() {
   return array(
     'administer archive',
@@ -143,6 +152,9 @@ function station_archive_view_hours_rss($hour_string) {
   return node_feed($result, $channel);
 }
 
+/**
+ * Implementation of hook_block().
+ */
 function station_archive_block($op = 'list', $delta = 0, $edit = array()) {
   switch ($op) {
   case 'view':
@@ -164,9 +176,7 @@ function station_archive_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 /**
- * Return HTML for browsing the taxonomy
- *
- * @return string
+ * Return HTML for browsing the taxonomy.
  */
 function _station_archive_browse_block() {
   $vid = _station_archive_get_vid();
@@ -181,8 +191,9 @@ function _station_archive_browse_block() {
   }
 }
 
-
-
+/**
+ * Archive settings form.
+ */
 function station_archive_admin_settings() {
   $times = array(86400, 172800, 259200, 345600, 432000, 518400, 604800, 1209600, 1814400, 2419200, 3024000, 3628800, 4233600, 4838400, 5443200, 6048000);
   $ageoptions = drupal_map_assoc($times, 'format_interval');
@@ -387,7 +398,7 @@ function station_archive_get_programs() {
 
 
 /**
- * implementation of hook_form_alter()
+ * Implementation of hook_form_alter().
  */
 function station_archive_form_alter($form_id, &$form) {
   // We only alter audio node edit forms
@@ -447,6 +458,15 @@ function station_archive_form_alter($form_id, &$form) {
   }
 }
 
+/**
+ * Create form elements to display the station archive information for an audio
+ * node.
+ * 
+ * @param $node
+ *   Audio node object.
+ * @return
+ *   Array of form information.
+ */
 function station_archive_node_info_form($node) {
   if (isset($node->station_archive)) {
     $form['station_archive']['imported'] = array(
@@ -482,7 +502,9 @@ function station_archive_node_info_form($node) {
 }
 
 /**
- * Cron task: remove old files, import new ones.
+ * Implementation of hook_cron().
+ *
+ * Remove old files, import new ones.
  */
 function station_archive_cron() {
   // HACK: we overwrite the user so that the cron user can get around the
@@ -544,12 +566,15 @@ function _station_archive_import_files() {
 }
 
 /**
- * Create an audio node for an MP3, named with an hour's timestamp. Use the
- * timestamp to load the program information.
+ * Add a file to the archive.
+ *
+ * Create an audio node for an mp3 or ogg file that is named with an hour's
+ * timestamp. Use the timestamp to load the program information.
  *
  * @param $file
  *   Drupal file object.
- * @return boolean indicating success
+ * @return
+ *   Boolean indicating success.
  */
 function _station_archive_add_file($file) {
   // extract the timestamp from the filename (should be simply timestamp.mp3)
@@ -630,8 +655,10 @@ function _station_archive_add_file($file) {
 /**
  * Find/create the term ids for a day and hour based on a timestamp.
  *
- * @param $local_timestamp A timestamp that's been adjusted for the local timezone. see station_local_ts().
- * @return array
+ * @param $local_timestamp
+ *   A timestamp that's been adjusted for the local timezone. see station_local_ts().
+ * @return
+ *   Array with day and hour terms.
  */
 function _station_archive_get_taxonomy($local_timestamp) {
   $vid = _station_archive_get_vid();
@@ -654,9 +681,10 @@ function _station_archive_get_taxonomy($local_timestamp) {
 }
 
 /**
- * Find or create a station archive vocabulary id.
+ * Find or create a Station Archive vocabulary ID.
  *
- * @return integer taxonomy vocab id
+ * @return
+ *   Vocabulary ID.
  */
 function _station_archive_get_vid() {
   $vid = variable_get('station_archive_vid', '');
@@ -732,11 +760,11 @@ function _station_archive_get_hour_tids($vid, $hour_string = '') {
  * Find the taxonomy term for a day.
  *
  * @param $vid
- *   our vocabulary id
+ *   Our vocabulary ID.
  * @param $day
- *   integer day between 0 and 6
+ *   Integer day between 0 and 6.
  * @return
- *   array with a day's taxonomy term, false if it doesn't exist
+ *   Array with a day's taxonomy term, FALSE if it doesn't exist.
  */
 function _station_archive_get_day_term($vid, $day) {
   $dayname = station_day_name($day);
@@ -748,11 +776,11 @@ function _station_archive_get_day_term($vid, $day) {
  * Find or create taxonomy term for a day.
  *
  * @param $dayterm
- *   array day taxonomy term
+ *   Array day taxonomy term.
  * @param $hour
- *   integer hour between 0 and 23
+ *   Integer hour between 0 and 23.
  * @return
- *   array with an hour's taxonomy term, false if it doesn't exist
+ *   Array with an hour's taxonomy term, false if it doesn't exist.
  */
 function _station_archive_get_hour_term($dayterm, $hour) {
   $hourname = station_hour_name($hour);

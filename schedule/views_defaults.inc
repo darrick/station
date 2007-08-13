@@ -61,7 +61,7 @@ function station_schedule_views_default_views() {
       'label' => variable_get('station_schedule_dj_title', 'DJs'),
     ),
     array (
-      'tablename' => 'station_schedule',
+      'tablename' => 'station_schedule_item',
       'field' => 'times',
       'label' => 'Times',
     ),
@@ -84,7 +84,7 @@ function station_schedule_views_default_views() {
       'value' => '1',
     ),
     array (
-      'tablename' => 'station_schedule',
+      'tablename' => 'station_schedule_item',
       'field' => 'is_scheduled',
       'operator' => '1',
       'options' => '',
@@ -93,7 +93,7 @@ function station_schedule_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(node, station_program, station_djs, station_schedule);
+  $view->requires = array(node, station_program, station_djs, station_schedule_item);
   $views[$view->name] = $view;
 
 
@@ -124,6 +124,7 @@ function station_schedule_views_default_views() {
   $view->menu_tab_weight = '1';
   $view->menu_tab_default = FALSE;
   $view->menu_tab_default_parent = NULL;
+  $view->menu_tab_default_parent_type = 'tab';
   $view->menu_parent_tab_weight = '0';
   $view->menu_parent_title = '';
   $view->sort = array (
@@ -173,7 +174,7 @@ function station_schedule_views_default_views() {
       'value' => '1',
     ),
     array (
-      'tablename' => 'station_schedule',
+      'tablename' => 'station_schedule_item',
       'field' => 'is_scheduled',
       'operator' => '0',
       'options' => '',
@@ -182,7 +183,7 @@ function station_schedule_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(node, station_program, station_djs, station_schedule);
+  $view->requires = array(node, station_program, station_djs, station_schedule_item);
   $views[$view->name] = $view;
 
 

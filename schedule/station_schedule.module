@@ -1054,8 +1054,8 @@ function station_schedule_item_remove_form($node, $iid = '') {
   $program = node_load($schedule_item->program_nid);
 
   $form['schedule_nid'] = array('#type' => 'value', '#value' => $node->nid);
-  $form['program_nid'] = array('#type' => 'value', '#value' => $node_item->program_nid);
-  $form['iid'] = array('#type' => 'value', '#value' => $node_item->iid);
+  $form['program_nid'] = array('#type' => 'value', '#value' => $schedule_item->program_nid);
+  $form['iid'] = array('#type' => 'value', '#value' => $schedule_item->iid);
   return confirm_form(
     $form,
     t('Are you sure you want to unschedule %title from %schedule at %time?', array('%title' => $program->title, '%schedule' => $node->title, '%time' => theme('station_dayhour_range', $schedule_item->start, $schedule_item->finish))),

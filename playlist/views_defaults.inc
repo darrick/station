@@ -17,7 +17,7 @@ function station_playlist_views_default_views() {
   $view->page_header_format = '1';
   $view->page_footer = '';
   $view->page_footer_format = '1';
-  $view->page_empty = '';
+  $view->page_empty = 'No playlists were found.';
   $view->page_empty_format = '1';
   $view->page_type = 'teaser';
   $view->url = 'station/playlists';

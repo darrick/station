@@ -17,7 +17,7 @@ function station_schedule_views_default_views() {
   $view->page_header_format = '1';
   $view->page_footer = '';
   $view->page_footer_format = '1';
-  $view->page_empty = 'There are no currently no scheduled programs.';
+  $view->page_empty = 'There are currently no scheduled programs.';
   $view->page_empty_format = '1';
   $view->page_type = 'table';
   $view->url = 'station/programs/scheduled';
@@ -112,7 +112,7 @@ function station_schedule_views_default_views() {
   $view->page_header_format = '1';
   $view->page_footer = '';
   $view->page_footer_format = '1';
-  $view->page_empty = 'There are no currently no unscheduled programs.';
+  $view->page_empty = 'There are currently no unscheduled programs.';
   $view->page_empty_format = '1';
   $view->page_type = 'table';
   $view->url = 'station/programs/unscheduled';

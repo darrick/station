@@ -101,7 +101,7 @@ function station_playlist_admin_settings() {
 function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
   if ($type == 'node') {
     switch ($node->type) {
-      case 'program':
+      case 'station_program':
         $links = array();
         if ($result = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} sp WHERE sp.program_nid = %d", $node->nid))) {
           $links['station_station_playlist_view'] = array(
@@ -180,7 +180,7 @@ function station_playlist_form(&$node) {
   if (!isset($node->program_title) && isset($node->program_nid)) {
     $program = node_load(array(
       'nid' => $node->program_nid,
-      'type' => 'program'
+      'type' => 'station_program'
     ));
     $node->program_title = $program->title;
   }
@@ -320,7 +320,7 @@ function theme_station_playlist_track_form($form) {
 function station_playlist_validate(&$node, &$form) {
   // convert the programs title into a node id
   if (isset($node->program_title)) {
-    $prog = node_load(array('type' => 'program', 'title' => $node->program_title));
+    $prog = node_load(array('type' => 'station_program', 'title' => $node->program_title));
     if ($prog) {
       $node->program_nid = $prog->nid;
       form_set_value($form['program_nid'], $node->program_nid);
@@ -490,7 +490,7 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
  * Implementation of hook_nodeapi().
  */
 function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == 'program'){
+  if ($node->type == 'station_program'){
     switch ($op) {
       case 'view':
         if (!$teaser) {

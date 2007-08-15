@@ -252,7 +252,7 @@ function station_get_schedules() {
 
     $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
     if (xmlrpc_errno()) {
-      watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+      watchdog('station', t('Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
       return FALSE;
     }
   }

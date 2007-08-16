@@ -655,10 +655,10 @@ function _station_archive_add_file($file) {
   $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
 
   // then create a new audio node with it
-  $node = audio_api_insert($file->filename, '!title', $audio_tags);
+  $node = audio_api_insert($file->filename, '[audio-tag-title]', $audio_tags);
 
   // make any other changes to the node...
-  $node->audio_fileinfo['downloadable'] = 1;
+  $node->audio_file['downloadable'] = 1;
   $node->created = $gmt_timestamp;
   // find/create the proper taxonomic terms based on day and hour
   $node->taxonomy = _station_archive_get_taxonomy($local_timestamp);
@@ -667,7 +667,7 @@ function _station_archive_add_file($file) {
   // keep the timestamp as the filename so we can re-import again if needed but
   // store a more readable filename for the user.
   $prettyname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).$file_format");
-  $node->audio_file->origname = $prettyname;
+  $node->audio_file['file_name'] = $prettyname;
 
   // ... and save it
   node_save($node);

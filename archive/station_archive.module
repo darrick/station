@@ -591,12 +591,12 @@ function _station_archive_update_program_list() {
     }
   }
   foreach ($programs as $program) {
-    db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program_nid);
+    db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program['nid']);
     db_query("INSERT INTO {station_archive_program} (program_nid, title) VALUES (%d, '%s')", $program['nid'], $program['title']);
   }
 }
 
-/**
+ /**
  * Add a file to the archive.
  *
  * Create an audio node for an mp3 or ogg file that is named with an hour's

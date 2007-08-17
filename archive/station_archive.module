@@ -670,6 +670,7 @@ function _station_archive_add_file($file) {
   $node->audio_file['file_name'] = $prettyname;
 
   // ... and save it
+  $node = node_submit($node);
   node_save($node);
 
   // record an association of the audio and program node ids and the time it was imported.

@@ -430,8 +430,8 @@ function station_archive_form_alter($form_id, &$form) {
         $form['station_archive']['program_nid'] = array(
           '#type' => 'select',
           '#title' => t('Recording of'),
-          '#default_value' => $node->station_archive['program_nid'],
           '#options' => $program_options,
+          '#default_value' => (int) $node->station_archive['program_nid'],
           '#description' => t('Select the program that this audio is a recording of.')
         );
         $form['station_archive']['refresh'] = array(
@@ -590,6 +590,13 @@ function _station_archive_update_program_list() {
       return FALSE;
     }
   }
+
+  // Insert a program for unschedule times. 
+  $programs[0] = array(
+    'nid' => 0,
+    'title' => variable_get('station_archive_unscheduled_title', t('DJ Auto mix')),
+  );
+
   foreach ($programs as $program) {
     db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program['nid']);
     db_query("INSERT INTO {station_archive_program} (program_nid, title) VALUES (%d, '%s')", $program['nid'], $program['title']);

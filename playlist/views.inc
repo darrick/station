@@ -72,7 +72,7 @@ function station_playlist_views_tables() {
 }
 
 
-function station_schedule_views_arguments() {
+function station_playlist_views_arguments() {
   $arguments = array(
     'program_nid' => array(
       'name' => t('Station Playlist: Program NID'),

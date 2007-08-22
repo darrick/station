@@ -409,7 +409,8 @@ function station_archive_form_alter($form_id, &$form) {
       $form['station_archive'] = array(
         '#type' => 'fieldset',
         '#title' => t('Station Archive'),
-        '#collapsible'=> TRUE,
+        '#collapsible' => TRUE,
+        '#collapsed' => (!$node->station_archive['archived'] || !isset($node->audio_file)),
         '#weight' => -5,
         '#tree' => TRUE,
         station_archive_node_info_form($node),

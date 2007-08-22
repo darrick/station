@@ -2,6 +2,9 @@
 
 // $Id$
 
+/**
+ * Implementation of hook_views_tables().
+ */
 function station_schedule_views_tables() {
   $tables['station_djs'] = array(
     'name' => 'station_djs',

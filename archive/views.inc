@@ -2,6 +2,9 @@
 
 // $Id$
 
+/**
+ * Implementation of hook_views_tables().
+ */
 function station_archive_views_tables() {
   $tables['station_archive'] = array(
     'name' => 'station_archive',
@@ -60,6 +63,9 @@ function station_archive_views_tables() {
   return $tables;
 }
 
+/**
+ * Implementation of hook_views_arguments().
+ */
 function station_archive_views_arguments() {
   $arguments = array(
     'station_archive_program_nid' => array(

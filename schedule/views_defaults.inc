@@ -2,6 +2,9 @@
 
 // $Id$
 
+/**
+ * Implementation of hook_views_default_views().
+ */
 function station_schedule_views_default_views() {
   $view = new stdClass();
   $view->name = 'station_scheduled_programs';

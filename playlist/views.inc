@@ -2,6 +2,9 @@
 
 // $Id$
 
+/**
+ * Implementation of hook_views_tables().
+ */
 function station_playlist_views_tables() {
   $tables['station_playlist'] = array(
     'name' => 'station_playlist',
@@ -71,7 +74,9 @@ function station_playlist_views_tables() {
   return $tables;
 }
 
-
+/**
+ * Implementation of hook_views_arguments().
+ */
 function station_playlist_views_arguments() {
   $arguments = array(
     'program_nid' => array(

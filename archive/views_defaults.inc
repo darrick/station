@@ -2,6 +2,9 @@
 
 // $Id$
 
+/**
+ * Implementation of hook_views_default_views().
+ */
 function station_archive_views_default_views() {
   $view = new stdClass();
   $view->name = 'station_archive_audio';

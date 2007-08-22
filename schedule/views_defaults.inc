@@ -8,10 +8,8 @@
 function station_schedule_views_default_views() {
   $view = new stdClass();
   $view->name = 'station_scheduled_programs';
-  $view->description = 'Programs';
+  $view->description = 'Scheduled programs';
   $view->access = array (
-  0 => '1',
-  1 => '2',
 );
   $view->view_args_php = '';
   $view->page = TRUE;
@@ -105,8 +103,6 @@ function station_schedule_views_default_views() {
   $view->name = 'station_unscheduled_programs';
   $view->description = 'Unscheduled programs';
   $view->access = array (
-  0 => '1',
-  1 => '2',
 );
   $view->view_args_php = '';
   $view->page = TRUE;

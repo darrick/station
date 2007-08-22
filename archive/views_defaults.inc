@@ -10,8 +10,6 @@ function station_archive_views_default_views() {
   $view->name = 'station_archive_audio';
   $view->description = 'Archived audio';
   $view->access = array (
-  0 => '1',
-  1 => '2',
 );
   $view->view_args_php = '';
   $view->page = TRUE;
@@ -87,8 +85,6 @@ function station_archive_views_default_views() {
   $view->name = 'station_archive_audio_rss';
   $view->description = 'Station Archive';
   $view->access = array (
-  0 => '1',
-  1 => '2',
 );
   $view->view_args_php = '';
   $view->page = TRUE;

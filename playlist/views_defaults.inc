@@ -9,10 +9,8 @@ function station_playlist_views_default_views() {
   $view = new stdClass();
   $view->name = 'station_schedule_playlists';
   $view->description = 'Playlists';
-  $view->access = array(
-    0 => '1',
-    1 => '2',
-  );
+  $view->access = array (
+);
   $view->view_args_php = '';
   $view->page = TRUE;
   $view->page_title = 'Playlists';

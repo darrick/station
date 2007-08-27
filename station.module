@@ -229,8 +229,8 @@ function station_get_archive_url() {
   if (module_exists('station_archive')) {
     return 'station/archives/';
   }
-  elseif ($url = variable_get('station_remote_archive_url', FALSE)) {
-    return $url . 'station/archives/';
+  else if ($url = variable_get('station_remote_archive_url', FALSE)) {
+    return $url .'station/archives/';
   }
   return FALSE;
 }

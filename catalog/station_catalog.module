@@ -1,8 +1,7 @@
 <?php
+// $Id$
 
 define('STATION_CATALOG_CVS_ID', '$Id$');
-
-#require_once(drupal_get_path('module', 'station_catalog') .'/musicbrainz.inc');
 
 if (module_exists('views')) {
 #  require_once(drupal_get_path('module', 'station_catalog') .'/views.inc');
@@ -36,13 +35,6 @@ function station_catalog_menu($may_cache) {
       'callback' => 'station_catalog_search_page',
       'access' => user_access('access content'),
       'type' => MENU_NORMAL_ITEM,
-    );
-    
-    $items[] = array(
-      'path' => 'station/catalog/js_search',
-      'callback' => 'station_catalog_search_js',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
     );
   }
 
@@ -220,33 +212,46 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
     '#value' => $node->label,
     '#weight' => -3,
   );
-  //musicbrainz_request('artist', array('name' => $node->artist));
+
   return $node;
 }
 
 
 function station_catalog_search_page($field = '', $value ='') {
-  drupal_add_js(drupal_get_path('module', 'station_catalog') .'/station_catalog.js' , 'module', 'header', FALSE, TRUE);
+  $header = array(
+    'number' => array('data' => t('Number'), 'field' => 'sc.number'),
+    'artist' => array('data' => t('Artist'), 'field' => 'sc.artist'),
+    'album' => array('data' => t('Album'), 'field' => 'sc.album'),
+    'label' => array('data' => t('Label'), 'field' => 'sc.label'),
+  );
+  
+  // Only search when there's a value and the field is valid.
+  if (!empty($value) && in_array($field, array('number', 'artist', 'album', 'label'))) {
+    $header[$field]['sort'] = 'asc';
+    $result = pager_query("SELECT sc.* FROM {node} n INNER JOIN {station_catalog} sc ON n.nid = sc.nid WHERE LOWER(sc.%s) LIKE LOWER('%%%s%%')". tablesort_sql($header), 30, 0, NULL, $field, $value);
+  }
+  else {
+    $header['number']['sort'] = 'asc';
+    $result = pager_query("SELECT sc.* FROM {node} n INNER JOIN {station_catalog} sc ON n.nid = sc.nid". tablesort_sql($header), 30, 0);
+  }
+
+  $rows = array();
+  while ($item = db_fetch_object($result)) {
+    $rows[] = array(
+      array('data' => $item->number),
+      array('data' => $item->artist),
+      array('data' => $item->album),
+      array('data' => $item->label)
+    );
+  }
+  
+  if (!$rows) {
+    $rows[] = array(array('colspan' => 4, 'data' => t('No matches were found.')));
+  }
 
   $output .= '<div id="station-catalog-search">';
   $output = drupal_get_form('station_catalog_search_form', $field, $value);
-  
-  $heading = array(t('Number'), t('Artist'), t('Album'), t('Label'));
-  $rows = array();
-  if (in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
-    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY %s', $field, $value, $field, 0, 10);
-    while ($item = db_fetch_object($result)) {
-      $rows[] = array($item->number, $item->artist, $item->album, $item->label);
-    }
-  }
-  if ($rows) {
-    $matches = theme('table', $heading, $rows);
-  }
-  else {
-    $matches = t("No matches were found.");
-  }
-    
-  $output .= '<div id="station-catalog-search-results">' .$matches. '</div>';
+  $output .= '<div id="station-catalog-search-results">'. theme('table', $header, $rows) .'</div>';
   $output .= '</div>';
   return $output;
 }
@@ -256,14 +261,12 @@ function station_catalog_search_form($field = '', $value ='') {
     '#type' => 'select',
     '#title' => 'Search by',
     '#options' => array(
-      '-' => t('Select one...'),
       'number' => t('Number'), 
       'artist' => t('Artist'), 
       'album' => t('Album'), 
       'label' => t('Label')
     ),
     '#default_value' => $field,
-    '#required' => TRUE,
   );
   $form['value'] = array(
     '#type' => 'textfield',
@@ -288,21 +291,9 @@ function theme_station_catalog_search_form($form) {
 }
 
 function station_catalog_search_form_submit($form_id, $form_values) {
-  // make sure it's an allowed search field
-  if (in_array($form_values['field'], array('number', 'artist', 'title', 'album', 'label'))) {
-    return 'station/catalog/search/' . $form_values['field'] .'/'. $form_values['value'];
+  // Make sure it's an allowed search field.
+  if (in_array($form_values['field'], array('number', 'artist', 'album', 'label'))) {
+    return 'station/catalog/search/'. $form_values['field'] .'/'. $form_values['value'];
   }
-  return 'station/catalog/search';
 }
 
-function station_catalog_search_js($field = '', $value ='') {
-  $matches = array();
-  if ($value && in_array($field, array('number', 'artist', 'title', 'album', 'label'))) {
-    $result = db_query_range('SELECT * FROM {station_catalog} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY number', $field, $value, 0, 30);
-    while ($item = db_fetch_object($result)) {
-     $matches[] = $item;
-    }
-  }
-  print drupal_to_js($matches);
-  exit();
-}

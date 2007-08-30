@@ -175,7 +175,8 @@ function station_catalog_album_delete($node) {
 }
 
 function station_catalog_album_update($node) {
-  db_query("UPDATE {station_catalog} SET album = '%s', artist = '%s', label = '%s' WHERE nid = %d", $node->album, $node->artist, $node->label, $node->nid);
+  db_query("DELETE FROM {station_catalog} WHERE nid = %d", $node->nid);
+  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, label) VALUES (%d, %d, '%s', '%s', '%s')", $node->nid, $node->number, $node->artist, $node->album, $node->label);
 }
 
 function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {

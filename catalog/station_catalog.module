@@ -75,6 +75,8 @@ function station_catalog_node_info() {
 function station_catalog_perm() {
   return array(
     'view catalog',
+    'create album content',
+    'edit album content',
     'administer catalog',
   );
 }
@@ -82,15 +84,21 @@ function station_catalog_perm() {
 function station_catalog_album_access($op, $node) {
   global $user;
 
+  // Admins can do anything.
+  if (user_access('administer catalog')) {
+    return TRUE;
+  }
+  
   switch ($op) {
     case 'view':
       return user_access('view catalog');
 
+    case 'create':
+      return user_access('create album content');
+
     case 'update':
     case 'delete':
-    case 'create':
-    default:
-      return user_access('administer catalog');
+      return user_access('edit album content');
   }
 }
 

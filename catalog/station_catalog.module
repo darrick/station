@@ -4,7 +4,7 @@
 define('STATION_CATALOG_CVS_ID', '$Id$');
 
 if (module_exists('views')) {
-#  require_once(drupal_get_path('module', 'station_catalog') .'/views.inc');
+  require_once(drupal_get_path('module', 'station_catalog') .'/views.inc');
 #  require_once(drupal_get_path('module', 'station_catalog') .'/views_defaults.inc');
 }
 

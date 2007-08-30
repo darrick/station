@@ -32,6 +32,11 @@ function station_catalog_install() {
  */
 function station_catalog_uninstall() {
   db_query('DROP TABLE {station_catalog}');
+
+  if ($vid = variable_get('station_category_vocabulary', FALSE)) {
+    taxonomy_del_vocabulary($vid);
+  }
+  variable_del('station_category_vocabulary');
 }
 
 /**

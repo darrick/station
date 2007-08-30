@@ -13,8 +13,6 @@ function station_catalog_help($section='') {
   switch ($section) {
     case 'admin/settings/station/catalog':
       return t("These settings allow you to configure the station catalog.");
-    default:
-      return null;
   }
 }
 
@@ -225,6 +223,46 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
   return $node;
 }
 
+/**
+ * Implementation of hook_taxonomy().
+ * 
+ * Delete our vocabulary variable if the vocabulary is deleted.
+ */
+function station_catalog_taxonomy($op, $type, $object = NULL) {
+  if ($op == 'delete' && $type == 'vocabulary' && $object->vid == _station_archive_get_vid())  {
+    variable_del('station_category_vocabulary');
+  }
+}
+
+
+/**
+ * Find or create a station catalog vocabulary ID.
+ *
+ * @return
+ *   Vocabulary ID.
+ */
+function _station_catalog_get_vid() {
+  $vid = variable_get('station_category_vocabulary', '');
+  if (empty($vid)) {
+    // Check to see if a a  vocabulary exists
+    $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'station_catalog'));
+    if (!$vid) {
+      $vocabulary = array(
+        'name' => t('Station Catalog Genres'),
+        'multiple' => '1', 
+        'required' => '1', 
+        'hierarchy' => '0', 
+        'relations' => '0', 
+        'module' => 'station_catalog', 
+        'nodes' => array('station_album' => 1),
+      );
+      taxonomy_save_vocabulary($vocabulary);
+      $vid = $vocabulary['vid'];
+    }
+    variable_set('station_category_vocabulary', $vid);
+  }
+  return $vid;
+}
 
 function station_catalog_search_page($field = '', $value ='') {
   $perpage = 20;

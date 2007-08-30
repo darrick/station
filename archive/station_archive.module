@@ -727,7 +727,7 @@ function _station_archive_get_vid() {
   $vid = variable_get('station_archive_vid', '');
   if (empty($vid)) {
     // Check to see if a stationarchive vocabulary exists
-    $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'stationarchive'));
+    $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'station_archive'));
     if (!$vid) {
       $vocab = array(
         'name' => 'Station Archive',
@@ -737,7 +737,7 @@ function _station_archive_get_vid() {
         'required' => 0,
         'hierarchy' => 1,
         'relations' => 0,
-        'module' => 'stationarchive',
+        'module' => 'station_archive',
         'nodes' => array('audio' => 1),
       );
       taxonomy_save_vocabulary($vocab);

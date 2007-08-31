@@ -11,16 +11,18 @@ function station_catalog_install() {
     case 'mysqli':
       db_query("
         CREATE TABLE {station_catalog} (
-          `nid` INTEGER UNSIGNED AUTO_INCREMENT,
-          `number` INTEGER UNSIGNED NOT NULL DEFAULT 0,
-          `artist` VARCHAR(255) NOT NULL DEFAULT '',
-          `album` VARCHAR(255) NOT NULL DEFAULT '',
-          `label` VARCHAR(255) NOT NULL DEFAULT '',
-          PRIMARY KEY(`nid`),
-          UNIQUE KEY `station_catalog_number`(`number`),
-          INDEX `station_catalog_artist`(`artist`),
-          INDEX `station_catalog_album`(`album`),
-          INDEX `station_catalog_label`(`label`)
+          `nid` int(10) unsigned NOT NULL default '0',
+          `number` int(10) unsigned NOT NULL default '0',
+          `artist` varchar(255) NOT NULL default '',
+          `album` varchar(255) NOT NULL default '',
+          `year` int(10) unsigned NOT NULL,
+          `label` varchar(255) NOT NULL default '',
+          PRIMARY KEY  (`nid`),
+          UNIQUE KEY `station_catalog_number` (`number`),
+          KEY `station_catalog_artist` (`artist`),
+          KEY `station_catalog_album` (`album`),
+          KEY `station_catalog_year` (`year`)
+          KEY `station_catalog_label` (`label`),
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
       break;
@@ -60,3 +62,24 @@ function station_catalog_update_101() {
   }
   return $ret;
 }
+
+/**
+ * Remove the autonumber from the nid column and add a year column.
+ */
+function station_catalog_update_5200() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+        MODIFY COLUMN `nid` INTEGER UNSIGNED NOT NULL DEFAULT 0;
+      ");
+      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+        ADD COLUMN `year` INTEGER UNSIGNED NOT NULL AFTER `album`,
+        ADD INDEX station_catalog_year(`year`);
+      ");
+    break;
+  }
+  return $ret;
+}
+

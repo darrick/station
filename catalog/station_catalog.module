@@ -101,6 +101,16 @@ function station_catalog_album_access($op, $node) {
 }
 
 /**
+ * Returns the the next unused album number.
+ * 
+ * @return
+ *   Integer with the next, unused album number. 
+ */
+function station_catalog_album_next_number() {
+  return db_result(db_query('SELECT MAX(number) + 1 FROM {station_catalog}'));
+}
+
+/**
  * Build a form for program nodes.
  */
 function station_catalog_album_form($node) {
@@ -113,7 +123,7 @@ function station_catalog_album_form($node) {
   $form['album']['number'] = array(
     '#type' => 'textfield',
     '#title' => t('Number'),
-    '#default_value' => $node->album['number'],
+    '#default_value' => isset($node->album['number']) ? $node->album['number'] : station_catalog_album_next_number(),
     '#required' => TRUE,
     '#description' => t("The album's log number must be numeric and unique."),
   );

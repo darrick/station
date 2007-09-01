@@ -31,7 +31,7 @@ function station_catalog_menu($may_cache) {
       'path' => 'station/catalog/search',
       'title' => t('Catalog'),
       'callback' => 'station_catalog_search_page',
-      'access' => user_access('access content'),
+      'access' => user_access('view catalog'),
       'type' => MENU_NORMAL_ITEM,
     );
   }
@@ -375,6 +375,7 @@ function station_catalog_search_form($field = '', $value ='') {
     '#type' => 'textfield',
     '#title' => t('Value'),
     '#default_value' => $value,
+    '#size' => 20,
     '#required' => TRUE,
   );
   $form['search']['submit'] = array(

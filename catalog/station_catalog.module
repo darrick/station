@@ -375,20 +375,32 @@ function station_catalog_search_form($field = '', $value ='') {
     '#type' => 'textfield',
     '#title' => t('Value'),
     '#default_value' => $value,
-    '#size' => 20,
+    '#size' => 25,
     '#required' => TRUE,
   );
-  $form['search']['submit'] = array(
+  $form['search']['filter'] = array(
     '#type' => 'submit', 
-    '#value' => t('Submit')
+    '#value' => t('Filter'),
   );
+  if (!empty($value)) {
+    $form['search']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset'),
+    );
+  }
   return $form;
 }
 
 function station_catalog_search_form_submit($form_id, $form_values) {
-  // Make sure it's an allowed search field.
-  if (in_array($form_values['field'], array('number', 'artist', 'album', 'year', 'label'))) {
-    return 'station/catalog/search/'. $form_values['field'] .'/'. $form_values['value'];
+  switch ($form_values['op']) {
+    case t('Reset'):
+      return 'station/catalog/search/'; 
+
+    case t('Filter'):
+      // Make sure it's an allowed search field.
+      if (in_array($form_values['field'], array('number', 'artist', 'album', 'year', 'label'))) {
+        return 'station/catalog/search/'. $form_values['field'] .'/'. $form_values['value'];
+      }
   }
 }
 

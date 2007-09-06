@@ -317,13 +317,13 @@ function station_catalog_search_page($field = '', $value ='') {
   );
 
   // Only search when there's a value and the field is valid.
-  if (!empty($value) && in_array($field, array('number', 'artist', 'album', 'year', 'label'))) {
+  if (!empty($value) && in_array($field, array('number', 'artist', 'album', 'year', 'label'), TRUE)) {
     $header[$field]['sort'] = 'asc';
-    $result = pager_query("SELECT n.nid, sc.* FROM {node} n INNER JOIN {station_catalog} sc ON n.nid = sc.nid WHERE LOWER(sc.%s) LIKE LOWER('%%%s%%')". tablesort_sql($header), $perpage, 0, NULL, $field, $value);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, sc.* FROM {node} n INNER JOIN {station_catalog} sc ON n.nid = sc.nid WHERE LOWER(sc.$field) LIKE LOWER('%%%s%%')"). tablesort_sql($header), $perpage, 0, NULL, $value);
   }
   else {
     $header['number']['sort'] = 'desc';
-    $result = pager_query("SELECT n.nid, sc.* FROM {node} n INNER JOIN {station_catalog} sc ON n.nid = sc.nid". tablesort_sql($header), $perpage, 0);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid, sc.* FROM {node} n INNER JOIN {station_catalog} sc ON n.nid = sc.nid"). tablesort_sql($header), $perpage, 0);
   }
 
   $rows = array();

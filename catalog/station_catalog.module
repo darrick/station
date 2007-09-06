@@ -269,7 +269,7 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
  * Delete our vocabulary variable if the vocabulary is deleted.
  */
 function station_catalog_taxonomy($op, $type, $object = NULL) {
-  if ($op == 'delete' && $type == 'vocabulary' && $object->vid == _station_archive_get_vid())  {
+  if ($op == 'delete' && $type == 'vocabulary' && $object->vid == _station_catalog_get_vid())  {
     variable_del('station_category_vocabulary');
   }
 }

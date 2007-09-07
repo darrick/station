@@ -41,12 +41,18 @@ function station_catalog_menu($may_cache) {
 
 
 function station_catalog_admin_settings() {
-  $form = array();
+  $form['station_category_redirect_on_add'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add multiple albums'),
+    '#default_value' => variable_get('station_category_redirect_on_add', TRUE),
+    '#description' => t('If this is checked after adding a new album you will be redirected back to the new album form. This is much more convienient when entering multiple albums.'),
+  );
   $form['module_cvs_id'] = array(
     '#type' => 'item',
     '#value' => '<pre>'. STATION_CATALOG_CVS_ID .'</pre>',
   );
-  return $form;
+
+  return system_settings_form($form);
 }
 
 
@@ -114,6 +120,12 @@ function station_catalog_album_next_number() {
  * Build a form for program nodes.
  */
 function station_catalog_album_form($node) {
+  // Make it a little easier when doing data entry and redirect back to the
+  // add form after submitting a new album.
+  if (empty($node->nid) && variable_get('station_category_redirect_on_add', TRUE)) {
+    $form['#redirect'] = 'node/add/station-album';
+  }
+
   $form['album'] = array(
     '#type' => 'fieldset',
     '#title' => t('Album information'),

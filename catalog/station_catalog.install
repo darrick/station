@@ -39,6 +39,7 @@ function station_catalog_uninstall() {
     taxonomy_del_vocabulary($vid);
   }
   variable_del('station_category_vocabulary');
+  variable_del('station_category_redirect_on_add');
 }
 
 /**

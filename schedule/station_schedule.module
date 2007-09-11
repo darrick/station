@@ -558,41 +558,39 @@ function station_schedule_form_alter($form_id, &$form) {
     if (user_access('administer schedule')) {
       // if it's a saved display the scheduled times.
       if ($node->nid) {
+        $schedules = station_schedule_get_list();
+
         $form['schedule'] = array(
           '#type' => 'fieldset',
           '#title' => t('Station Schedule'),
           '#weight' => 1,
           '#tree' => TRUE,
-          '#description' => t("These are the times the program is currently scheduled."),
+          '#description' => count($schedules) ? '' : t("There are no schedules on this site."),
           '#collapsible' => TRUE,
         );
-
-        // Don't encourage adding unpublished stuff to the schedule.
-        if ($node->status != 0) {
-          foreach (station_schedule_get_list() as $schedule_nid => $schedule) {
-            $form['schedule'][$schedule_nid] = array(
-              '#type' => 'fieldset',
-              '#title' => $schedule['title'],
-            );
-            $form['schedule'][$schedule_nid]['unscheduled'] = array(
-              '#type' => 'item',
-              '#value' => t('This program is not on this schedule.'),
-            );
-            $form['schedule'][$schedule_nid]['new_'. $schedule_nid] = array(
-              '#type' => 'item',
-              '#value' => l(t('Add to this schedule'), "node/{$schedule_nid}/schedule/add/{$node->nid}"),
-              '#weight' => 20,
-            );
+        foreach ($schedules as $schedule_nid => $schedule) {
+          $links = array();
+          $form['schedule'][$schedule_nid] = array(
+            '#type' => 'fieldset',
+            '#title' => $schedule['title'],
+            '#description' => t("These are the times this program is currently scheduled:"),
+          );
+          if (!isset($node->times[$schedule_nid])) {
+            $form['schedule'][$schedule_nid]['#description'] = t('This program is not on this schedule.');
           }
-        }
-        foreach ($node->times as $schedule_nid => $times) {
-          unset($form['schedule'][$schedule_nid]['unscheduled']);
-          foreach ($times as $time) {
-            $form['schedule'][$schedule_nid][$time['iid']] = array(
-              '#type' => 'item',
-              '#value' => l(theme('station_dayhour_range', $time['start'], $time['finish']), "node/{$schedule_nid}/schedule/edit/{$time['iid']}"),
-            );
+          else {
+            foreach ($node->times[$schedule_nid] as $time) {
+              $links[] = l(theme('station_dayhour_range', $time['start'], $time['finish']), "node/{$schedule_nid}/schedule/edit/{$time['iid']}");
+            }
           }
+          // Don't encourage adding unpublished stuff to the schedule.
+          if ($node->status != 0) {
+            $links[] = l(t('Add this program to to the @name schedule', array('@name' => $schedule[''])), "node/{$schedule_nid}/schedule/add/{$node->nid}");
+          }
+          $form['schedule'][$schedule_nid]['links'] = array(
+            '#type' => 'item',
+            '#value' => theme('item_list', $links),
+          );
         }
       }
 

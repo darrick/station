@@ -113,10 +113,18 @@ function station_schedule_views_tables() {
 
 function station_handler_field_schedule_times($fieldinfo, $fielddata, $value, $data) {
   if ($program = node_load($data->nid)) {
-    $schedules = station_schedule_get_list();
     $scheduled = array();
-    foreach (station_schedule_program_get_themed_times($program) as $schedule_nid => $times) {
-      $scheduled[] = t('@title @times', array('@title' => $schedules[$schedule_nid]['title'], '@times' => station_anded_list($times)));
+    $schedules = station_schedule_get_list();
+
+    if (count($schedules) == 1) {
+      foreach (station_schedule_program_get_themed_times($program) as $schedule_nid => $times) {
+        $scheduled[] = t('@times', array('@times' => station_anded_list($times)));
+      }
+    }
+    else {
+      foreach (station_schedule_program_get_themed_times($program) as $schedule_nid => $times) {
+        $scheduled[] = t('On @title @times', array('@title' => $schedules[$schedule_nid]['title'], '@times' => station_anded_list($times)));
+      }
     }
     return station_anded_list($scheduled);
   }

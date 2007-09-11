@@ -585,7 +585,7 @@ function station_schedule_form_alter($form_id, &$form) {
           }
           // Don't encourage adding unpublished stuff to the schedule.
           if ($node->status != 0) {
-            $links[] = l(t('Add this program to to the @name schedule', array('@name' => $schedule[''])), "node/{$schedule_nid}/schedule/add/{$node->nid}");
+            $links[] = l(t('Add this program to the @name schedule', array('@name' => $schedule[''])), "node/{$schedule_nid}/schedule/add/{$node->nid}");
           }
           $form['schedule'][$schedule_nid]['links'] = array(
             '#type' => 'item',

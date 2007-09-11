@@ -646,7 +646,7 @@ function station_schedule_program_get_themed_djs($program_node) {
   $djs = array();
   foreach ((array) $program_node->djs as $uid => $name) {
     if (!empty($name)) {
-      $user = user_load(array('name' => $name));
+      $user = user_load(array('uid' => $uid));
       $djs[] = theme('username', $user);
     }
   }

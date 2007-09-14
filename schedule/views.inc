@@ -161,17 +161,15 @@ function station_handler_field_listen_link_rss($fieldinfo, $fielddata, $value, $
 function station_handler_filter_is_scheduled($op, $filterdata, $filterinfo, &$query) {
   switch ($op) {
   case 'handler':
-    $query->ensure_table('node');
-    $query->add_field('nid', 'node');
+    $query->ensure_table('station_schedule_item');
     if ($filterdata['operator']) {
-      $query->add_where('EXISTS (SELECT * FROM {station_schedule_item} WHERE {station_schedule_item}.program_nid = node.nid)');
+      $query->add_where('{station_schedule_item}.program_nid IS NOT NULL');
     }
     else {
-      $query->add_where('NOT EXISTS (SELECT * FROM {station_schedule_item} WHERE {station_schedule_item}.program_nid = node.nid)');
+      $query->add_where('{station_schedule_item}.program_nid IS NULL');
     }
     break;
   }
-  return;
 }
 
 /**
@@ -192,5 +190,4 @@ function station_handler_filter_now_playing($op, $filterdata, $filterinfo, &$que
     $query->add_where('EXISTS (SELECT * FROM {station_schedule_item} WHERE {station_schedule_item}.program_nid = node.nid AND {station_schedule_item}.start <= %d AND {station_schedule_item}.finish > %d)', $minute, $minute);
     break;
   }
-  return;
 }

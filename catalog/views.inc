@@ -42,6 +42,7 @@ function station_catalog_views_tables() {
         'help' => t("Label that released the album."),
         'sortable' => TRUE,
       ),
+    ),
   );
 
   return $tables;

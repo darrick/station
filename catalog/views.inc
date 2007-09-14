@@ -34,7 +34,7 @@ function station_catalog_views_tables() {
       ),
       'year' => array(
         'name' => t('Station Catalog: Year'),
-        'help' => t(Year the album was released."),
+        'help' => t("Year the album was released."),
         'sortable' => TRUE,
       ),
       'label' => array(

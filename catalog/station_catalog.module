@@ -238,7 +238,7 @@ function station_catalog_album_form($node) {
  */
 function station_catalog_album_validate(&$node, &$form) {
   if (!is_numeric($node->album['number'])) {
-    form_set_error('number', t('Album number must be a numeric value.')));
+    form_set_error('number', t('Album number must be a numeric value.'));
   }
   else if ($node->album['number']) {
     // look for duplicate numbers

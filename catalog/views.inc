@@ -32,12 +32,16 @@ function station_catalog_views_tables() {
         'help' => t("Album time."),
         'sortable' => TRUE,
       ),
+      'year' => array(
+        'name' => t('Station Catalog: Year'),
+        'help' => t("Year the album was released."),
+        'sortable' => TRUE,
+      ),
       'label' => array(
         'name' => t('Station Catalog: Label'),
         'help' => t("Label that released the album."),
         'sortable' => TRUE,
       ),
-    ),
   );
 
   return $tables;

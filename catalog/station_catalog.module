@@ -124,7 +124,34 @@ function station_catalog_album_next_number() {
 }
 
 /**
- * Build a form for program nodes.
+ * Implementation of hook_prepare().
+ */
+function station_catalog_album_prepare(&$node) {
+  if (isset($node->album['artist']) && isset($node->album['album'])) {
+    if ($mb_info = _station_catalog_musicbrainz_album($node->album['artist'], $node->album['album'])) {
+      $fields = array(
+        'artist' => t('Artist'),
+        'album' => t('Album'),
+        'year' => t('Year'),
+        'mb_release_id' => t('Music Brainz ID'),
+        'asin' => t('ASIN'),
+      );
+      $adjusted = array();
+      foreach ($fields as $field => $name) {
+        if (empty($node->album[$field])) {
+          $adjusted[] = $name;
+          $node->album[$field] = $mb_info[$field];
+        }
+      }
+      if ($adjusted) {
+        drupal_set_message(t('Values for @fields fields were loaded from the MusicBrainz data.', array('@fields' => station_anded_list($adjusted))));
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_form().
  */
 function station_catalog_album_form($node) {
   // Make it a little easier when doing data entry and redirect back to the
@@ -171,9 +198,25 @@ function station_catalog_album_form($node) {
     '#type' => 'textfield',
     '#title' => t('Label'),
     '#default_value' => $node->album['label'],
-    '#required' => TRUE,
+    '#required' => FALSE,
     '#maxlength' => 255,
     '#description' => t("The year the album was released."),
+  );
+  $form['album']['mb_release_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Music Brainz Release ID'),
+    '#default_value' => $node->album['mb_release_id'],
+    '#required' => FALSE,
+    '#maxlength' => 255,
+    '#description' => t("MusicBrainz ID for this release."),
+  );
+  $form['album']['asin'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amazon Standard Identification Number'),
+    '#default_value' => $node->album['asin'],
+    '#required' => FALSE,
+    '#maxlength' => 255,
+    '#description' => t("Amazon product ID for this album."),
   );
 
   if ($type->has_body) {
@@ -195,7 +238,7 @@ function station_catalog_album_form($node) {
  */
 function station_catalog_album_validate(&$node, &$form) {
   if (!is_numeric($node->album['number'])) {
-    form_set_error('number', 'Album number must be a numeric value');
+    form_set_error('number', t('Album number must be a numeric value.')));
   }
   else if ($node->album['number']) {
     // look for duplicate numbers
@@ -213,19 +256,20 @@ function station_catalog_album_validate(&$node, &$form) {
     }
   }
 
-  if (!is_numeric($node->album['year'])) {
-    form_set_error('year', 'Year must be a numeric value');
+  if (!empty($node->album['year']) && !is_numeric($node->album['year'])) {
+    form_set_error('year', t('Year must be a numeric value and %value is not.', array('%value' => ($node->album['year']))));
   }
 
   // Compute the title.
-  form_set_value($form['title'], $node->album['artist'] .' - '. $node->album['album']);
+  $node->title = $node->album['artist'] .' - '. $node->album['album'];
+  form_set_value($form['title'], $node->title);
 }
 
 /**
  * Implementation of hook_load().
  */
 function station_catalog_album_load($node) {
-  $result = db_query('SELECT number, artist, album, year, label FROM {station_catalog} WHERE nid = %d', $node->nid);
+  $result = db_query('SELECT number, artist, album, year, label, mb_release_id, asin FROM {station_catalog} WHERE nid = %d', $node->nid);
   return array('album' => db_fetch_array($result)); 
 }
 
@@ -233,7 +277,7 @@ function station_catalog_album_load($node) {
  * Implementation of hook_insert().
  */
 function station_catalog_album_insert($node) {
-  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, year, label) VALUES (%d, %d, '%s', '%s', %d, '%s')", $node->nid, $node->album['number'], $node->album['artist'], $node->album['album'], $node->album['year'], $node->album['label']);
+  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, year, label, mb_release_id, asin) VALUES (%d, %d, '%s', '%s', %d, '%s', '%s', '%s')", $node->nid, $node->album['number'], $node->album['artist'], $node->album['album'], $node->album['year'], $node->album['label'], $node->album['mb_release_id'], $node->album['asin']);
 }
 
 /**
@@ -248,7 +292,7 @@ function station_catalog_album_delete($node) {
  */
 function station_catalog_album_update($node) {
   db_query("DELETE FROM {station_catalog} WHERE nid = %d", $node->nid);
-  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, year, label) VALUES (%d, %d, '%s', '%s', %d, '%s')", $node->nid, $node->album['number'], $node->album['artist'], $node->album['album'], $node->album['year'], $node->album['label']);
+  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, year, label, mb_release_id, asin) VALUES (%d, %d, '%s', '%s', %d, '%s', '%s', '%s')", $node->nid, $node->album['number'], $node->album['artist'], $node->album['album'], $node->album['year'], $node->album['label'], $node->album['mb_release_id'], $node->album['asin']);
 }
 
 /**
@@ -296,6 +340,23 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
       '#weight' => -2,
     ),
   );
+
+  if (!empty($node->album['mb_release_id'])) {
+    $node->content['album']['mb_release_id'] = array(
+      '#type' => 'item',
+      '#title' => t('MusicBrainz'),
+      '#value' => l($node->album['mb_release_id'], "http://musicbrainz.org/release/{$node->album['mb_release_id']}.html"),
+      '#weight' => 0,
+    );
+  }
+  if (!empty($node->album['asin'])) {
+    $node->content['album']['asin'] = array(
+      '#type' => 'item',
+      '#title' => t('Amazon'),
+      '#value' => l($node->album['asin'], 'http://www.amazon.com/gp/product/'. $node->album['asin']),
+      '#weight' => 0,
+    );
+  }
 
   return $node;
 }
@@ -439,4 +500,65 @@ function station_catalog_search_form_submit($form_id, $form_values) {
         return 'station/catalog/search/'. $form_values['field'] .'/'. $form_values['value'];
       }
   }
+}
+
+function _station_catalog_musicbrainz_album($artist, $title) {
+  $args = array(
+    'type' => 'xml',
+    'artist' => $artist,
+    'title' => $title
+  );
+  $url = url('http://musicbrainz.org/ws/1/release/', drupal_query_string_encode($args));
+
+  $ret = array();
+
+  $response = drupal_http_request($url);
+  if ($response->code == 200) {
+    $doc = DOMDocument::loadXML($response->data);
+
+    $xpath = new DOMXPath($doc);
+    // Can't use the default namespace, must explicitly set one...
+    $xpath->registerNameSpace('mb', 'http://musicbrainz.org/ns/mmd-1.0#');
+#dvm($doc->saveXML());
+    // Only return exact matches.
+    $result = $xpath->query('//mb:release-list/mb:release[@ext:score="100"]');
+    if ($result && $result->length) {
+      foreach ($result as $item) {
+        $release = simplexml_import_dom($result->item(0));
+#        dvm($release);
+      }
+      $release = simplexml_import_dom($result->item(0));
+      $ret['mb_release_id'] = (string) $release['id'];
+      $ret['artist'] = (string) $release->artist->name;
+      $ret['album'] = (string) $release->title;
+      $ret['asin'] = (string) $release->asin;
+      // Release year is a bit of a pain, the tag name isn't a valid PHP 
+      // identifier and we need to use a regular expression to match the 
+      // year portion of the ate.
+      $event = 'release-event-list';
+      preg_match('/.*US (\d{4}).*/', $release->$event->event['date'], $matches);
+      $ret['year'] = (string) $matches[1];
+
+      // Now that we've got the release id, we need to make another call to get the label.
+#      $label = _station_catalog_musicbrainz_label($ret['mb_release_id']);
+      $ret['label'] = '';
+    }
+  }
+  return $ret;
+}
+
+function _station_catalog_musicbrainz_label($release_id) {
+  $args = array(
+    'type' => 'xml',
+    'inc' => 'labels',
+  );
+  $url = url('http://musicbrainz.org/ws/1/release/'. $release_id, drupal_query_string_encode($args));
+dvm($url);
+  $ret = array();
+  $response = drupal_http_request($url);
+  if ($response->code == 200) {
+    $doc = DOMDocument::loadXML($response->data);
+dvm($doc->savexml());
+  }
+  return $ret;
 }

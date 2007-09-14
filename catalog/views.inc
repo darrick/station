@@ -34,12 +34,22 @@ function station_catalog_views_tables() {
       ),
       'year' => array(
         'name' => t('Station Catalog: Year'),
-        'help' => t("Year the album was released."),
+        'help' => t(Year the album was released."),
         'sortable' => TRUE,
       ),
       'label' => array(
         'name' => t('Station Catalog: Label'),
         'help' => t("Label that released the album."),
+        'sortable' => TRUE,
+      ),
+      'mb_release_id' => array(
+        'name' => t('Station Catalog: Music Brainz ID'),
+        'help' => t("MusicBrainz ID for this release."),
+        'sortable' => TRUE,
+      ),
+      'asin' => array(
+        'name' => t('Station Catalog: ASIN'),
+        'help' => t("Amazon product ID for this album."),
         'sortable' => TRUE,
       ),
     ),

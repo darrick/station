@@ -17,12 +17,15 @@ function station_catalog_install() {
           `album` varchar(255) NOT NULL default '',
           `year` int(10) unsigned NOT NULL,
           `label` varchar(255) NOT NULL default '',
+          `mb_release_id` varchar(36) NOT NULL default  '',
+          `asin` varchar(16) NOT NULL default '',
           PRIMARY KEY  (`nid`),
           UNIQUE KEY `station_catalog_number` (`number`),
           KEY `station_catalog_artist` (`artist`),
           KEY `station_catalog_album` (`album`),
           KEY `station_catalog_year` (`year`)
           KEY `station_catalog_label` (`label`),
+          KEY `mb_release` (`mb_release_id`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
       break;
@@ -79,6 +82,27 @@ function station_catalog_update_5200() {
         ADD COLUMN `year` INTEGER UNSIGNED NOT NULL AFTER `album`,
         ADD INDEX station_catalog_year(`year`);
       ");
+    break;
+  }
+  return $ret;
+}
+
+/**
+ * Add MusicBrainz release id field and Amazon ASIN field.
+ */
+function station_catalog_update_5201() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+        ADD COLUMN `mb_release_id` VARCHAR(36) NOT NULL DEFAULT '' AFTER `label`,
+        ADD INDEX mb_release(`mb_release_id`);
+      ");
+      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+        ADD COLUMN `asin` varchar(16) NOT NULL default '' AFTER `mb_release_id`;
+      ");
+
     break;
   }
   return $ret;

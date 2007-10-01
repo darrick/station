@@ -744,7 +744,7 @@ function station_schedule_admin_form($op, $id = NULL, $start = 0, $finish = 60) 
   $form['program_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Program'),
-    '#description' => t("Type the name of this hour's program, or if nothing is scheduled, leave it blank."),
+    '#description' => t("Enter the name of the program."),
     '#default_value' => $program_title,
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program'

@@ -124,8 +124,8 @@ function station_handler_field_station_playlist_program_title_nl($fieldinfo, $fi
 }
 
 function station_handler_field_station_playlist_timestamp($fieldinfo, $fielddata, $value, $data) {
-  return l(format_date($value, 'custom', 'j-n-y'), "node/$data->nid");
+  return l(format_date($value, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')), "node/$data->nid");
 }
 function station_handler_field_station_playlist_timestamp_nl($fieldinfo, $fielddata, $value, $data) {
-  return format_date($value, 'custom', 'j-n-y');
+  return format_date($value, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y'));
 }

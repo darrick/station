@@ -23,7 +23,7 @@ function station_catalog_install() {
           UNIQUE KEY `station_catalog_number` (`number`),
           KEY `station_catalog_artist` (`artist`),
           KEY `station_catalog_album` (`album`),
-          KEY `station_catalog_year` (`year`)
+          KEY `station_catalog_year` (`year`),
           KEY `station_catalog_label` (`label`),
           KEY `mb_release` (`mb_release_id`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;

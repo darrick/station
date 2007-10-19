@@ -22,8 +22,15 @@ function station_playlist_views_tables() {
         'name' => t('Station Playlist: Date'),
         'sortable' => TRUE,
         'handler' => array(
-          'station_handler_field_station_playlist_timestamp' => t("As link"),
-          'station_handler_field_station_playlist_timestamp_nl' => t("Without link"),
+          'station_handler_field_playlist_timestamp_title' => t('Playlist title date format'),
+          'station_handler_field_playlist_timestamp_program' => t('Program node date format'),
+        ),
+        'option' => array(
+           '#type' => 'select',
+           '#options' => array(
+             'listlink' => 'As link to playlist',
+             'nolink' => 'Without link'
+           ),
         ),
         'help' => t('Date of the program.'),
       ),
@@ -40,7 +47,7 @@ function station_playlist_views_tables() {
         'operator' => 'views_handler_operator_gtlt',
         'value' => views_handler_filter_date_value_form(),
         'handler' => 'views_handler_filter_timestamp',
-        'help' => t('Filter depending on the date the program has/will air. '),
+        'help' => t('Filter depending on the date the program has/will air.'),
       ),
     ),
 
@@ -61,9 +68,14 @@ function station_playlist_views_tables() {
       'title' => array(
         'name' => t('Station Playlist: Program Title'),
         'sortable' => TRUE,
-        'handler' => array(
-          'station_handler_field_station_playlist_program_title'    => t('As Link'),
-          'station_handler_field_station_playlist_program_title_nl' => t('Without Link'),
+        'handler' => 'station_handler_field_playlist_program_title',
+        'option' => array(
+           '#type' => 'select',
+           '#options' => array(
+             'proglink' => 'As link to program',
+             'listlink' => 'As link to playlist',
+             'nolink' => 'Without link'
+           ),
         ),
         'addlfields' => array('nid'),
         'help' => t('Title of the program.'),
@@ -116,16 +128,28 @@ function station_playlist_arg_program_nid_handler($op, &$query, $argtype, $arg =
   }
 }
 
-function station_handler_field_station_playlist_program_title($fieldinfo, $fielddata, $value, $data) {
-  return l($value, "node/$data->station_playlist_program_node_nid");
-}
-function station_handler_field_station_playlist_program_title_nl($fieldinfo, $fielddata, $value, $data) {
+function station_handler_field_playlist_program_title($fieldinfo, $fielddata, $value, $data) {
+  if ($fielddata['options'] == 'proglink') {
+    return l($value, "node/$data->station_playlist_program_node_nid");
+  }
+  if ($fielddata['options'] == 'listlink') {
+    return l($value, "node/$data->nid");
+  }
   return check_plain($value);
 }
 
-function station_handler_field_station_playlist_timestamp($fieldinfo, $fielddata, $value, $data) {
-  return l(format_date($value, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')), "node/$data->nid");
+function station_handler_field_playlist_timestamp_title($fieldinfo, $fielddata, $value, $data) {
+  $date = format_date($value, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y'));
+  if ($fielddata['options'] == 'listlink') {
+    return l($date, "node/$data->nid");
+  }
+  return $date;  
 }
-function station_handler_field_station_playlist_timestamp_nl($fieldinfo, $fielddata, $value, $data) {
-  return format_date($value, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y'));
+
+function station_handler_field_playlist_timestamp_program($fieldinfo, $fielddata, $value, $data) {
+  $date = format_date($value, 'custom', variable_get('station_playlist_program_dateformat', 'F j, Y'));
+  if ($fielddata['options'] == 'listlink') {
+    return l($date, "node/$data->nid");
+  }
+  return $date;  
 }

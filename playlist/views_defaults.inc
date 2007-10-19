@@ -7,7 +7,7 @@
  */
 function station_playlist_views_default_views() {
   $view = new stdClass();
-  $view->name = 'station_schedule_playlists';
+  $view->name = 'station_playlists';
   $view->description = 'Playlists';
   $view->access = array (
 );
@@ -27,8 +27,12 @@ function station_playlist_views_default_views() {
   $view->menu = TRUE;
   $view->menu_title = 'Playlists';
   $view->menu_tab = FALSE;
-  $view->menu_tab_default = FALSE;
   $view->menu_tab_weight = '0';
+  $view->menu_tab_default = FALSE;
+  $view->menu_tab_default_parent = NULL;
+  $view->menu_tab_default_parent_type = 'existing';
+  $view->menu_parent_tab_weight = '0';
+  $view->menu_parent_title = '';
   $view->block = TRUE;
   $view->block_title = 'Recent playlists';
   $view->block_header = '';
@@ -39,20 +43,20 @@ function station_playlist_views_default_views() {
   $view->block_empty_format = '1';
   $view->block_type = 'list';
   $view->nodes_per_block = '6';
-  $view->block_more = '1';
+  $view->block_more = TRUE;
   $view->block_use_page_header = FALSE;
   $view->block_use_page_footer = FALSE;
   $view->block_use_page_empty = FALSE;
-  $view->sort = array(
-    array(
+  $view->sort = array (
+    array (
       'tablename' => 'station_playlist',
       'field' => 'timestamp',
       'sortorder' => 'DESC',
       'options' => '',
     ),
   );
-  $view->argument = array(
-    array(
+  $view->argument = array (
+    array (
       'type' => 'program_nid',
       'argdefault' => '2',
       'title' => '%1 Playlists',
@@ -61,8 +65,8 @@ function station_playlist_views_default_views() {
       'wildcard_substitution' => '',
     ),
   );
-  $view->field = array(
-    array(
+  $view->field = array (
+    array (
       'tablename' => 'node',
       'field' => 'title',
       'label' => '',
@@ -70,24 +74,24 @@ function station_playlist_views_default_views() {
       'options' => 'link',
     ),
   );
-  $view->filter = array(
-    array(
+  $view->filter = array (
+    array (
       'tablename' => 'node',
       'field' => 'type',
       'operator' => 'OR',
       'options' => '',
-      'value' => array(
-        0 => 'station_playlist',
-      ),
+      'value' => array (
+  0 => 'station_playlist',
+),
     ),
-    array(
+    array (
       'tablename' => 'node',
       'field' => 'status',
       'operator' => '=',
       'options' => '',
       'value' => '1',
     ),
-    array(
+    array (
       'tablename' => 'station_playlist',
       'field' => 'timestamp',
       'operator' => '<=',
@@ -95,7 +99,7 @@ function station_playlist_views_default_views() {
       'value' => 'now',
     ),
   );
-  $view->exposed_filter = array(
+  $view->exposed_filter = array (
   );
   $view->requires = array(station_playlist, node);
   $views[$view->name] = $view;

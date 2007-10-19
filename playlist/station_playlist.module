@@ -477,7 +477,7 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
       }
 
       $node->content['tracks'] = array(
-        '#value' => theme('table', $header, $rows),
+        '#value' => theme('table', $header, $rows, array('class' => 'station-playlist-tracks')),
         '#title' => 'Tracks',
         '#weight' => 0,
       );

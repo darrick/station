@@ -77,13 +77,15 @@ function station_valid_day($day) {
  * @param $day
  *   An optional integer for the day of the week, zero being Sunday.
  * @return
- *   If $day is specified a string, othereise an array of the names of all the
- *   days in the week.
+ *   If $day is specified a string, othereise an array of the names of all
+ *   the days in the week. When an array is returned it will be ordered
+ *   honoring the site's first day of the week setting.
  */
 function station_day_name($day = NULL) {
   static $days;
+
   if (!isset($days)) {
-    $days = array(
+    $names = array(
       0 => t('Sunday'),
       t('Monday'),
       t('Tuesday'),
@@ -92,6 +94,11 @@ function station_day_name($day = NULL) {
       t('Friday'),
       t('Saturday')
     );
+    $day_offset = variable_get('date_first_day', 0);
+    $days = array();
+    for ($i = $day_offset; $i < (7 + $day_offset); $i++) {
+      $days[$i % 7] = $names[$i % 7];
+    }
   }
 
   if ($day === NULL) {

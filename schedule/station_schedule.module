@@ -73,6 +73,9 @@ function station_schedule_menu($may_cache) {
           'type' => MENU_DEFAULT_LOCAL_TASK,
           'weight' => -10,
         );
+        // Use a separate variable to set the weights since station_day_name()
+        // may return index values that are not sorted.
+        $weight = 0;
         foreach (station_day_name() as $day => $dayname) {
           $items[] = array(
             'path' => "node/$nid/view/". strtolower($dayname),
@@ -80,7 +83,7 @@ function station_schedule_menu($may_cache) {
             'callback' => 'station_schedule_day_page',
             'callback arguments' => array($node, $day),
             'type' => MENU_LOCAL_TASK,
-            'weight' => $day,
+            'weight' => $weight++,
           );
         }
 
@@ -214,7 +217,9 @@ function station_schedule_form($node) {
  */
 function station_schedule_load($node) {
   $schedule = array();
-  for ($day = 0; $day < 7; $day++) {
+  // Use station_day_name() for the day ordering in case Sunday isn't the
+  // first day of the week.
+  foreach (station_day_name() as $day => $name) {
     $schedule[$day] = array();
 
     $start = $day * MINUTES_IN_DAY;

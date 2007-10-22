@@ -1080,7 +1080,6 @@ function station_schedule_item_remove_form_submit($formid, $form) {
  */
 function station_schedule_view($node, $teaser = FALSE, $page = FALSE) {
   drupal_add_css(drupal_get_path('module', 'station_schedule') .'/station_schedule.css');
-//  drupal_set_title(check_plain($node->title));
 
   $header[0] = array('data' => t('Time'));
   $row = array();
@@ -1121,6 +1120,7 @@ function station_schedule_view($node, $teaser = FALSE, $page = FALSE) {
   $header[$today + 1]['class'] = 'station-sch-now-day';
   $row[$today + 1]['class'] = 'station-sch-now-day';
 
+  $node = node_prepare($node, $teaser);
   $node->content['weekly_schedule'] = array(
     '#value' => theme('table', $header, array($row), array('id' => 'station-sch')),
     '#weight' => 1,

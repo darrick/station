@@ -43,14 +43,19 @@ function station_archive_uninstall() {
   }
   variable_del('station_archive_vid');
 */
-
-  variable_del('station_archive_cleanup_old');
-  variable_del('station_archive_delete_unscheduled');
-  variable_del('station_archive_import_new');
-  variable_del('station_archive_import_dir');
-  variable_del('station_archive_max_age');
-  variable_del('station_archive_promote_scheduled');
-  variable_del('station_archive_unscheduled_title');
+  $variables = array(
+    'station_archive_cleanup_old',
+    'station_archive_delete_unscheduled',
+    'station_archive_import_new',
+    'station_archive_import_dir',
+    'station_archive_max_age',
+    'station_archive_promote_scheduled',
+    'station_archive_title_format',
+    'station_archive_unscheduled_title'
+  );
+  foreach ($variables as $variable) {
+    variable_del($variable);
+  }
 }
 
 /**
@@ -138,4 +143,18 @@ function station_archive_update_3() {
  */
 function station_archive_update_100() {
   return array();
+}
+
+/**
+ * Correct the station archive's {vocabulary}.module value.
+ */
+function station_archive_update_5200() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("UPDATE {vocabulary} SET module = 'station_archive' WHERE module = 'stationarchive'");
+      break;
+  }
+  return $ret;
 }

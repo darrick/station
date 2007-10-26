@@ -483,11 +483,15 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         break;
 
       case 'delete':
+        // Remove the DJs and provide notice.
         $removals = _station_schedule_program_load_djs($node->nid);
         db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
         foreach ($removals as $uid => $username) {
           _station_send_notice('dj', 'remove', array('program_nid' => $node->nid, 'uid' => $uid));
         }
+
+        // Remove the schedule item.
+        db_query('DELETE FROM {station_schedule_item} WHERE program_nid = %d', $node->nid);
         break;
 
       case 'load':

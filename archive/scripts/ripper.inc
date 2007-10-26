@@ -8,7 +8,7 @@ stream_url = "http://127.0.0.1:8000/high"
 streamripper_path = "/usr/local/bin/streamripper"
 
 ; Full path to station archive module's import directory (no trailing slash)
-import_path = "/usr/local/www/drupal/modules/station/archive/import"
+import_path = "/usr/local/www/drupal/sites/all/modules/station/archive/import"
 
 ; Because shows tend to start early or finish late, the overlap_seconds
 ; setting allows you to determine how much the recording should overlap at the

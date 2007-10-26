@@ -34,15 +34,16 @@ function station_archive_install() {
  * Implementation of hook_uninstall().
  */
 function station_archive_uninstall() {
+  // Remvoe our tables.
   db_query('DROP TABLE {station_archive}');
   db_query('DROP TABLE {station_archive_program}');
 
-/* i'm not sure if this is a good idea so i'm commenting it out
+  // Remove our taxonomy.
   if ($vid = variable_get('station_archive_vid', '')) {
     taxonomy_del_vocabulary($vid);
   }
-  variable_del('station_archive_vid');
-*/
+
+  // Remove our variables.
   $variables = array(
     'station_archive_cleanup_old',
     'station_archive_delete_unscheduled',
@@ -51,7 +52,8 @@ function station_archive_uninstall() {
     'station_archive_max_age',
     'station_archive_promote_scheduled',
     'station_archive_title_format',
-    'station_archive_unscheduled_title'
+    'station_archive_unscheduled_title',
+    'station_archive_vid',
   );
   foreach ($variables as $variable) {
     variable_del($variable);

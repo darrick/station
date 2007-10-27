@@ -260,6 +260,7 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
     foreach ((array) $user->programs as $nid => $title) {
       _station_send_notice('dj', 'remove', array('nid' => $nid, 'uid' => $user->uid));
     }
+    db_query('DELETE FROM {station_schedule} WHERE program_nid = %d', $node->nid);
     break;
   }
 }

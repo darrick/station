@@ -302,8 +302,7 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
       case 'prepare':
         // if they clicked the button, reload the program information
         if (t('Reload Program') == $_POST['op']) {
-          // use the create timestamp as the
-          $gmt_timestamp = (integer) $node->created;
+          $gmt_timestamp = $node->station_archive['aired'];
           // get a timestamp that's correct for the timezone
           $local_timestamp = station_local_ts($gmt_timestamp);
           $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
@@ -352,16 +351,17 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
 
       case 'update':
         if (isset($node->station_archive) && user_access('administer archive')) {
-          // If there was an existing import time use that, if not use the
-          // current time.
-          $imported = db_result(db_query('SELECT imported AS imported FROM {station_archive} WHERE audio_nid = %d', $node->nid));
-          $imported = !empty($imported) ? $imported : time();
-
-          // Remove any existing records and if this is in the archive, create
-          // a new record.
-          db_query("DELETE FROM {station_archive} WHERE audio_nid = %d", $node->nid);
+          // Remove any existing records.
+          db_query("DELETE FROM {station_archive_item} WHERE audio_nid = %d", $node->nid);
+          // If this should be in the archive, create a new record.
           if ($node->station_archive['archived']) {
-            db_query("INSERT INTO {station_archive} (audio_nid, program_nid, imported, permanent) VALUES (%d, %d, %d, %d)", $node->nid, $node->station_archive['program_nid'], $imported, $node->station_archive['permanent']);
+            if (empty($node->station_archive['aired'])) {
+              $node->station_archive['aired'] = (integer) $node->created;
+            }
+            if (empty($node->station_archive['imported'])) {
+              $node->station_archive['imported'] = time();
+            }
+            db_query("INSERT INTO {station_archive_item} (audio_nid, program_nid, aired, imported, permanent) VALUES (%d, %d, %d, %d, %d)", $node->nid, $node->station_archive['program_nid'], $node->station_archive['aired'], $node->station_archive['imported'], $node->station_archive['permanent']);
           }
         }
         break;
@@ -370,13 +370,13 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
         // remove our tracking records when the audio node is deleted. we only
         // assume that audio node are on this machine, the program nodes could
         // be on a remote server.
-        db_query('DELETE FROM {station_archive} WHERE audio_nid = %d', $node->nid);
+        db_query('DELETE FROM {station_archive_item} WHERE audio_nid = %d', $node->nid);
         break;
 
       case 'load':
         // Sneak the '1 AS archived' in so we've got a value to indicate that
         // this node is in the archive. 
-        $row = db_fetch_array(db_query("SELECT 1 AS archived, sa.program_nid, sap.title AS program_title, sa.imported, sa.permanent FROM {station_archive} sa LEFT OUTER JOIN {station_archive_program} sap ON sa.program_nid = sap.program_nid WHERE sa.audio_nid = %d", $node->nid));
+        $row = db_fetch_array(db_query("SELECT 1 AS archived, sa.program_nid, sa.aired, sap.title AS program_title, sa.imported, sa.permanent FROM {station_archive_item} sa LEFT OUTER JOIN {station_archive_program} sap ON sa.program_nid = sap.program_nid WHERE sa.audio_nid = %d", $node->nid));
         if ($row) {
           return array('station_archive' => $row);
         }
@@ -447,7 +447,13 @@ function station_archive_form_alter($form_id, &$form) {
         foreach (station_archive_get_programs() as $nid => $program) {
           $program_options[$nid] = $program->title;
         }
-
+        $form['station_archive']['aired'] = array(
+          '#type' => 'item',
+          '#title' => t('Air date'),
+          '#default_value' => $node->station_archive['aired'],
+          '#description' => t("The date the program first aired."),
+          '#weight' => -1,
+        );
         $form['station_archive']['archived'] = array(
           '#type' => 'checkbox',
           '#title' => t('In Station Archive'),
@@ -562,7 +568,7 @@ function station_archive_cron() {
  */
 function _station_archive_delete_old_nodes() {
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
-  $result = db_query('SELECT n.nid, n.title FROM {node} n INNER JOIN {station_archive} sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
+  $result = db_query('SELECT n.nid, n.title FROM {node} n INNER JOIN {station_archive_item} sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
   while ($node = db_fetch_object($result)) {
     watchdog('stationarchive', t('Removing %title from the archive.', array('%title' => $node->title)), WATCHDOG_NOTICE);
     node_delete($node->nid);
@@ -585,6 +591,7 @@ function _station_archive_import_files() {
       // if there's a .cue file, it's still being downloaded, we'll get it on
       // the next cron call.
       if (!file_exists($cuefile)) {
+        watchdog('stationarchive', t('Attempting to import %filename into the archive.', array('%filename' => $file->filename)), WATCHDOG_NOTICE);
         $status = _station_archive_add_file($file);
         // if there was a problem stop the import
         if (!$status) {
@@ -645,7 +652,7 @@ function _station_archive_update_program_list() {
 function _station_archive_add_file($file) {
   // extract the timestamp from the filename (should be simply timestamp.mp3)
   $basename = explode('.', $file->basename);
-  $gmt_timestamp = $basename[0];
+  $gmt_timestamp = (int) $basename[0];
   $file_format = $basename[1];
   // get a timestamp that's correct for the timezone
   $local_timestamp = station_local_ts($gmt_timestamp);
@@ -679,7 +686,7 @@ function _station_archive_add_file($file) {
   }
   else {
     // we've got program information
-    $program_nid = $program->nid;
+    $program_nid = (int) $program->nid;
     $program_title = $program->title;
     $audio_tags['artist'] = station_anded_list($program->djs);
     $audio_tags['genre'] = $program->genre;
@@ -694,6 +701,13 @@ function _station_archive_add_file($file) {
   $node = audio_api_insert($file->filename, $title_format, $audio_tags);
 
   // make any other changes to the node...
+  $node->station_archive = array(
+    'archived' => 1,
+    'program_nid' => $program_nid,
+    'aired' => $gmt_timestamp,
+    'imported' => time(),
+    'permanent' => 0,
+  );
   $node->audio_file['downloadable'] = 1;
   $node->created = $gmt_timestamp;
   // find/create the proper taxonomic terms based on day and hour
@@ -702,15 +716,11 @@ function _station_archive_add_file($file) {
   $node->promote = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
   // keep the timestamp as the filename so we can re-import again if needed but
   // store a more readable filename for the user.
-  $prettyname = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).$file_format");
-  $node->audio_file['file_name'] = $prettyname;
+  $node->audio_file['file_name'] = str_replace(' ', '_', $audio_tags['title'] ." ($prettydate).$file_format");
 
   // ... and save it
   $node = node_submit($node);
   node_save($node);
-
-  // record an association of the audio and program node ids and the time it was imported.
-  db_query("INSERT INTO {station_archive} (audio_nid, program_nid, imported) VALUES (%d, %d, %d)", $node->nid, $program_nid, time());
 
   watchdog('stationarchive', t('Added %title to the archive.', array('%title' => $program_title)), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
 

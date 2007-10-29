@@ -10,9 +10,10 @@ function station_archive_install() {
     case 'mysql':
     case 'mysqli':
       db_query("
-        CREATE TABLE {station_archive} (
+        CREATE TABLE {station_archive_item} (
           `audio_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `program_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+          `aired` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `imported` INTEGER UNSIGNED NOT NULL DEFAULT 0,
           `permanent` int(2) UNSIGNED NOT NULL DEFAULT '0',
           PRIMARY KEY(`audio_nid`, `program_nid`),
@@ -34,8 +35,8 @@ function station_archive_install() {
  * Implementation of hook_uninstall().
  */
 function station_archive_uninstall() {
-  // Remvoe our tables.
-  db_query('DROP TABLE {station_archive}');
+  // Remove our tables.
+  db_query('DROP TABLE {station_archive_item}');
   db_query('DROP TABLE {station_archive_program}');
 
   // Remove our taxonomy.
@@ -156,6 +157,24 @@ function station_archive_update_5200() {
     case 'mysql':
     case 'mysqli':
       $ret[] = update_sql("UPDATE {vocabulary} SET module = 'station_archive' WHERE module = 'stationarchive'");
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Add rename {station_archive} to {station_archive_item} and add a .aired
+ * column to record the node's original air date. Use the node's creation date
+ * as a default value.
+ */
+function station_archive_update_5201() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_archive} RENAME TO {station_archive_item}");
+      $ret[] = update_sql("ALTER TABLE {station_archive_item} ADD COLUMN `aired` INTEGER UNSIGNED NOT NULL DEFAULT 0 AFTER `program_nid`");
+      $ret[] = update_sql("UPDATE {station_archive_item} sai INNER JOIN {node} n ON sai.audio_nid = n.nid SET sai.aired = n.created WHERE n.type = 'audio'");
       break;
   }
   return $ret;

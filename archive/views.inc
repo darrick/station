@@ -6,8 +6,8 @@
  * Implementation of hook_views_tables().
  */
 function station_archive_views_tables() {
-  $tables['station_archive'] = array(
-    'name' => 'station_archive',
+  $tables['station_archive_item'] = array(
+    'name' => 'station_archive_item',
     'join' => array(
       'left' => array(
         'table' => 'node',
@@ -18,8 +18,15 @@ function station_archive_views_tables() {
       )
     ),
     'fields' => array(
+      'aired' => array(
+        'name' => t('Station Archive: Air date'),
+        'sortable' => TRUE,
+        'handler' => views_handler_field_dates(),
+        'option' => 'string',
+        'help' => t('Date the audio was aired.'),
+      ),
       'imported' => array(
-        'name' => t('Station Archive: Import Date'),
+        'name' => t('Station Archive: Import date'),
         'sortable' => TRUE,
         'handler' => views_handler_field_dates(),
         'option' => 'string',
@@ -40,7 +47,7 @@ function station_archive_views_tables() {
     'name' => 'station_archive_program',
     'join' => array(
       'left' => array(
-        'table' => 'station_archive',
+        'table' => 'station_archive_item',
         'field' => 'program_nid'
       ),
       'right' => array(
@@ -88,7 +95,7 @@ function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = 
       $query->ensure_table('node');
       $query->add_field('nid', 'node');
       // now onto our regularly scheduled program
-      $query->ensure_table('station_archive');
+      $query->ensure_table('station_archive_item');
       $query->ensure_table('station_archive_program');
       $query->add_field('title', 'station_archive_program');
       $query->add_field('program_nid', 'station_archive_program');
@@ -100,7 +107,7 @@ function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = 
       $query->add_orderby('station_archive_program', 'title', $argtype);
       break;
     case 'filter':
-      $query->ensure_table("station_archive");
+      $query->ensure_table("station_archive_item");
       $query->add_where("station_archive.program_nid = %d", $arg);
       break;
     case 'link':

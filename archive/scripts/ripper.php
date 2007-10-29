@@ -9,7 +9,7 @@
  * MP3 for the station archive module to import.
  *
  *     Y O U   D O N ' T   N E E D   T O   E D I T   T H I S   F I L E !
- *       Configuration options are now set in the ripper.ini file.
+ *       Configuration options are now set in the ripper.inc file.
  *
  * This script requires that Streamripper (http://streamripper.sourceforge.net/)
  * version 1.61.17 or higher be installed (we use the --quite option)
@@ -20,12 +20,12 @@ if (isset($_SERVER['REMOTE_ADDR'])) {
   exit("This script must be called from the command line.\n");
 }
 
-// Load our settings from the ripper.ini file.
-$inifile = realpath(dirname(__FILE__) .'/ripper.inc');
-if (!file_exists($inifile)) {
-  exit("Cannot read the ripper.inc file from {$inifile}.\n");
+// Load our settings from the ripper.inc file.
+$incfile = realpath(dirname(__FILE__) .'/ripper.inc');
+if (!file_exists($incfile)) {
+  exit("Cannot read the ripper.inc file from {$incfile}.\n");
 }
-$settings = parse_ini_file($inifile);
+$settings = parse_ini_file($incfile);
 
 // Check that the import directory is writable.
 $import_dir = realpath($settings['import_path']);

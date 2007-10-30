@@ -447,13 +447,6 @@ function station_archive_form_alter($form_id, &$form) {
         foreach (station_archive_get_programs() as $nid => $program) {
           $program_options[$nid] = $program->title;
         }
-        $form['station_archive']['aired'] = array(
-          '#type' => 'item',
-          '#title' => t('Air date'),
-          '#default_value' => $node->station_archive['aired'],
-          '#description' => t("The date the program first aired."),
-          '#weight' => -1,
-        );
         $form['station_archive']['archived'] = array(
           '#type' => 'checkbox',
           '#title' => t('In Station Archive'),
@@ -503,6 +496,13 @@ function station_archive_form_alter($form_id, &$form) {
  */
 function station_archive_node_info_form($node) {
   if (isset($node->station_archive)) {
+    $form['station_archive']['aired'] = array(
+      '#type' => 'item',
+      '#title' => t('Air date'),
+      '#value' => format_date($node->station_archive['aired'], 'large'),
+      '#description' => t("The date the program first aired."),
+      '#weight' => -1,
+    );
     $form['station_archive']['imported'] = array(
       '#type' => 'item',
       '#title' => t('Imported on'),

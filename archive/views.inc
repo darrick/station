@@ -108,7 +108,7 @@ function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = 
       break;
     case 'filter':
       $query->ensure_table("station_archive_item");
-      $query->add_where("station_archive.program_nid = %d", $arg);
+      $query->add_where("station_archive_item.program_nid = %d", $arg);
       break;
     case 'link':
       return l($query->title, "$arg/" . intval($query->program_nid));

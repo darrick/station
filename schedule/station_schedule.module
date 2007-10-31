@@ -771,14 +771,13 @@ function station_schedule_get_program_list() {
 function station_schedule_program_get_at($gmt_timestamp, $schedule_nid = 0) {
   // Load the schedule item based on the time.
   $ts = station_local_ts($gmt_timestamp);
-  $day = date('w', $ts);
-  $hour = date('G', $ts);
-  $minute = station_minute_from_day_hour($day, $hour);
+  $minute = station_minute_from_day_hour(date('w', $ts), date('G', $ts));
+
   $schedule_nid = (int) ($schedule_nid ? $schedule_nid : variable_get('station_schedule_default', 0));
-  $schedule_item = station_schedule_load_item_at($schedule_nid, $minute);
+  $schedule_item = db_fetch_object(db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = %d AND s.start <= %d AND s.finish > %d', $schedule_nid, $minute, $minute));
 
   // If there's an associated program, load it
-  if ($schedule_item->program_nid) {
+  if (isset($schedule_item->program_nid)) {
     if ($node = node_load($schedule_item->program_nid)) {
       // set this so that if the show is scheduled for multiple times the caller
       // can easily figure out which one.
@@ -800,21 +799,6 @@ function station_schedule_load_item($iid) {
   $result = db_query('SELECT * FROM {station_schedule_item} i WHERE i.iid = %d', $iid);
   if ($o = db_fetch_object($result)) {
     return $o;
-  }
-}
-
-/**
- * Load the schedule by minute of the week.
- * @param $schedule_nid
- *  Schedule id
- * @param $minute
- *  the minute of the week...
- * @return schedule object
- */
-function station_schedule_load_item_at($schedule_nid, $minute) {
-  $result = db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = %d AND s.start <= %d AND s.finish > %d', $schedule_nid, $minute, $minute);
-  if ($s = db_fetch_object($result)) {
-    return $s;
   }
 }
 
@@ -1168,15 +1152,6 @@ function theme_station_schedule_item($start, $finish, $program) {
   }
   $output .= "</a></div>\n";
   return $output;
-}
-
-
-/**
- * Today's schedule. This is just a short cut for the menu system.
- */
-function station_schedule_today_page($schedule_nid) {
-  $node = node_load($schedule_nid);
-  return station_schedule_day_page($node, station_today());
 }
 
 /**

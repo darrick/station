@@ -27,7 +27,31 @@ function station_schedule_views_tables() {
       ),
     ),
   );
-
+  $tables['station_schedule_item_current'] = array(
+    'name' => 'station_schedule_item',
+    'join' => array(
+      'left' => array(
+        'table' => 'station_schedule',
+        'field' => 'nid',
+      ),
+      'right' => array(
+        'field' => 'schedule_nid'
+      ),
+      'extra' => array(
+        'start <= ***CURRENT_STATION_MINUTE***' => NULL,
+        'finish > ***CURRENT_STATION_MINUTE***' => NULL,
+      ),
+    ),
+    'fields' => array(
+      'program_nid' => array(
+        'name' => t('Station Schedule: Current program'),
+        'help' => t("The currently schedule program."),
+        'sortable' => TRUE,
+        'handler' => 'station_handler_field_schedule_current_program',
+        'addlfields' => array('iid', 'start', 'finish'),
+      ),
+    ),
+  );
   $tables['station_schedule_item'] = array(
     'name' => 'station_schedule_item',
     'join' => array(
@@ -41,14 +65,14 @@ function station_schedule_views_tables() {
     ),
     'fields' => array(
       'times' => array(
-        'name' => t('Station: Scheduled times'),
+        'name' => t('Station Schedule: Scheduled times'),
         'help' => t("The time a program begins."),
         'sortable' => FALSE,
         'notafield' => TRUE,
         'handler' => 'station_handler_field_schedule_times',
       ),
       'archive_links' => array(
-        'name' => t('Station: Archive listen and RSS links'),
+        'name' => t('Station Schedule: Archive listen and RSS links'),
         'help' => t("Links to both a page and feed for the program's archived audio."),
         'sortable' => FALSE,
         'notafield' => TRUE,
@@ -62,7 +86,7 @@ function station_schedule_views_tables() {
         ),
       ),
       'archive_link_page' => array(
-        'name' => t('Station: Archive listen link'),
+        'name' => t('Station Schedule: Archive listen link'),
         'help' => t("Link to the program's archived audio page."),
         'sortable' => FALSE,
         'notafield' => TRUE,
@@ -76,7 +100,7 @@ function station_schedule_views_tables() {
         ),
       ),
       'archive_link_rss' => array(
-        'name' => t('Station: Archive RSS link'),
+        'name' => t('Station Schedule: Archive RSS link'),
         'help' => t("Link to the program's archived audio feed."),
         'sortable' => FALSE,
         'notafield' => TRUE,
@@ -109,6 +133,17 @@ function station_schedule_views_tables() {
   );
 
   return $tables;
+}
+
+function station_handler_field_schedule_current_program($fieldinfo, $fielddata, $value, $data) {
+  if (isset($data->station_schedule_item_current_program_nid)) {
+    if ($program = node_load($data->station_schedule_item_current_program_nid)) {
+      return l($program->title, "node/$program->nid");
+    }
+  }
+  else {
+    return check_plain(variable_get('station_block_unschedule',  t("We're on autopilot.")));
+  }
 }
 
 function station_handler_field_schedule_times($fieldinfo, $fielddata, $value, $data) {

@@ -67,6 +67,16 @@ function station_schedule_menu($may_cache) {
       $nid = (int) arg(1);
       $node = node_load($nid);
       if ($node->type == 'station_schedule') {
+        // Stream M3U links
+        foreach ($node->settings['streams'] as $key => $stream) {
+          $items[] = array(
+            'path' => "node/$nid/$key.m3u",
+            'type' => MENU_CALLBACK,
+            'callback' => 'station_schedule_stream_m3u',
+            'callback arguments' => array($stream),
+          );
+        }
+
         $items[] = array(
           'path' => "node/$nid/view/week",
           'title' => t('Week'),
@@ -183,8 +193,8 @@ function station_schedule_form($node) {
     '#type' => 'textfield',
     '#title' => check_plain($type->title_label),
     '#default_value' => $node->title,
-    '#required' =>  TRUE,
-    '#maxlength' =>  128,
+    '#required' => TRUE,
+    '#maxlength' => 128,
     '#description' => t("The name of the schedule, e.g. 'AM', 'FM', callsign."),
   );
 
@@ -201,9 +211,42 @@ function station_schedule_form($node) {
     '#title' => t('No scheduled programming message'),
     '#size' => 60,
     '#maxlength' => 255,
+    '#default_value' => isset($node->settings['unscheduled_message']) ? $node->settings['unscheduled_message'] : t("We're on autopilot."),
+    '#required' =>  TRUE,
     '#description' => t('This string will appear when no program is currently scheduled.'),
-    '#default_value' => $node->settings['unscheduled_message'],
   );
+  $form['settings']['streams'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Web streams'),
+    '#theme' => 'station_schedule_form_streams',
+    '#collapsible' => TRUE,
+    '#description' => t("If your station has webstreams enter them below."),
+  );
+  if (!isset($node->settings['streams']['new'])) {
+    $node->settings['streams']['new'] = array(
+      'name' => '',
+      'description' => '',
+      'urls' => array(),
+    );
+  }
+  foreach ($node->settings['streams'] as $key => $stream) {
+    $form['settings']['streams'][$key]['name'] = array(
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#default_value' => $stream['name'],
+    );
+    $form['settings']['streams'][$key]['description'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $stream['description'],
+    );
+    $form['settings']['streams'][$key]['urls'] = array(
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#cols' => 20,
+      '#default_value' => implode("\n", $stream['urls']),
+    );
+  }
 
   if ($type->has_body) {
     $form['body_filter']['body'] = array(
@@ -219,6 +262,63 @@ function station_schedule_form($node) {
 
   return $form;
 }
+
+
+function theme_station_schedule_form_streams(&$form) {
+  $header = array(t('Name'), t('Description'), t('URLs'));
+  foreach (element_children($form) as $key) {
+    $row = array();
+    $row[] = drupal_render($form[$key]['name']);
+    $row[] = drupal_render($form[$key]['description']);
+    $row[] = drupal_render($form[$key]['urls']);
+    $rows[] = $row;
+  }
+  $output .= theme('table', $header, $rows);
+  $output .= drupal_render($form);
+
+  return $output;
+}
+
+/**
+ * Implementation of hook_validate().
+ */
+function station_schedule_validate(&$node) {
+  foreach ($node->settings['streams'] as $key => $stream) {
+    // Must have both a name and URL.
+    if (empty($stream['name']) xor empty($stream['urls'])) {
+      if (empty($stream['name'])) {
+        form_set_error("settings][streams][$key][name", t('You must provide a name for the webstream.'));
+      }
+      else {
+        form_set_error("settings][streams][$key][urls", t('You must provide a URL for the webstream.'));
+      }
+    }
+
+    foreach (explode("\n", $stream['urls']) as $url) {
+      $url = trim($url);
+      if (!empty($url) && !valid_url($url, TRUE)) {
+        form_set_error("settings][streams][$key][urls", t('An invalid webstream URL was provided: %url', array('%url' => $url)));
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_submit().
+ */
+function station_schedule_submit(&$node) {
+  $streams = array();
+  foreach ($node->settings['streams'] as $key => $stream) {
+    // Skip empty rows.
+    if (!empty($stream['name'])) {
+      // Convert URLs into an array.
+      $stream['urls'] = array_map('trim', explode("\n", $stream['urls']));
+      $streams[$stream['name']] = $stream;
+    }
+  }
+  $node->settings['streams'] = $streams;
+}
+
 
 /**
  * Implementation of hook_load().
@@ -247,7 +347,13 @@ function station_schedule_load($node) {
   }
 
   // Load the settings.
-  $settings = db_fetch_array(db_query('SELECT increment, unscheduled_message FROM {station_schedule} WHERE nid = %d', $node->nid));
+  $settings = db_fetch_array(db_query('SELECT increment, streams, unscheduled_message FROM {station_schedule} WHERE nid = %d', $node->nid));
+  if (isset($settings['streams']) && $streams = unserialize($settings['streams'])) {
+    $settings['streams'] = $streams;
+  }
+  else {
+    $settings['streams'] = array();
+  }
 
   return array(
     'settings' => $settings,
@@ -259,7 +365,7 @@ function station_schedule_load($node) {
  * Implementation of hook_insert().
  */
 function station_schedule_insert($node) {
-  db_query("INSERT INTO {station_schedule} (nid, increment, unscheduled_message) VALUES (%d, %d, '%s')", $node->nid, $node->settings['increment'], $node->settings['unscheduled_message']);
+  db_query("INSERT INTO {station_schedule} (nid, increment, streams, unscheduled_message) VALUES (%d, %d, '%s', '%s')", $node->nid, $node->settings['increment'], serialize($node->settings['streams']), $node->settings['unscheduled_message']);
 }
 
 /**
@@ -275,7 +381,7 @@ function station_schedule_delete($node) {
  */
 function station_schedule_update($node) {
   db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid);
-  db_query("INSERT INTO {station_schedule} (nid, increment, unscheduled_message) VALUES (%d, %d, '%s')", $node->nid, $node->settings['increment'], $node->settings['unscheduled_message']);
+  db_query("INSERT INTO {station_schedule} (nid, increment, streams, unscheduled_message) VALUES (%d, %d, '%s', '%s')", $node->nid, $node->settings['increment'], serialize($node->settings['streams']), $node->settings['unscheduled_message']);
 }
 
 function station_schedule_admin_settings() {
@@ -736,9 +842,15 @@ function station_schedule_redirect_old($day = '', $hour = '') {
  */
 function station_schedule_get_list() {
   $schedules = array();
-  $result = db_query("SELECT n.nid, n.title, ss.increment, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
-  while ($o = db_fetch_array($result)) {
-    $schedules[$o['nid']] = $o;
+  $result = db_query("SELECT n.nid, n.title, ss.increment, ss.streams, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
+  while ($schedule = db_fetch_array($result)) {
+    if (isset($schedule['streams']) && $streams = unserialize($schedule['streams'])) {
+      $schedule['streams'] = $streams;
+    }
+    else {
+      $schedule['streams'] = array();
+    }
+    $schedules[$schedule['nid']] = $schedule;
   }
 
   return $schedules;
@@ -793,7 +905,7 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
       return $node;
     }
   }
-  return new stdClass;
+  return new stdClass();
 }
 
 /**
@@ -1090,12 +1202,10 @@ function station_schedule_view($node, $teaser = FALSE, $page = FALSE) {
 
   $node = node_prepare($node, $teaser);
   if ($teaser) {
-    $program = station_schedule_program_get_at(time(), $node->nid);
-    $node->content['current_program'] = array(
-      '#prefix' => t('On Air: '),
-      '#value' => isset($program) ? l($program->title, "node/$program->nid") : check_plain($node->settings['unscheduled_message']),
-      '#suffix' => ' ',
-      '#weight' => -6,
+    $node->content['streams'] = array(
+      '#title' => t('Webstreams'),
+      '#value' => theme('station_streams', $node->nid, $node->settings['streams']),
+      '#weight' => -5,
     );
   }
   else {
@@ -1222,4 +1332,20 @@ function station_schedule_day_page($node, $day) {
   }
 
   return $output;
+}
+
+/**
+ * Send the client an M3U file of the streams.
+ *
+ * @param $stream An array with a 'urls' item containing an array of webstream
+ *   URLs.
+ */
+function station_schedule_stream_m3u($stream) {
+  drupal_set_header('Content-Type: audio/mpegurl');
+  $output = '';
+  foreach ($stream['urls'] as $url) {
+    $output .= $url ."\n";
+  }
+  print $output;
+  exit();
 }

@@ -13,6 +13,7 @@ function station_schedule_install() {
         CREATE TABLE {station_schedule} (
           `nid` int unsigned NOT NULL default '0',
           `increment` int unsigned NOT NULL default '0',
+          `streams` longtext,
           `unscheduled_message` VARCHAR(255) NOT NULL default '',
           PRIMARY KEY(`nid`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
@@ -278,6 +279,7 @@ function station_schedule_update_5200() {
         CREATE TABLE {station_schedule} (
           `nid` int unsigned NOT NULL default '0',
           `increment` int unsigned NOT NULL default '0',
+          `streams` longtext,
           PRIMARY KEY(`nid`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
@@ -334,6 +336,42 @@ function station_schedule_update_5202() {
       $unscheduled_message = variable_get('station_block_unschedule',  t("We're on autopilot."));
       db_query("UPDATE {station_schedule} SET unscheduled_message = '%s'", $unscheduled_message);
       variable_del('station_block_unschedule');
+
+      break;
+  }
+  return $ret;
+}
+ 
+/**
+ * Move the streams from variables into the schedule table.
+ */
+function station_schedule_update_5203() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_schedule} ADD COLUMN `streams` longtext AFTER `increment`");
+
+      $streams = array();
+      if ($high = variable_get('station_stream_high_url', '')) {
+        $streams['high'] = array(
+           'name' => t('High'),
+           'description' => t('High bandwidth stream'),
+           'urls' => $high,
+        );
+      }
+      if ($low = variable_get('station_stream_low_url', '')) {
+        $streams['low'] = array(
+          'name' => t('Low'),
+          'description' => t('Low bandwidth stream'),
+          'urls' => $low,
+        );
+      }
+      if (count($streams)) {
+        db_query("UPDATE {station_schedule} SET streams = '%s', unscheduled_message = '%s'", serialize($streams), $unscheduled_message);
+      }
+      variable_del('station_stream_high_url');
+      variable_del('station_stream_low_url');
 
       break;
   }

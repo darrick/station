@@ -27,6 +27,26 @@ function station_schedule_views_tables() {
       ),
     ),
   );
+  $tables['station_schedule'] = array(
+    'name' => 'station_schedule',
+    'join' => array(
+      'left' => array(
+        'table' => 'node',
+        'field' => 'nid'
+      ),
+      'right' => array(
+        'field' => 'nid'
+      )
+    ),
+    'fields' => array(
+      'streams' => array(
+        'name' => t('Station Schedule: Web streams'),
+        'help' => t("Web stream links"),
+        'sortable' => FALSE,
+        'handler' => 'station_handler_field_schedule_streams',
+      ),
+    ),
+  );
   $tables['station_schedule_item_current'] = array(
     'name' => 'station_schedule_item',
     'join' => array(
@@ -143,6 +163,12 @@ function station_handler_field_schedule_current_program($fieldinfo, $fielddata, 
   }
   else {
     return check_plain(variable_get('station_block_unschedule',  t("We're on autopilot.")));
+  }
+}
+
+function station_handler_field_schedule_streams($fieldinfo, $fielddata, $value, $data) {
+  if ($streams = unserialize($data->station_schedule_streams)) {
+    return theme('station_streams', $data->nid, $streams);
   }
 }
 

@@ -217,6 +217,21 @@ function station_get_archive_url() {
 }
 
 /**
+ * If there's a schedule, return the URL.
+ *
+ * @return FALSE or string URL.
+ */
+function station_get_station_url($schedule_nid) {
+  if (module_exists('station_schedule')) {
+    return 'node/'. $schedule_nid;
+  }
+  else if ($url = variable_get('station_remote_schedule_url', FALSE)) {
+    return $url .'/node/'. $schedule_nid;
+  }
+  return FALSE;
+}
+
+/**
  * Return a list of schedules.
  *
  * The list of schedules is cached between calls.
@@ -364,52 +379,55 @@ function station_get_program_at($timestamp, $schedule_nid) {
 function station_block_current_program() {
   $schedule = station_default_schedule();
   $program = station_get_program_at(time(), $schedule['nid']);
-
-  $unscheduled_message = check_plain($schedule['unscheduled_message']);
-  $high = check_url(variable_get('station_stream_high_url', ''));
-  $low = check_url(variable_get('station_stream_low_url', ''));
-
-  return theme('station_block_current_program', $program, $unscheduled_message, $high, $low);
+  return theme('station_block_current_program', $schedule, $program);
 }
 
 /**
  * Theme the current program block.
  *
+ * @param $schedule
+ *   Schedule array returned by station_default_schedule().
  * @param $program
  *   Program node object.
- * @param $unscheduled_message
- *   message to display if no program is scheduled, i.e. when $program is null
- * @param $high_url
- *   optional, high-bandwidth webstream URL
- * @param $low_url
- *   optional, low-bandwith webstream URL
  * @return string
  */
-function theme_station_block_current_program($program = NULL, $unscheduled_message ='', $high_url = NULL, $low_url = NULL) {
-  // program or unscheduled...
+function theme_station_block_current_program($schedule, $program) {
+  // Program or unscheduled...
   if ($program) {
     $output = l($program->title, $program->node_url) .'<br />';
   }
   else {
-    $output = $unscheduled_message .'<br />';
+    $output = check_plain($schedule['unscheduled_message']) .'<br />';
   }
 
-  // webstream links
-  if ($high_url || $low_url) {
-    $output .= t('Tune in: ');
-    if ($high_url) {
-      $output .= ' '. l(t('High'), $high_url);
-    }
-    if ($low_url) {
-      $output .= ' '. l(t('Low'), $low_url);
-    }
-  }
+  // Streams
+  $output .= theme('station_streams', $schedule['nid'], $schedule['streams']);
 
   return $output;
 }
 
 /**
- * Convert an array to a comma separates list with an add between the last terms.
+ * Theme a schedule's web streams.
+ *
+ * @param $nid
+ *   A station schedule node.
+ * @param $streams
+ *   Schedule's streams.
+ */
+function theme_station_streams($schedule_nid, $streams) {
+  if (count($streams)) {
+    $items = array();
+    foreach ($streams as $key => $stream) {
+      $items[] = l($stream['name'], station_get_station_url($schedule_nid) ."/$key.m3u", array('title' => $stream['description']));
+    }
+    return t('Tune in: ') . station_ored_list($items);
+  }
+}
+
+
+/**
+ * Convert an array to a comma separates list with an 'add' between the last
+ * terms.
  *
  * @param $array array of items
  */
@@ -422,6 +440,24 @@ function station_anded_list($array) {
     default:
       $last = array_pop($array);
       return implode(', ', $array) . t(' and ') . $last;
+  }
+}
+
+/**
+ * Convert an array to a comma separates list with an 'or' between the last
+ * terms.
+ *
+ * @param $array array of items
+ */
+function station_ored_list($array) {
+  switch (count($array)) {
+    case 0:
+      return '';
+    case 1:
+      return array_pop($array);
+    default:
+      $last = array_pop($array);
+      return implode(', ', $array) . t(' or ') . $last;
   }
 }
 

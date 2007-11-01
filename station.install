@@ -9,8 +9,6 @@
 function station_uninstall() {
   variable_del('station_remote_archive_url');
   variable_del('station_remote_schedule_url');
-  variable_del('station_stream_high_url');
-  variable_del('station_stream_low_url');
 }
 
 

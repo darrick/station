@@ -196,6 +196,14 @@ function station_schedule_form($node) {
     '#options' => array(15 => t('15 Minutes'), 30 => t('30 Minutes'), 60 => t('1 Hour')),
     '#description' => t("This is the minimum increment that programs can be scheduled in. <strong>Caution:</strong> Increasing this value on an existing schedule will probably cause wierdness."),
   );
+  $form['settings']['unscheduled_message'] = array(
+    '#type' => 'textfield',
+    '#title' => t('No scheduled programming message'),
+    '#size' => 60,
+    '#maxlength' => 255,
+    '#description' => t('This string will appear when no program is currently scheduled.'),
+    '#default_value' => $node->settings['unscheduled_message'],
+  );
 
   if ($type->has_body) {
     $form['body_filter']['body'] = array(
@@ -238,8 +246,11 @@ function station_schedule_load($node) {
     }
   }
 
+  // Load the settings.
+  $settings = db_fetch_array(db_query('SELECT increment, unscheduled_message FROM {station_schedule} WHERE nid = %d', $node->nid));
+
   return array(
-    'settings' => db_fetch_array(db_query('SELECT increment FROM {station_schedule} WHERE nid = %d', $node->nid)),
+    'settings' => $settings,
     'schedule' => $schedule,
   );
 }
@@ -248,7 +259,7 @@ function station_schedule_load($node) {
  * Implementation of hook_insert().
  */
 function station_schedule_insert($node) {
-  db_query("INSERT INTO {station_schedule} (nid, increment) VALUES (%d, %d)", $node->nid, $node->settings['increment']);
+  db_query("INSERT INTO {station_schedule} (nid, increment, unscheduled_message) VALUES (%d, %d, '%s')", $node->nid, $node->settings['increment'], $node->settings['unscheduled_message']);
 }
 
 /**
@@ -264,7 +275,7 @@ function station_schedule_delete($node) {
  */
 function station_schedule_update($node) {
   db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid);
-  db_query("INSERT INTO {station_schedule} (nid, increment) VALUES (%d, %d)", $node->nid, $node->settings['increment']);
+  db_query("INSERT INTO {station_schedule} (nid, increment, unscheduled_message) VALUES (%d, %d, '%s')", $node->nid, $node->settings['increment'], $node->settings['unscheduled_message']);
 }
 
 function station_schedule_admin_settings() {
@@ -292,7 +303,7 @@ function station_schedule_admin_settings() {
     '#title' => t('Backwards compatibility'),
   );
   $schedules = array();
-  foreach (station_schedule_get_list() as $nid => $schedule) {
+  foreach (station_get_schedules() as $nid => $schedule) {
     $schedules[$nid] = $schedule['title'];
   }
   $form['bc']['station_schedule_redirect_old_urls'] = array(
@@ -516,7 +527,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
 
         $djs = station_schedule_program_get_themed_djs($node);
         $ret[$schedule_nid][] = theme('station_dayhour_range', $time['start'], $time['finish']);
-        $schedules = station_schedule_get_list();
+        $schedules = station_get_schedules();
         $times_by_schedule = station_schedule_program_get_themed_times($node);
 
         if ($teaser) {
@@ -567,7 +578,7 @@ function station_schedule_form_alter($form_id, &$form) {
     if (user_access('administer schedule')) {
       // if it's a saved display the scheduled times.
       if ($node->nid) {
-        $schedules = station_schedule_get_list();
+        $schedules = station_get_schedules();
 
         $form['schedule'] = array(
           '#type' => 'fieldset',
@@ -724,14 +735,10 @@ function station_schedule_redirect_old($day = '', $hour = '') {
  *   Array of schedules.
  */
 function station_schedule_get_list() {
-  static $schedules;
-
-  if (!isset($schedules)) {
-    $schedules = array();
-    $result = db_query("SELECT n.nid, n.title, ss.increment FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
-    while ($o = db_fetch_array($result)) {
-      $schedules[$o['nid']] = $o;
-    }
+  $schedules = array();
+  $result = db_query("SELECT n.nid, n.title, ss.increment, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
+  while ($o = db_fetch_array($result)) {
+    $schedules[$o['nid']] = $o;
   }
 
   return $schedules;
@@ -763,17 +770,16 @@ function station_schedule_get_program_list() {
  * @param $gmt_timestamp
  *   a timestamp used to determine the day of the week an hour.
  * @param $schedule_nid
- *   Schedule Id, 0 will load the default schedule.
+ *   Schedule node id.
  * @return
  *   program node object if one is scheduled, an empty object if nothing is
  *   scheduled.
  */
-function station_schedule_program_get_at($gmt_timestamp, $schedule_nid = 0) {
+function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
   // Load the schedule item based on the time.
   $ts = station_local_ts($gmt_timestamp);
   $minute = station_minute_from_day_hour(date('w', $ts), date('G', $ts));
 
-  $schedule_nid = (int) ($schedule_nid ? $schedule_nid : variable_get('station_schedule_default', 0));
   $schedule_item = db_fetch_object(db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = %d AND s.start <= %d AND s.finish > %d', $schedule_nid, $minute, $minute));
 
   // If there's an associated program, load it

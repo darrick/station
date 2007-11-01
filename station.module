@@ -173,25 +173,6 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
   case 'list':
     $blocks[0]['info'] = t('Station: Current Program');
     return $blocks;
-
-  case 'configure':
-    $form = array();
-    if ($delta == 0) {
-      $form['station_block_unschedule'] = array(
-        '#type' => 'textfield',
-        '#title' => t('No scheduled programming message'),
-        '#size' => 60,
-        '#description' => t('This string will appear when no program is currently scheduled.'),
-        '#default_value' =>
-          variable_get('station_block_unschedule',  t("We're on autopilot.")),
-      );
-    }
-    return $form;
-  case 'save':
-    if ($delta == 0) {
-      variable_set('station_block_unschedule', $edit['station_block_unschedule']);
-    }
-    return;
   }
 }
 
@@ -236,27 +217,60 @@ function station_get_archive_url() {
 }
 
 /**
+ * Return a list of schedules.
+ *
+ * The list of schedules is cached between calls.
  *
  * @return Array keyed to nid of schedules or FALSE on error.
  */
 function station_get_schedules() {
+  static $schedules;
+
+  if (!isset($schedules)) {
+    if (module_exists('station_schedule')) {
+      $schedules = station_schedule_get_list();
+    }
+    else {
+      // If they haven't provided a URL we can't retreive any data.
+      $url = variable_get('station_remote_schedule_url', '');
+      if (empty($url)) {
+        return FALSE;
+      }
+
+      // Try to load the schedules from the cache.
+      $cacheid = 'station_remote:schedules_'. $url;
+      if ($cache = cache_get($cacheid, 'cache')) {
+        $schedules = unserialize($cache->data);
+      }
+      else {
+        $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
+        if (xmlrpc_errno()) {
+          watchdog('station', t('Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+          return FALSE;
+        }
+        // Save the value for the next call.
+        cache_set($cacheid, 'cache', serialize($schedules), CACHE_TEMPORARY);
+      }
+    }
+  }
+
+  return $schedules;
+}
+
+/**
+ * Return the default schedule.
+ *
+ * @return Array with schedule info.
+ */
+function station_default_schedule() {
   if (module_exists('station_schedule')) {
-    $schedules = station_schedule_get_list();
+    $id = variable_get('station_schedule_default', 0);
   }
   else {
-    // If they haven't provided a URL we can't retreive any data.
-    $url = variable_get('station_remote_schedule_url', '');
-    if (!$url) {
-      return FALSE;
-    }
-
-    $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
-    if (xmlrpc_errno()) {
-      watchdog('station', t('Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
-      return FALSE;
-    }
+    $id = variable_get('station_remote_schedule_nid', 0);
   }
-  return $schedules;
+  $schedules = station_get_schedules();
+  return $schedules[$id];
 }
 
 /**
@@ -271,8 +285,19 @@ function station_get_schedules() {
  *   FALSE if there was an error loading the data, NULL if nothing could be
  *   found, or, a program object if everything worked out.
  */
-function station_get_program_at($timestamp, $schedule_nid = 0) {
-  // Use the locally schedule if one is available
+function station_get_program_at($timestamp, $schedule_nid) {
+  // If no schedule was provided, use the default.
+  if (empty($schedule_nid)) {
+    $schedule = station_default_schedule();
+    $schedule_nid = $schedule['nid'];
+  }
+
+  // Force the params to integers, the xmlrpc() call gets pissy if an int isn't
+  // typed as an int.
+  $schedule_nid = (int) $schedule_nid;
+  $timestamp = (int) $timestamp; 
+
+  // Use the local schedule if one is available.
   if (module_exists('station_schedule')) {
     $program = station_schedule_program_get_at($timestamp, $schedule_nid);
     if ($program->nid) {
@@ -285,7 +310,7 @@ function station_get_program_at($timestamp, $schedule_nid = 0) {
 
     // If they haven't provided a url we can't retreive any data
     $url = variable_get('station_remote_schedule_url', '');
-    if (!$url) {
+    if (empty($url)) {
       return FALSE;
     }
 
@@ -337,13 +362,14 @@ function station_get_program_at($timestamp, $schedule_nid = 0) {
  * @return string
  */
 function station_block_current_program() {
-  // current program
-  $program = station_get_program_at(time(), 0);
-  $unschedule_message = check_plain(variable_get('station_block_unschedule',  t("We're on autopilot.")));
+  $schedule = station_default_schedule();
+  $program = station_get_program_at(time(), $schedule['nid']);
+
+  $unscheduled_message = check_plain($schedule['unscheduled_message']);
   $high = check_url(variable_get('station_stream_high_url', ''));
   $low = check_url(variable_get('station_stream_low_url', ''));
 
-  return theme('station_block_current_program', $program, $unschedule_message, $high, $low);
+  return theme('station_block_current_program', $program, $unscheduled_message, $high, $low);
 }
 
 /**

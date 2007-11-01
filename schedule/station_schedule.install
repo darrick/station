@@ -13,6 +13,7 @@ function station_schedule_install() {
         CREATE TABLE {station_schedule} (
           `nid` int unsigned NOT NULL default '0',
           `increment` int unsigned NOT NULL default '0',
+          `unscheduled_message` VARCHAR(255) NOT NULL default '',
           PRIMARY KEY(`nid`)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
@@ -318,4 +319,23 @@ function station_schedule_update_5200() {
 function station_schedule_update_5201() {
   variable_set('station_schedule_redirect_old_urls', 1);
   return array();
+}
+
+/**
+ * Move the unscheduled message from variable into the schedule table.
+ */
+function station_schedule_update_5202() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {station_schedule} ADD COLUMN `unscheduled_message` VARCHAR(255) NOT NULL default '' AFTER `increment`");
+
+      $unscheduled_message = variable_get('station_block_unschedule',  t("We're on autopilot."));
+      db_query("UPDATE {station_schedule} SET unscheduled_message = '%s'", $unscheduled_message);
+      variable_del('station_block_unschedule');
+
+      break;
+  }
+  return $ret;
 }

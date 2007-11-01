@@ -7,7 +7,6 @@
  * Implementation of hook_uninstall().
  */
 function station_uninstall() {
-  variable_del('station_block_unschedule');
   variable_del('station_remote_archive_url');
   variable_del('station_remote_schedule_url');
   variable_del('station_stream_high_url');

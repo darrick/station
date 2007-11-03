@@ -368,7 +368,7 @@ function station_schedule_update_5203() {
         );
       }
       if (count($streams)) {
-        db_query("UPDATE {station_schedule} SET streams = '%s', unscheduled_message = '%s'", serialize($streams), $unscheduled_message);
+        db_query("UPDATE {station_schedule} SET streams = '%s'", serialize($streams));
       }
       variable_del('station_stream_high_url');
       variable_del('station_stream_low_url');

@@ -1031,9 +1031,8 @@ function station_schedule_item_edit_form($op, $node, $id = NULL, $start = 0, $fi
   // Make sure the increment will advance the counter.
   $increment = ($node->settings['increment'] < 1) ? 1 : $node->settings['increment'];
   for ($minute = 0; $minute <= 24 * 60; $minute += $increment) {
-    $h = str_pad((int) ($minute / 60), 2, '0', STR_PAD_LEFT);
-    $i = str_pad($minute % 60, 2, '0', STR_PAD_LEFT);
-    $minute_options[$minute] = $h .':'. $i;
+    $time = station_time_from_minute($minute);
+    $minute_options[$minute] = $time['time'] . $time['a'];
   }
 
 
@@ -1260,7 +1259,7 @@ function theme_station_schedule_hour($hour) {
   $class = 'station-sch-box station-sch-hour';
   $height = 60;
   $output = "<div class='{$class}' style='height:{$height}px;'>";
-  $output .= station_hour_name($hour);
+  $output .= theme('station_hour', $hour * 60);
   $output .= "</div>\n";
   return $output;
 }

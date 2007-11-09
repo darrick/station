@@ -110,31 +110,6 @@ function station_day_name($day = NULL) {
 }
 
 /**
- * Return a formated hour string.
- *
- * @param $hour
- *   An integer between 0 and 23.
- *   input.
- * @return
- *   String, 1-12 am/pm.
- * @see station_valid_hour() to sanitize hour strings.
- */
-function station_hour_name($hour = 0) {
-  if ($hour < 12) {
-    $sufix = 'am';
-  }
-  else {
-    $sufix = 'pm';
-    $hour -= 12;
-  }
-  // midnight and noon
-  if ($hour <= 0) {
-    $hour = 12;
-  }
-  return $hour . $sufix;
-}
-
-/**
  * Given a day and hour, compute the number of minutes since midnight Sunday.
  *
  * @param $day
@@ -173,7 +148,7 @@ function station_day_from_minute($minute) {
  *     'H'       - 24 hour, 0 padded.
  *     'h'       - 12 hour, 0 padded.
  *     'i'       - minutes, 0 padded.
- *     'time'    - zero-padded 12 hour, minutes.
+ *     'time'    - hour and minutes acording to 12/24 setting.
  *     'minutes' - minutes since midnight Sunday.
  *     'a'       - am/pm.
  */
@@ -186,6 +161,14 @@ function station_time_from_minute($minutes) {
   }
   $i = str_pad($min, 2, '0', STR_PAD_LEFT);
   $h = str_pad($hour12, 2, '0', STR_PAD_LEFT);
+  if (variable_get('station_clock', 12) == 12) {
+    $time = $hour12 . (($min == 0) ? '' : ":$i");
+    $a = ($hour24 > 11) ? 'pm' : 'am';
+  }
+  else {
+    $time = "$hour24:$i";
+    $a = '';
+  }
   return array(
     'w' => $day,
     'G' => $hour24,
@@ -193,9 +176,9 @@ function station_time_from_minute($minutes) {
     'H' => str_pad($hour24, 2, '0', STR_PAD_LEFT),
     'h' => $h,
     'i' => $i,
-    'time' => ($min == 0) ? $hour12 : "$hour12:$i",
+    'time' => $time,
     'minutes' => $minutes,
-    'a' => ($hour24 > 11) ? 'pm' : 'am',
+    'a' => $a,
   );
 }
 
@@ -224,16 +207,15 @@ function theme_station_dayhour_range($start, $finish) {
   if ($start['w'] == $finish['w']) {
     // same am pm
     if ($start['a'] == $finish['a']) {
-      $format = '@sday @stime-@ftime@sampm';
+      return t('@sday @stime-@ftime@sampm', $format_params);
     }
     else {
-      $format = '@sday @stime@sampm-@ftime@fampm';
+      return t('@sday @stime@sampm-@ftime@fampm', $format_params);
     }
   }
   else {
-    $format = '@sday @stime@sampm-@fday @ftime@fampm';
+    return t('@sday @stime@sampm-@fday @ftime@fampm', $format_params);
   }
-  return t($format, $format_params);
 }
 
 /**
@@ -255,10 +237,26 @@ function theme_station_hour_range($start, $finish) {
   );
 
   if ($start['a'] == $finish['a']) {
-    $format = '@stime-@ftime@sampm';
+    return t('@stime-@ftime@sampm', $format_params);
   }
   else {
-    $format = '@stime@sampm-@ftime@fampm';
+    return t('@stime@sampm-@ftime@fampm', $format_params);
   }
-  return t($format, $format_params);
+}
+
+/**
+ * Format minutes into a hour string, e.g. "1am".
+ *
+ * @param $time
+ *   Integer specifying minutes.
+ * @return 
+ *   Formatted string.
+ */
+function theme_station_hour($time) {
+  $time = station_time_from_minute($time);
+  $format_params = array(
+    '@time' => $time['time'], '@ampm' => $time['a'],
+  );
+
+  return t('@time@ampm', $format_params);
 }

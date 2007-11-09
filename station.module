@@ -49,6 +49,14 @@ function station_menu($may_cache) {
  * the modules settings form
  */
 function station_admin_settings() {
+  $form['station_clock'] = array(
+    '#type' => 'radios',
+    '#title' => t('Time format'),
+    '#options' => array(12 => t('12-hour (am/pm)'), 24 => t('24-hour')),
+    '#default_value' => variable_get('station_clock', 12),
+    '#description' => t('This setting determines whether times are formatted using a 12 or 24-hour clock.'),
+  );
+
   $form['station_remote'] = array(
     '#type' => 'fieldset',
     '#title' => t('Sub-module Integration'),

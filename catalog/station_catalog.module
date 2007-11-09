@@ -154,6 +154,8 @@ function station_catalog_album_prepare(&$node) {
  * Implementation of hook_form().
  */
 function station_catalog_album_form($node) {
+  $type = node_get_types('type', $node);
+
   // Make it a little easier when doing data entry and redirect back to the
   // add form after submitting a new album.
   if (empty($node->nid) && variable_get('station_category_redirect_on_add', TRUE)) {

@@ -961,7 +961,7 @@ function theme_station_schedule_admin_nonitem($node, $start, $finish) {
 
   $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
   $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
-  $output .= '<span class="station-sch-title">'. t('Unscheduled') .'</span>';
+  $output .= '<span class="station-sch-title">'. t('<em>Unscheduled</em>') .'</span>';
   $output .= "</a></div>\n";
 
   return $output;
@@ -1063,13 +1063,19 @@ function station_schedule_item_edit_form($op, $node, $id = NULL, $start = 0, $fi
     '#default_value' => $schedule_item->finish % MINUTES_IN_DAY,
     '#options' => $minute_options,
   );
+  // Make sure a range that ends on midnigh of one day gets pushed back
+  // to the previous day.
+  if ($form['finish_minutes']['#default_value'] == 0) {
+    $form['finish_day']['#default_value']--;
+    $form['finish_minutes']['#default_value'] = MINUTES_IN_DAY;
+  }
   $form['program_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Program'),
     '#description' => t("Enter the name of the program."),
     '#default_value' => $program_title,
     '#maxlength' => 128,
-    '#autocomplete_path' => 'station/autocomplete/program'
+    '#autocomplete_path' => 'station/autocomplete/program',
   );
   $form['may_archive'] = array(
     '#type' => 'checkbox',

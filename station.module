@@ -49,24 +49,6 @@ function station_menu($may_cache) {
  * the modules settings form
  */
 function station_admin_settings() {
-  $form['station_stream'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Webstream settings'),
-    '#description' => t('The station module expects that your station has a high and low bandwidth webstreams.'),
-  );
-  $form['station_stream']['station_stream_high_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('High-bandwith URL'),
-    '#default_value' => variable_get('station_stream_high_url', ''),
-    '#description' => t('The URL of the station\'s high-bandwith webstream.'),
-  );
-  $form['station_stream']['station_stream_low_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Low-bandwith URL'),
-    '#default_value' => variable_get('station_stream_low_url', ''),
-    '#description' => t('The URL of the station\'s low-bandwith webstream.'),
-  );
-
   $form['station_remote'] = array(
     '#type' => 'fieldset',
     '#title' => t('Sub-module Integration'),

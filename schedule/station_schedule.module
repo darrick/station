@@ -961,7 +961,7 @@ function theme_station_schedule_admin_nonitem($node, $start, $finish) {
   $height = ($finish - $start);
   $link = url("node/{$node->nid}/schedule/add/0/{$start}/{$finish}");
 
-  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
+  $output = "<div class='{$class}'><a id='schedule-{$start}' href='{$link}' style='height: {$height}px;'>";
   $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
   $output .= '<span class="station-sch-title">'. t('<em>Unscheduled</em>') .'</span>';
   $output .= "</a></div>\n";
@@ -974,7 +974,7 @@ function theme_station_schedule_admin_item($node, $item) {
   $height = ($item->finish - $item->start);
   $link = url("node/{$node->nid}/schedule/edit/{$item->iid}");
 
-  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
+  $output = "<div class='{$class}'><a id='schedule-{$item->start}' href='{$link}' style='height: {$height}px;'>";
   $output .= '<span class="station-sch-time">'. theme('station_hour_range', $item->start, $item->finish) .'</span>';
   $output .= '<span class="station-sch-title">'. check_plain($item->program->title) .'</span>';
   $output .= "</a></div>\n";
@@ -994,7 +994,7 @@ function theme_station_schedule_admin_item($node, $item) {
 function station_schedule_item_edit_form($op, $node, $id = NULL, $start = 0, $finish = 60) {
   $post_op = $_POST['op'];
   if ($post_op == t('Cancel')) {
-    drupal_goto("node/{$node->nid}/schedule");
+    drupal_goto("node/{$node->nid}/schedule", NULL, "schedule-{$start}");
   }
   if ($post_op == t('Remove')) {
     drupal_goto("node/{$node->nid}/schedule/remove/$id");
@@ -1154,7 +1154,7 @@ function station_schedule_item_edit_form_submit($form_id, $form_values) {
      $schedule_nid, $iid, $program->nid, $start, $finish, $form_values['may_archive']);
     _station_send_notice('schedule', 'add', array('schedule_nid' => $schedule_nid, 'program_nid' => $program->nid, 'iid' => $iid));
   }
-  drupal_goto("node/{$schedule_nid}/schedule");
+  drupal_goto("node/{$schedule_nid}/schedule", NULL, "schedule-{$start}");
 }
 
 /**

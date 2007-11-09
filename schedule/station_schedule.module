@@ -632,32 +632,34 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         }
 
         $djs = station_schedule_program_get_themed_djs($node);
-        $ret[$schedule_nid][] = theme('station_dayhour_range', $time['start'], $time['finish']);
         $schedules = station_get_schedules();
         $times_by_schedule = station_schedule_program_get_themed_times($node);
 
         if ($teaser) {
+          if ($djs) {
+            $node->content['djs'] = array(
+              '#value' => t(' with !djs', array('!djs' => station_anded_list($djs))),
+              '#weight' => -1,
+            );
+          }
           $scheduled = array();
           foreach ($times_by_schedule as $schedule_nid => $times) {
             $scheduled[] = t('@title @times', array('@title' => $schedules[$schedule_nid]['title'], '@times' => station_anded_list($times)));
           }
-          $node->content['djs'] = array(
-            '#value' => t(' with !djs', array('!djs' => station_anded_list($djs))),
-            '#weight' => -1,
-          );
           $node->content['times'] = array(
             '#value' => $scheduled ? t(' on @scheduling.', array('@scheduling' => station_anded_list($scheduled))) : t(' is not currently scheduled.'),
             '#weight' => 0,
           );
         }
         else {
-          $djs_title = variable_get('station_schedule_dj_title', 'DJs');
-          $node->content['djs'] = array(
-            '#type' => 'item',
-            '#title' => $djs_title,
-            '#value' => $djs ? theme('item_list', $djs) : t('This program has no @dj-title.', array('@dj-title' => $djs_title)),
-            '#weight' => -5,
-          );
+          if ($djs) {
+            $node->content['djs'] = array(
+              '#type' => 'item',
+              '#title' => variable_get('station_schedule_dj_title', 'DJs'),
+              '#value' => theme('item_list', $djs),
+              '#weight' => -5,
+            );
+          }
           $node->content['times']['#weight'] = -4;
           foreach ($times_by_schedule as $schedule_nid => $times) {
             $node->content['times'][$schedule_nid] = array(

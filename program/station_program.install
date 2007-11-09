@@ -27,6 +27,8 @@ function station_program_install() {
  */
 function station_program_uninstall() {
   db_query('DROP TABLE {station_program}');
+
+  variable_del('station_program_redirect_on_add');
 }
 
 /**

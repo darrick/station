@@ -69,12 +69,18 @@ function station_program_perm() {
 }
 
 function station_program_admin_settings() {
-  $form = array();
+  $form['station_program_redirect_on_add'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add multiple programs'),
+    '#default_value' => variable_get('station_program_redirect_on_add', TRUE),
+    '#description' => t('If this is checked after adding a new program node you will be redirected back to the new program form. This is much more convienient when entering multiple programs.'),
+  );
   $form['module_cvs_id'] = array(
     '#type' => 'item',
     '#value' => '<pre>'. STATION_PROGRAM_CVS_ID .'</pre>',
   );
-  return $form;
+
+  return system_settings_form($form);
 }
 
 /**
@@ -116,6 +122,12 @@ function station_program_access($op, $node) {
  */
 function station_program_form(&$node) {
   $type = node_get_types('type', $node);
+
+  // Make it a little easier when doing data entry and redirect back to the
+  // add form after submitting a new program.
+  if (empty($node->nid) && variable_get('station_program_redirect_on_add', TRUE)) {
+    $form['#redirect'] = 'node/add/station-program';
+  }
 
   $form['title'] = array(
     '#type' => 'textfield',

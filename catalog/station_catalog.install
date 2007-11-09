@@ -38,11 +38,11 @@ function station_catalog_install() {
 function station_catalog_uninstall() {
   db_query('DROP TABLE {station_catalog}');
 
-  if ($vid = variable_get('station_category_vocabulary', FALSE)) {
+  if ($vid = variable_get('station_catalog_vocabulary', FALSE)) {
     taxonomy_del_vocabulary($vid);
   }
-  variable_del('station_category_vocabulary');
-  variable_del('station_category_redirect_on_add');
+  variable_del('station_catalog_vocabulary');
+  variable_del('station_catalog_redirect_on_add');
 }
 
 /**
@@ -108,3 +108,20 @@ function station_catalog_update_5201() {
   return $ret;
 }
 
+/**
+ * Rename some incorrectly named variables.
+ */
+function station_catalog_update_5202() {
+  if ($val = variable_get('station_category_vocabulary', FALSE)) {
+    variable_set('station_catalog_vocabulary', $val);
+  }
+
+  if ($val = variable_get('station_category_redirect_on_add', FALSE)) {
+    variable_set('station_catalog_redirect_on_add', $val);
+  }
+  
+  variable_del('station_category_vocabulary');
+  variable_del('station_category_redirect_on_add');
+
+  return array();
+}

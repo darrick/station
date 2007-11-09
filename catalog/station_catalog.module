@@ -46,10 +46,10 @@ function station_catalog_menu($may_cache) {
 
 
 function station_catalog_admin_settings() {
-  $form['station_category_redirect_on_add'] = array(
+  $form['station_catalog_redirect_on_add'] = array(
     '#type' => 'checkbox',
     '#title' => t('Add multiple albums'),
-    '#default_value' => variable_get('station_category_redirect_on_add', TRUE),
+    '#default_value' => variable_get('station_catalog_redirect_on_add', TRUE),
     '#description' => t('If this is checked after adding a new album you will be redirected back to the new album form. This is much more convienient when entering multiple albums.'),
   );
   $form['module_cvs_id'] = array(
@@ -158,7 +158,7 @@ function station_catalog_album_form($node) {
 
   // Make it a little easier when doing data entry and redirect back to the
   // add form after submitting a new album.
-  if (empty($node->nid) && variable_get('station_category_redirect_on_add', TRUE)) {
+  if (empty($node->nid) && variable_get('station_catalog_redirect_on_add', TRUE)) {
     $form['#redirect'] = 'node/add/station-album';
   }
 
@@ -370,7 +370,7 @@ function station_catalog_album_view(&$node, $teaser = FALSE, $page = FALSE) {
  */
 function station_catalog_taxonomy($op, $type, $object = NULL) {
   if ($op == 'delete' && $type == 'vocabulary' && $object->vid == _station_catalog_get_vid())  {
-    variable_del('station_category_vocabulary');
+    variable_del('station_catalog_vocabulary');
   }
 }
 
@@ -382,7 +382,7 @@ function station_catalog_taxonomy($op, $type, $object = NULL) {
  *   Vocabulary ID.
  */
 function _station_catalog_get_vid() {
-  $vid = variable_get('station_category_vocabulary', '');
+  $vid = variable_get('station_catalog_vocabulary', '');
   if (empty($vid)) {
     // Check to see if a a  vocabulary exists
     $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'station_catalog'));
@@ -400,7 +400,7 @@ function _station_catalog_get_vid() {
       taxonomy_save_vocabulary($vocabulary);
       $vid = $vocabulary['vid'];
     }
-    variable_set('station_category_vocabulary', $vid);
+    variable_set('station_catalog_vocabulary', $vid);
   }
   return $vid;
 }

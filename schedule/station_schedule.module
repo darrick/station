@@ -276,7 +276,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
 
         // validate the users
-        foreach ($node->djs as $key => $dj) {
+        foreach ((array) $node->djs as $key => $dj) {
           if ($dj['username']) {
             $user = user_load(array('name' => $dj['username']));
             if (!$user->uid) {

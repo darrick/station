@@ -308,7 +308,8 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
           $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
 
           // connect to the station module and find program info based on timestamp
-          $program = station_get_program_at($gmt_timestamp);
+          $schedule = station_default_schedule();
+          $program = station_get_program_at($gmt_timestamp, $schedule['nid']);
           if ($program === FALSE) {
             // couldn't get the program info, configuation error?
             drupal_set_error(t("Couldn't load the program metadata from the schedule."));
@@ -332,15 +333,15 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
           $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
 
           // audio metadata tags
-          $_POST['edit']['audio_tags'] = $audio_tags;
+          $_POST['audio_tags'] = $audio_tags;
           // archive program nid (this won't work if there isn't already a copy
           // of the program in station_archive_program).
-          $_POST['edit']['station_archive']['program_nid'] = $program_nid;
+          $_POST['station_archive']['program_nid'] = $program_nid;
           // taxonomy
           $vid = _station_archive_get_vid();
-          $_POST['edit']['taxonomy'][$vid] = _station_archive_get_taxonomy($local_timestamp);
+          $_POST['taxonomy'][$vid] = _station_archive_get_taxonomy($local_timestamp);
           // promotion
-          $_POST['edit']['promote'] = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
+          $_POST['promote'] = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
 
           drupal_set_message(t("The program information has been reloaded from the schedule. Verify that it is correct and save the changes."));
         }
@@ -659,7 +660,8 @@ function _station_archive_add_file($file) {
   $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
 
   // connect to the station module and find program info based on timestamp
-  $program = station_get_program_at($gmt_timestamp);
+  $schedule = station_default_schedule();
+  $program = station_get_program_at($gmt_timestamp, $schedule['nid']);
   if ($program === FALSE) {
     // couldn't get the program info, configuation error?
     watchdog('stationarchive', t("Couldn't load the program metadata. We'll retry the import on the next cron run."), WATCHDOG_WARNING);
@@ -858,7 +860,9 @@ function _station_archive_get_day_term($vid, $day) {
  *   Array with an hour's taxonomy term, false if it doesn't exist.
  */
 function _station_archive_get_hour_term($dayterm, $hour) {
-  $hourname = station_hour_name($hour);
+  $minute = station_minute_from_day_hour(0, $hour);
+  $time = station_time_from_minute($minute);
+  $hourname = $time['time'] . $time['a'];
   $result = db_query(db_rewrite_sql("SELECT d.tid, d.* FROM {term_data} d INNER JOIN {term_hierarchy} h ON d.tid = h.tid WHERE d.vid = %d AND h.parent = %d AND LOWER('%s') LIKE LOWER(name)", 't', 'tid'), array($dayterm['vid'], $dayterm['tid'], trim($hourname)));
   return db_fetch_array($result);
 }

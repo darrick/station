@@ -735,22 +735,33 @@ function _station_archive_add_file($file) {
  * @param $local_timestamp
  *   A timestamp that's been adjusted for the local timezone. see station_local_ts().
  * @return
- *   Array with day and hour terms.
+ *   Array with day and hour term ids.
  */
 function _station_archive_get_taxonomy($local_timestamp) {
   $vid = _station_archive_get_vid();
   $day = date('w', $local_timestamp);
   $hour = date('G', $local_timestamp);
+  $minute = station_minute_from_day_hour($day, $hour);
+  $time = station_time_from_minute($minute);
 
   $dayterm = _station_archive_get_day_term($vid, $day);
   if (!$dayterm) {
-    $dayterm = array('vid' => $vid, 'name' => station_day_name($day),'weight' => $day - 7);
+    $dayterm = array(
+      'vid' => $vid,
+      'name' => $time['w'],
+      'weight' => $day - 7,
+    );
     taxonomy_save_term($dayterm);
   }
 
   $hourterm = _station_archive_get_hour_term($dayterm, $hour);
   if (!$hourterm) {
-    $hourterm = array('vid' => $dayterm['vid'], 'parent' => $dayterm['tid'], 'name' => station_hour_name($hour), 'weight' => $hour);
+    $hourterm = array(
+      'vid' => $dayterm['vid'],
+      'parent' => $dayterm['tid'],
+      'name' => $time['time'] . $time['a'],
+      'weight' => $hour,
+    );
     taxonomy_save_term($hourterm);
   }
 

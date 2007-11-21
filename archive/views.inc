@@ -56,12 +56,17 @@ function station_archive_views_tables() {
     ),
     'fields' => array(
       'title' => array(
-        'name' => t('Station Archive: Program Title'),
+        'name' => t('Station Archive: Program title'),
         'sortable' => TRUE,
-        'handler' => array(
-          'station_archive_handler_audio_program_title_field' => t("As link"),
-          'station_archive_handler_audio_program_title_field_nl' => t("Without link"),
+        'handler' => 'station_archive_handler_audio_program_title_field',
+        'option' => array(
+           '#type' => 'select',
+           '#options' => array(
+             'link' => 'As link',
+             'nolink' => 'Without link'
+           ),
         ),
+        'addlfields' => array('program_nid'),
         'help' => t('The program that this audio is a recording of.'),
       ),
     ),
@@ -123,8 +128,8 @@ function station_archive_handler_timestamp_field($fieldinfo, $fielddata, $value,
 }
 
 function station_archive_handler_audio_program_title_field($fieldinfo, $fielddata, $value, $data) {
-  return l($value, "node/$data->station_archive_program_nid");
-}
-function station_archive_handler_audio_program_title_field_nl($fieldinfo, $fielddata, $value, $data) {
+  if ($fielddata['options'] == 'link' && !empty($data->station_archive_program_program_nid)) {
+    return l($value, "node/$data->station_archive_program_program_nid");
+  }
   return check_plain($value);
 }

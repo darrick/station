@@ -308,7 +308,7 @@ function station_schedule_validate(&$node) {
  */
 function station_schedule_submit(&$node) {
   $streams = array();
-  foreach ($node->settings['streams'] as $key => $stream) {
+  foreach ((array) $node->settings['streams'] as $key => $stream) {
     // Skip empty rows.
     if (!empty($stream['name'])) {
       // Convert URLs into an array.

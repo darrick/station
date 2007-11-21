@@ -262,11 +262,9 @@ function station_schedule_update_5200() {
     case 'mysqli':
       // Rename {station_schedule} to {station_schedule_item}, sid to iid and
       // add schedule_nid so we can join to the new {station_schedule}.
-      $ret[] = update_sql('ALTER TABLE {station_schedule}
-        RENAME TO {station_schedule_item},
-        CHANGE COLUMN `sid` `iid` INTEGER UNSIGNED NOT NULL DEFAULT 0,
-        ADD COLUMN `schedule_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0 FIRST
-      ');
+      $ret[] = update_sql('ALTER TABLE {station_schedule} RENAME TO {station_schedule_item}');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} CHANGE COLUMN `sid` `iid` INTEGER UNSIGNED NOT NULL DEFAULT 0');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} ADD COLUMN `schedule_nid` INTEGER UNSIGNED NOT NULL DEFAULT 0 FIRST');
 
       // Move the sequence.
       db_query('LOCK TABLES {sequences} WRITE');
@@ -284,17 +282,25 @@ function station_schedule_update_5200() {
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;
       ");
 
-      // Create a new node for the existing schedule.
-      $user = user_load(array('uid' => 1));
+      // Create a new node for the existing schedule. We can't do it the easy
+      // with node_save() because it'll call station_schedule_insert() which
+      // references fields added in later updates.
       $node = new stdClass();
-      $node->type = 'station_schedule';
-      $node->uid = $user->uid;
-      $node->name = $user->name;
+      $node->nid = db_next_id('{node}_nid');
+      $node->vid = db_next_id('{node_revisions}_vid');
+      $node->created = time();
+      $node->changed = time();
+      $node->uid = 1;
       $node->title = t('Default');
-      $node->status = 1;
-      $node->station_schedule['increment'] = variable_get('station_schedule_increment', 60);
-      $node = node_submit($node);
-      node_save($node);
+      db_query("INSERT INTO {node} (nid, vid, title, type, uid, status, created, changed, comment, promote, sticky) 
+      	VALUES (%d, %d, '%s', 'station_schedule', 1, %d, %d, %d, 0, 0, 0)",
+        $node->nid, $node->vid, $node->title, $node->uid, $node->created, $node->changed
+      );
+      db_query("INSERT INTO {node_revisions} (nid, vid, title, body, teaser, timestamp, uid, format, log) 
+        VALUES (%d, %d, '%s', '', '', %d, %d, 0, '')",
+        $node->nid, $node->vid, $node->title, $node->created, $node->uid
+      );
+      db_query("INSERT INTO {station_schedule} (nid, increment) VALUES (%d, %d)", $node->nid, variable_get('station_schedule_increment', 60));
 
       // Don't need this anymore.
       variable_del('station_schedule_increment');
@@ -306,10 +312,8 @@ function station_schedule_update_5200() {
       // Fix the keys.
       $ret[] = update_sql('ALTER TABLE {station_schedule_item} DROP INDEX `station_schedule_start`');
       $ret[] = update_sql('ALTER TABLE {station_schedule_item} DROP INDEX `station_schedule_program`');
-      $ret[] = update_sql('ALTER TABLE {station_schedule_item}
-        ADD INDEX `station_schedule_start` (`schedule_nid`, `start`),
-        ADD INDEX `station_schedule_program` (`schedule_nid`, `program_nid`)
-      ');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} ADD INDEX `station_schedule_start` (`schedule_nid`, `start`)');
+      $ret[] = update_sql('ALTER TABLE {station_schedule_item} ADD INDEX `station_schedule_program` (`schedule_nid`, `program_nid`)');
     break;
   }
   return $ret;

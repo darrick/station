@@ -128,8 +128,9 @@ function station_archive_handler_timestamp_field($fieldinfo, $fielddata, $value,
 }
 
 function station_archive_handler_audio_program_title_field($fieldinfo, $fielddata, $value, $data) {
-  if ($fielddata['options'] == 'link' && !empty($data->station_archive_program_program_nid)) {
-    return l($value, "node/$data->station_archive_program_program_nid");
+  $schedule = station_default_schedule();
+  if ($fielddata['options'] == 'link' && isset($schedule['base_url']) && !empty($data->station_archive_program_program_nid)) {
+    return l($value, $schedule['base_url'] .'/node/'. $data->station_archive_program_program_nid);
   }
   return check_plain($value);
 }

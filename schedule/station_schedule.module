@@ -843,15 +843,20 @@ function station_schedule_redirect_old($day = '', $hour = '') {
  *   Array of schedules.
  */
 function station_schedule_get_list() {
+  global $base_url;
+
   $schedules = array();
   $result = db_query("SELECT n.nid, n.title, ss.increment, ss.streams, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
   while ($schedule = db_fetch_array($result)) {
+    $schedule['base_url'] = $base_url;
+
     if (isset($schedule['streams']) && $streams = unserialize($schedule['streams'])) {
       $schedule['streams'] = $streams;
     }
     else {
       $schedule['streams'] = array();
     }
+
     $schedules[$schedule['nid']] = $schedule;
   }
 

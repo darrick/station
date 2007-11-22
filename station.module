@@ -400,16 +400,21 @@ function theme_station_block_current_program($schedule, $program) {
  * Theme a schedule's web streams.
  *
  * @param $nid
- *   A station schedule node.
+ *   A station schedule node id (might be on a remote site).
  * @param $streams
  *   Schedule's streams.
  */
 function theme_station_streams($schedule_nid, $streams) {
   if (count($streams)) {
+    $schedules = station_get_schedules();
+    $site_url = $schedules[$schedule_nid]['base_url'];
+
     $items = array();
     foreach ($streams as $key => $stream) {
-      $items[] = l($stream['name'], station_get_station_url($schedule_nid) ."/$key.m3u", array('title' => $stream['description']));
+      $m3u_url =  "$site_url/node/$schedule_nid/$key.m3u";
+      $items[] = l($stream['name'], $m3u_url, array('title' => $stream['description']));
     }
+
     return t('Tune in: ') . station_ored_list($items);
   }
 }

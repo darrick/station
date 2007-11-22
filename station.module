@@ -207,21 +207,6 @@ function station_get_archive_url() {
 }
 
 /**
- * If there's a schedule, return the URL.
- *
- * @return FALSE or string URL.
- */
-function station_get_station_url($schedule_nid) {
-  if (module_exists('station_schedule')) {
-    return 'node/'. $schedule_nid;
-  }
-  else if ($url = variable_get('station_remote_schedule_url', FALSE)) {
-    return $url .'/node/'. $schedule_nid;
-  }
-  return FALSE;
-}
-
-/**
  * Return a list of schedules.
  *
  * The list of schedules is cached between calls.

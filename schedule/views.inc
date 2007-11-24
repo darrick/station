@@ -141,12 +141,12 @@ function station_handler_field_listen_link_rss($fieldinfo, $fielddata, $value, $
 function station_handler_filter_is_scheduled($op, $filterdata, $filterinfo, &$query) {
   switch ($op) {
   case 'handler':
-    $query->ensure_table('station_schedule_item');
+    $query->ensure_table('station_schedule');
     if ($filterdata['operator']) {
-      $query->add_where('{station_schedule_item}.program_nid IS NOT NULL');
+      $query->add_where('{station_schedule}.program_nid IS NOT NULL');
     }
     else {
-      $query->add_where('{station_schedule_item}.program_nid IS NULL');
+      $query->add_where('{station_schedule}.program_nid IS NULL');
     }
     break;
   }

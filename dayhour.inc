@@ -4,6 +4,7 @@
 
 // there are 1440 minutes in a day (60minute * 24hours = 1day)
 define('MINUTES_IN_DAY', 1440);
+define('MINUTES_IN_WEEK', 7 * MINUTES_IN_DAY);
 
 /**
  * Turn a string into a valid hour.

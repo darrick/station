@@ -616,7 +616,9 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         $node->djs = _station_schedule_program_load_djs($node->nid);
 
         $node->times = array();
-        $result = db_query('SELECT * FROM {station_schedule_item} s WHERE s.program_nid = %d ORDER BY s.schedule_nid, s.start', $node->nid);
+        // Load the schedule items in order of start time while taking into
+        // account Drupal's first day of the week setting.
+        $result = db_query('SELECT * FROM {station_schedule_item} s WHERE s.program_nid = %d ORDER BY s.schedule_nid, ((s.start + %d) %% %d)', $node->nid, MINUTES_IN_DAY * (7 - variable_get('date_first_day', 0)), MINUTES_IN_WEEK);
         while ($item = db_fetch_array($result)) {
           $node->times[$item['schedule_nid']][] = $item;
         }

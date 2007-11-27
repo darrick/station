@@ -249,7 +249,8 @@ function station_schedule_argument_schedule_item_day($op, &$query, $a1, $a2 = NU
   switch($op) {
     case 'summary':
       $query->ensure_table('station_schedule_item');
-      $fieldinfo['field'] = "CAST(station_schedule_item.start / $min_in_day AS UNSIGNED) %% 7";
+      // Need to do the modulus by week to avoid having Sunday listed twice as 0 and 7.
+      $fieldinfo['field'] = "CAST(station_schedule_item.start / $min_in_day AS UNSIGNED INTEGER) %% 7";
       $fieldinfo['fieldname'] = 'station_schedule_item_start_day';
       return $fieldinfo;
 
@@ -257,10 +258,10 @@ function station_schedule_argument_schedule_item_day($op, &$query, $a1, $a2 = NU
       $query->ensure_table('station_schedule_item');
       $first_day = 7 - variable_get('date_first_day', 0);
       if ($first_day != 0) {
-        $formula = "(CAST(station_schedule_item.start / $min_in_day AS UNSIGNED) + $first_day) %% 7";
+        $formula = "(CAST(station_schedule_item.start / $min_in_day AS UNSIGNED INTEGER) + $first_day) %% 7";
       }
       else {
-        $formula = "CAST(station_schedule_item.start / $min_in_day AS UNSIGNED)";
+        $formula = "CAST(station_schedule_item.start / $min_in_day AS UNSIGNED INTEGER)";
       }
       $query->add_orderby(NULL, $formula, $a1, 'station_schedule_item_start_day_sort');
 
@@ -281,7 +282,6 @@ function station_schedule_argument_schedule_item_day($op, &$query, $a1, $a2 = NU
       break;
 
     case 'title':
-      dvm($a1);dvm($a2);
       return station_day_name(station_valid_day($a2));
   }
 }

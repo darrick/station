@@ -90,7 +90,7 @@ function station_archive_views_arguments() {
 }
 
 
-/*
+/**
  * Handle the program node id argument.
  */
 function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = '') {

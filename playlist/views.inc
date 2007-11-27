@@ -107,8 +107,8 @@ function station_playlist_views_arguments() {
 function station_playlist_arg_program_nid_handler($op, &$query, $argtype, $arg = '') {
   switch($op) {
     case 'summary':
-      $query->ensure_table('station_playlist', true);
-      $query->ensure_table('station_playlist_program_node', true);
+      $query->ensure_table('station_playlist');
+      $query->ensure_table('station_playlist_program_node');
       $query->add_field('program_nid', 'station_playlist');
       $query->add_field('title', 'station_playlist_program_node');
       $fieldinfo['field'] = "station_playlist_program_node.title";

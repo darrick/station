@@ -140,6 +140,10 @@ function station_schedule_views_default_views() {
       'label' => variable_get('station_schedule_dj_title', 'DJs'),
     ),
   );
+  // If there's no archive remove the listen links.
+  if (!station_has_archive()) {
+    unset($view->field[1]);
+  }
   $view->filter = array (
     array (
       'tablename' => 'node',

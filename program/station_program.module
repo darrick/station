@@ -206,8 +206,29 @@ function station_program_delete($node) {
  * Implementation of hook_update().
  */
 function station_program_update($node) {
-  db_query("UPDATE {station_program} SET genre = '%s', url = '%s' WHERE vid = %d", $node->genre, $node->url, $node->vid);
+  if ($node->revision){
+    db_query("INSERT INTO {station_program} (nid, vid, genre, url) VALUES (%d, %d, '%s', '%s')", $node->nid, $node->vid, $node->genre, $node->url);
+  }
+  else {
+    db_query("UPDATE {station_program} SET genre = '%s', url = '%s' WHERE vid = %d", $node->genre, $node->url, $node->vid);
+  }
 }
+
+/**
+ * Implementation of hook_nodeapi().
+ *
+ * Use this to handle deletion of revisions.
+ */
+function station_program_nodeapi(&$node, $op, $arg) {
+  if ($node->type == 'station_program') {
+    switch ($op) {
+      case 'delete revision':
+        db_query('DELETE FROM {station_program} WHERE vid = %d', $node->vid);
+        break;
+    }
+  }
+}
+
 
 /**
  * Implementation of hook_view().

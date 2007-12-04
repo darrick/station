@@ -183,7 +183,7 @@ function station_schedule_views_tables() {
         'name' => t('Station Program: Scheduled'),
         'operator' => 'views_handler_operator_yesno',
         'handler' => 'station_handler_filter_is_scheduled',
-        'help' => t("Filter weather the node is on a schedule."),
+        'help' => t("Filter whether the node is on a schedule."),
       ),
       'now_playing' => array(
         'name' => t('Station Program: Now playing'),

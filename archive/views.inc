@@ -39,7 +39,7 @@ function station_archive_views_tables() {
         'operator' => array('=' => 'Equals'),
         'list' => 'views_handler_operator_yesno',
         'list-type' => 'select',
-        'help' => t('Filter weather the node is part of the permanent archive.'),
+        'help' => t('Filter whether the node is part of the permanent archive.'),
       ),
     ),
   );

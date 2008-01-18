@@ -143,10 +143,10 @@ function station_handler_filter_is_scheduled($op, $filterdata, $filterinfo, &$qu
   case 'handler':
     $query->ensure_table('station_schedule');
     if ($filterdata['operator']) {
-      $query->add_where('{station_schedule}.program_nid IS NOT NULL');
+      $query->add_where('station_schedule.program_nid IS NOT NULL');
     }
     else {
-      $query->add_where('{station_schedule}.program_nid IS NULL');
+      $query->add_where('station_schedule.program_nid IS NULL');
     }
     break;
   }

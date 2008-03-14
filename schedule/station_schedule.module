@@ -349,7 +349,12 @@ function station_schedule_load($node) {
   // Load the settings.
   $settings = db_fetch_array(db_query('SELECT increment, streams, unscheduled_message FROM {station_schedule} WHERE nid = %d', $node->nid));
   if (isset($settings['streams']) && $streams = unserialize($settings['streams'])) {
-    $settings['streams'] = $streams;
+    $settings['streams'] = array();
+    foreach ($streams as $key => $stream) {
+      // Add in the M3U URL.
+      $stream['m3u_url'] = url('node/'. $node->nid .'/'. $key .'.m3u', NULL, NULL, TRUE);
+      $settings['streams'][$key] = $stream;
+    }
   }
   else {
     $settings['streams'] = array();
@@ -853,7 +858,12 @@ function station_schedule_get_list() {
     $schedule['base_url'] = $base_url;
 
     if (isset($schedule['streams']) && $streams = unserialize($schedule['streams'])) {
-      $schedule['streams'] = $streams;
+      $schedule['streams'] = array();
+      foreach ($streams as $key => $stream) {
+        // Add in the M3U URL.
+        $stream['m3u_url'] = url('node/'. $schedule['nid'] .'/'. $key .'.m3u', NULL, NULL, TRUE);
+        $schedule['streams'][$key] = $stream;
+      }
     }
     else {
       $schedule['streams'] = array();
@@ -1218,7 +1228,7 @@ function station_schedule_view($node, $teaser = FALSE, $page = FALSE) {
   if ($teaser) {
     $node->content['streams'] = array(
       '#title' => t('Webstreams'),
-      '#value' => theme('station_streams', $node->nid, $node->settings['streams']),
+      '#value' => theme('station_streams', $node->settings['streams']),
       '#weight' => -5,
     );
   }

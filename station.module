@@ -376,7 +376,7 @@ function theme_station_block_current_program($schedule, $program) {
   }
 
   // Streams
-  $output .= theme('station_streams', $schedule['nid'], $schedule['streams']);
+  $output .= theme('station_streams', $schedule['streams']);
 
   return $output;
 }
@@ -389,15 +389,11 @@ function theme_station_block_current_program($schedule, $program) {
  * @param $streams
  *   Schedule's streams.
  */
-function theme_station_streams($schedule_nid, $streams) {
+function theme_station_streams($streams) {
   if (count($streams)) {
-    $schedules = station_get_schedules();
-    $site_url = $schedules[$schedule_nid]['base_url'];
-
     $items = array();
     foreach ($streams as $key => $stream) {
-      $m3u_url =  "$site_url/node/$schedule_nid/$key.m3u";
-      $items[] = l($stream['name'], $m3u_url, array('title' => $stream['description']));
+      $items[] = l($stream['name'], $stream['m3u_url'], array('title' => $stream['description']));
     }
 
     return t('Tune in: ') . station_ored_list($items);

@@ -691,18 +691,21 @@ function station_schedule_form_alter($form_id, &$form) {
     $node = $form['#node'];
 
     if (user_access('administer schedule')) {
+      $form['schedule'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Station Schedule'),
+        '#weight' => 1,
+        '#tree' => TRUE,
+        '#description' => t('The program must be saved before it can be added to the schedule.'),
+        '#collapsible' => TRUE,
+      );
+
       // if it's a saved display the scheduled times.
       if ($node->nid) {
         $schedules = station_get_schedules();
 
-        $form['schedule'] = array(
-          '#type' => 'fieldset',
-          '#title' => t('Station Schedule'),
-          '#weight' => 1,
-          '#tree' => TRUE,
-          '#description' => count($schedules) ? '' : t("There are no schedules on this site."),
-          '#collapsible' => TRUE,
-        );
+        $form['schedule']['#description'] = count($schedules) ? '' : t("There are no schedules on this site.");
+        
         foreach ($schedules as $schedule_nid => $schedule) {
           $links = array();
           $form['schedule'][$schedule_nid] = array(
@@ -715,12 +718,12 @@ function station_schedule_form_alter($form_id, &$form) {
           }
           else {
             foreach ($node->times[$schedule_nid] as $time) {
-              $links[] = l(theme('station_dayhour_range', $time['start'], $time['finish']), "node/{$schedule_nid}/schedule/edit/{$time['iid']}");
+              $links[] = l(theme('station_dayhour_range', $time['start'], $time['finish']), "node/{$schedule_nid}/schedule/edit/{$time['iid']}", array(), "destination=node/{$node->nid}/edit");
             }
           }
           // Don't encourage adding unpublished stuff to the schedule.
           if ($node->status != 0) {
-            $links[] = l(t('Add this program to the @name schedule', array('@name' => $schedule[''])), "node/{$schedule_nid}/schedule/add/{$node->nid}");
+            $links[] = l(t('Add this program to the @name schedule', array('@name' => $schedule[''])), "node/{$schedule_nid}/schedule/add/{$node->nid}", array(), "destination=node/{$node->nid}/edit");
           }
           $form['schedule'][$schedule_nid]['links'] = array(
             '#type' => 'item',

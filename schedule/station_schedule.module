@@ -866,6 +866,13 @@ function station_schedule_get_list() {
   return $schedules;
 }
 
+/**
+ * Deserialize the schedule's streams array and fill in the m3u_url element.
+ *
+ * @param $schedule_nid Schedule node id.
+ * @param $serialized_streams Serialized stream array.
+ * @return Array of stream data.
+ */
 function station_schedule_unserialize_streams($schedule_nid, $serialized_streams = NULL) {
   if (isset($serialized_streams) && $streams = unserialize($serialized_streams)) {
     if (is_array($streams)) {

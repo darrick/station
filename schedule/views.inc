@@ -329,9 +329,8 @@ function station_handler_field_schedule_current_program($fieldinfo, $fielddata, 
 }
 
 function station_handler_field_schedule_streams($fieldinfo, $fielddata, $value, $data) {
-  if ($streams = unserialize($data->station_schedule_streams)) {
-    return theme('station_streams', $data->nid, $streams);
-  }
+  $streams = station_schedule_unserialize_streams($data->nid, $data->station_schedule_streams);
+  return theme('station_streams', $streams);
 }
 
 function station_handler_field_schedule_time($fieldinfo, $fielddata, $value, $data) {

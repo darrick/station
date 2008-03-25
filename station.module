@@ -390,12 +390,11 @@ function theme_station_block_current_program($schedule, $program) {
  *   Schedule's streams.
  */
 function theme_station_streams($streams) {
-  if (count($streams)) {
+  if (is_array($streams) && count($streams)) {
     $items = array();
     foreach ($streams as $key => $stream) {
       $items[] = l($stream['name'], $stream['m3u_url'], array('title' => $stream['description']));
     }
-
     return t('Tune in: ') . station_ored_list($items);
   }
 }

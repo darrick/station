@@ -54,7 +54,6 @@ function station_playlist_views_tables() {
   );
   $tables['station_playlist_program_node'] = array(
     'name' => 'node',
-    'provider' => 'internal',
     'join' => array(
       'left' => array(
         'table' => 'station_playlist',

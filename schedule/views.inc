@@ -74,7 +74,6 @@ function station_schedule_views_tables() {
   );
   $tables['station_program_schedule_node'] = array(
     'name' => 'node',
-    'provider' => 'internal',
     'join' => array(
       'left' => array(
         'table' => 'station_schedule_item',

@@ -226,6 +226,15 @@ function station_schedule_views_default_views() {
   $view->filter = array (
     array (
       'tablename' => 'node',
+      'field' => 'distinct',
+      'operator' => '=',
+      'options' => '',
+      'value' => array (
+  0 => 'distinct',
+),
+    ),
+    array (
+      'tablename' => 'node',
       'field' => 'type',
       'operator' => 'OR',
       'options' => '',

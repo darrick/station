@@ -549,3 +549,42 @@ function station_playlist_autocomplete($field = '', $string = '') {
   print drupal_to_js($matches);
   exit();
 }
+
+/**
+ * Implementation of hook_token_list().
+ */
+function station_playlist_token_list($type = 'all') {
+  if ($type == 'node' || $type == 'all') {
+    $tokens['node']['station-playlist-yyyy']  = t("The year of this playlist's show.");
+    $tokens['node']['station-playlist-mm']    = t("The two-digit month (01-12) of this playlist's show.");
+    $tokens['node']['station-playlist-mon']   = t("The three-letter month (jan-dec) of this playlist's show.");
+    $tokens['node']['station-playlist-dd']    = t("The two-digit day of the month (01-31) of this playlist's show.");
+    $tokens['node']['station-playlist-day']   = t("The three-letter day of the week (sun-sat) of this playlist's show.");
+    $tokens['node']['station-playlist-week']  = t("The week number (1-52) of the year of this playlist's show.");
+    $tokens['node']['station-playlist-show']  = t("Name of the show this playlist is for");
+    $tokens['node']['station-playlist-show-raw'] = t("Unfiltered name of the show this playlist is for. WARNING - raw user input.");
+    return $tokens;
+  }
+}
+
+/**
+ * Implementation of hook_token_values().
+ */
+function station_playlist_token_values($type, $object = NULL) {
+  if ($type == 'node' && $object->type == 'station_playlist') {
+    $node = $object;
+    $program_date = mktime(0, 0, 0, $node->program_date['month'], $node->program_date['day'], $node->program_date['year']); 
+
+    $tokens['station-playlist-yyyy'] = date('Y', $program_date);
+    $tokens['station-playlist-mm']   = date('m', $program_date);
+    $tokens['station-playlist-mon']  = date('M', $program_date);
+    $tokens['station-playlist-dd']   = date('d', $program_date);
+    $tokens['station-playlist-day']  = date('D', $program_date);
+    $tokens['station-playlist-week'] = date('W', $program_date);
+
+    $tokens['station-playlist-show'] = check_plain($node->program_title);
+    $tokens['station-playlist-show-raw'] = $node->program_title;
+
+    return $tokens;
+  }
+}

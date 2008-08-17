@@ -90,10 +90,6 @@ function station_program_access($op, $node) {
   global $user;
 
   switch ($op) {
-    case 'view':
-      return user_access('access content');
-      break;
-
     case 'update':
       if (user_access('edit program content')) {
         return TRUE;

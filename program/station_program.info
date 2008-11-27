@@ -1,5 +1,10 @@
 ; $Id$
 name = Station Program
 description = Provides a simple program node for schedule.
-dependencies = station views
 package = Station
+core=6.x
+dependencies[] = station
+dependencies[] = views
+dependencies[] = content
+dependencies[] = link
+dependencies[] = text

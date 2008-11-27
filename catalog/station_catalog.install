@@ -6,37 +6,14 @@
  * Install the initial schema.
  */
 function station_catalog_install() {
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      db_query("
-        CREATE TABLE {station_catalog} (
-          `nid` int(10) unsigned NOT NULL default '0',
-          `number` int(10) unsigned NOT NULL default '0',
-          `artist` varchar(255) NOT NULL default '',
-          `album` varchar(255) NOT NULL default '',
-          `year` int(10) unsigned NOT NULL,
-          `label` varchar(255) NOT NULL default '',
-          `mb_release_id` varchar(36) NOT NULL default  '',
-          `asin` varchar(16) NOT NULL default '',
-          PRIMARY KEY  (`nid`),
-          UNIQUE KEY `station_catalog_number` (`number`),
-          KEY `station_catalog_artist` (`artist`),
-          KEY `station_catalog_album` (`album`),
-          KEY `station_catalog_year` (`year`),
-          KEY `station_catalog_label` (`label`),
-          KEY `mb_release` (`mb_release_id`)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-      ");
-      break;
-  }
+  drupal_install_schema('station_catalog');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function station_catalog_uninstall() {
-  db_query('DROP TABLE {station_catalog}');
+  drupal_uninstall_schema('station_catalog');
 
   if ($vid = variable_get('station_catalog_vocabulary', FALSE)) {
     taxonomy_del_vocabulary($vid);
@@ -46,6 +23,100 @@ function station_catalog_uninstall() {
 }
 
 /**
+ * Implementation of hook_schema().
+ */
+function station_catalog_schema() {
+//      db_query("
+//        CREATE TABLE {station_catalog} (
+//          `nid` int(10) unsigned NOT NULL default '0',
+//          `number` int(10) unsigned NOT NULL default '0',
+//          `artist` varchar(255) NOT NULL default '',
+//          `album` varchar(255) NOT NULL default '',
+//          `year` int(10) unsigned NOT NULL,
+//          `label` varchar(255) NOT NULL default '',
+//          `mb_release_id` varchar(36) NOT NULL default  '',
+//          `asin` varchar(16) NOT NULL default '',
+//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+//      ");
+
+
+  $schema['station_catalog'] = array(
+    'description' => t('Information about albums in the station catalog.'),
+    'fields' => array(
+      'nid' => array(
+        'description' => t("The album's {node}.nid."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'number' => array(
+        'description' => t('The catalog number.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'artist' => array(
+        'description' => t('Name of the artist.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'album' => array(
+        'description' => t('Name of the album.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'year' => array(
+        'description' => t('Year the album was released.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'label' => array(
+        'description' => t('Name of the label that released the album.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'mb_release_id' => array(
+        'description' => t('MusicBrainz release id for the album.'),
+        'type' => 'varchar',
+        'length' => 36,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'asin' => array(
+        'description' => t('Amazon product id..'),
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'indexes' => array(
+      'station_catalog_artist'  => array('artist'),
+      'station_catalog_album'   => array('album'),
+      'station_catalog_year'    => array('year'),
+      'station_catalog_label'   => array('label'),
+      'mb_release'              => array('mb_release_id'),
+    ),
+    'unique keys' => array(
+      'station_catalog_number' => array('number')
+    ),
+    'primary key' => array('nid'),
+  );
+
+  return $schema;
+}
+
+
+/**
  * Empty update to set a schema number for Drupal 5.0.
  */
 function station_catalog_update_100() {
@@ -53,7 +124,7 @@ function station_catalog_update_100() {
 }
 
 /**
- * Change the album node name from 4.7 to 5.0. 
+ * Change the album node name from 4.7 to 5.0.
  */
 function station_catalog_update_101() {
   $ret = array();
@@ -75,10 +146,10 @@ function station_catalog_update_5200() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+      $ret[] = update_sql("ALTER TABLE {station_catalog}
         MODIFY COLUMN `nid` INTEGER UNSIGNED NOT NULL DEFAULT 0;
       ");
-      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+      $ret[] = update_sql("ALTER TABLE {station_catalog}
         ADD COLUMN `year` INTEGER UNSIGNED NOT NULL AFTER `album`,
         ADD INDEX station_catalog_year(`year`);
       ");
@@ -95,11 +166,11 @@ function station_catalog_update_5201() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+      $ret[] = update_sql("ALTER TABLE {station_catalog}
         ADD COLUMN `mb_release_id` VARCHAR(36) NOT NULL DEFAULT '' AFTER `label`,
         ADD INDEX mb_release(`mb_release_id`);
       ");
-      $ret[] = update_sql("ALTER TABLE {station_catalog} 
+      $ret[] = update_sql("ALTER TABLE {station_catalog}
         ADD COLUMN `asin` varchar(16) NOT NULL default '' AFTER `mb_release_id`;
       ");
 
@@ -119,7 +190,7 @@ function station_catalog_update_5202() {
   if ($val = variable_get('station_category_redirect_on_add', FALSE)) {
     variable_set('station_catalog_redirect_on_add', $val);
   }
-  
+
   variable_del('station_category_vocabulary');
   variable_del('station_category_redirect_on_add');
 

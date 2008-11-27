@@ -4,149 +4,61 @@ define('STATION_CVS_ID', '$Id$');
 
 require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
 
-function station_help($section='') {
-  switch ($section) {
+function station_help($path, $arg) {
+  switch ($path) {
     case 'admin/settings/station':
       return t('Configure the core station settings. These settings are used by all of the station modules.');
   }
-  return NULL;
 }
 
-function station_menu($may_cache) {
+/**
+ * Implementation of hook_menu().
+ */
+function station_menu() {
   $items = array();
-  if ($may_cache) {
-    $items[] = array(
-      'path' => 'admin/settings/station',
-      'title' => t('Station'),
-      'callback' => 'drupal_get_form',
-      'callback arguments' => array('station_admin_settings'),
-      'description' => t('Change settings for the Station module.'),
-      'access' => user_access('administer site configuration'),
-      'type' => MENU_NORMAL_ITEM,
-    );
-    $items[] = array(
-      'path' => 'admin/settings/station/main',
-      'title' => t('Core'),
-      'callback' => 'drupal_get_form',
-      'callback arguments' => array('station_admin_settings'),
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-      'weight' => '-10',
-    );
 
-    $items[] = array(
-      'path' => 'station',
-      'title' => t('Station'),
-      'callback' => 'station_page',
-      'access' => user_access('access content'),
-      'type' => MENU_NORMAL_ITEM
-    );
-  }
+  $items['admin/settings/station'] = array(
+    'title' => 'Station',
+    'description' => 'Change settings for the Station module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('station_admin_settings'),
+    'file' => 'station.admin.inc',
+    'access arguments' => array('administer site configuration'),
+  );
+  $items['admin/settings/station/main'] = array(
+    'title' => 'Core',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('station_admin_settings'),
+    'file' => 'station.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => '-10',
+  );
+  $items['station'] = array(
+    'title' => 'Station',
+    'page callback' => 'station_page',
+    'access arguments' => array('access content'),
+  );
+
   return $items;
 }
 
-
 /**
- * the modules settings form
+ * Implementation of hook_theme().
  */
-function station_admin_settings() {
-  $form['station_clock'] = array(
-    '#type' => 'radios',
-    '#title' => t('Time format'),
-    '#options' => array(12 => t('12-hour (am/pm)'), 24 => t('24-hour')),
-    '#default_value' => variable_get('station_clock', 12),
-    '#description' => t('This setting determines whether times are formatted using a 12 or 24-hour clock.'),
+function station_theme() {
+  return array(
+    'station_block_current_program' => array(
+      'arguments' => array('schedule' => NULL, 'program' => NULL),
+    ),
+    'station_streams' => array(
+      'arguments' => array('streams' => NULL),
+    ),
   );
-
-  $form['station_remote'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Sub-module Integration'),
-    '#description' => t('The Station module is designed to allow different modules to be run on different servers. So the archive could be on a dedicated machine while the schedule runs on your primary webserver.'),
-  );
-
-  if (!module_exists('station_archive')) {
-    $form['station_remote']['station_remote_archive_url'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Station Archive remote URL'),
-      '#default_value' => variable_get('station_remote_archive_url', ''),
-      '#description' => t("The archive module is not enabled on this machine. If you have it installed up on a different Drupal server, enter the URL here. If this is blank no archive links will be provided. Please include the trailing slash: i.e. http://example.com/"),
-    );
-  }
-  else {
-    $form['station_remote']['archive_status'] = array(
-      '#type' => 'item',
-      '#title' => t('Station Archive module is enabled'),
-      '#value' => t("The Station Archive module is enabled on this machine. This can be used by the Station Schedule module to provide users links to a program's archived audio."),
-    );
-  }
-
-  if (!module_exists('station_schedule')) {
-    $form['station_remote']['station_remote_schedule_url'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Station Schedule remote URL'),
-      '#default_value' => variable_get('station_remote_schedule_url', ''),
-      '#description' => t("The station schedule module is not enabled on this machine. The Station module can connect to another Drupal server running the station schedule module and retrieve information on scheduled programs via XML-RPC. If this is left blank, no connection will be attempted but things may not work. Omit the trailing slash, i.e.: http://example.com or http://example.com/drupal"),
-    );
-    if ($schedules = station_get_schedules()) {
-      $options = array();
-      foreach (station_get_schedules() as $nid => $schedule) {
-        $options[$nid] = $schedule['title'];
-      }
-      $form['station_remote']['station_remote_schedule_nid'] = array(
-        '#type' => 'select',
-        '#title' => t('Schedule'),
-        '#default_value' => variable_get('station_remote_schedule_nid', 0),
-        '#options' => $options,
-        '#description' => t("This you select the schedule that will be used as the default for backwards compatibility."),
-      );
-    }
-    $form['station_remote']['station_remote_schedule_offset'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Station Schedule remote minute adjustment'),
-      '#default_value' => variable_get('station_remote_schedule_offset', 0),
-      '#description' => t("If the clocks on your two servers aren't accurately synchronized the archive will end up with the wrong names for programs. This number of minutes (positive or negative) will be added to the time before checking the schedule."),
-    );
-  }
-  else {
-    $form['station_remote']['schedule_status'] = array(
-      '#type' => 'item',
-      '#title' => t('Station Schedule module is enabled'),
-      '#value' => t('The Station Schedule module is enabled on this machine. This information can be used by the Now Playing block and Station Archive module.'),
-    );
-  }
-
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_CVS_ID .'</pre>',
-  );
-
-  return system_settings_form($form);
 }
 
 /**
- * Checks that the RPC endpoint is valid.
+ * Implementation of hook_block().
  */
-function station_admin_settings_validate($form_id, $edit) {
-  if (!module_exists('station_schedule')) {
-    // check station url
-    if ($url = $edit['station_remote_schedule_url']) {
-      $url = check_url($url .'/xmlrpc.php');
-      $ret = xmlrpc($url, 'station.program.get.at', time(), 0);
-      if (xmlrpc_error_msg()) {
-        form_set_error('station_remote_schedule_url',
-          t('You must provide a a valid URL for a Drupal site with the station schedule module installed.<br />Specific error: %xmlrpc-error', array('%xmlrpc-error' => xmlrpc_error_msg()))
-        );
-      }
-    }
-
-    // check that the offset is an integer
-    $offset = $edit['station_remote_schedule_offset'];
-    if (!(is_numeric($offset) && intval($offset) == $offset)) {
-      form_set_error('station_remote_schedule_offset', t('The offset must be an integer.'));
-    }
-  }
-}
-
-
 function station_block($op = 'list', $delta = 0, $edit = array()) {
   switch ($op) {
   case 'view':
@@ -167,7 +79,7 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 function station_page() {
-  return theme('menu_tree', menu_get_active_item());
+  return '';
 }
 
 
@@ -230,16 +142,16 @@ function station_get_schedules() {
       // Try to load the schedules from the cache.
       $cacheid = 'station_remote:schedules_'. $url;
       if ($cache = cache_get($cacheid, 'cache')) {
-        $schedules = unserialize($cache->data);
+        $schedules = $cache->data;
       }
       else {
         $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
         if (xmlrpc_errno()) {
-          watchdog('station', t('Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+          watchdog('station', 'Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
           return FALSE;
         }
         // Save the value for the next call.
-        cache_set($cacheid, 'cache', serialize($schedules), CACHE_TEMPORARY);
+        cache_set($cacheid, $schedules, 'cache', CACHE_TEMPORARY);
       }
     }
   }
@@ -285,7 +197,7 @@ function station_get_program_at($timestamp, $schedule_nid) {
   // Force the params to integers, the xmlrpc() call gets pissy if an int isn't
   // typed as an int.
   $schedule_nid = (int) $schedule_nid;
-  $timestamp = (int) $timestamp; 
+  $timestamp = (int) $timestamp;
 
   // Use the local schedule if one is available.
   if (module_exists('station_schedule')) {
@@ -324,17 +236,17 @@ function station_get_program_at($timestamp, $schedule_nid) {
     // try to grab it from the cache
     $cacheid = 'station_remote:program_at_'. $timestamp;
     if ($cache = cache_get($cacheid, 'cache')) {
-      $program = unserialize($cache->data);
+      $program = $cache->data;
     }
     else {
       // if it isn't cached get the program info from the server
       $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp, $schedule_nid);
       if (xmlrpc_errno()) {
-        watchdog('station', t('Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+        watchdog('station', 'Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
         return FALSE;
       }
       // save it to the cache
-      cache_set($cacheid, 'cache', serialize($program), CACHE_TEMPORARY);
+      cache_set($cacheid, $program, 'cache', CACHE_TEMPORARY);
     }
 
     // program returned by XMLRPC is an array

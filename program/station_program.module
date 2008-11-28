@@ -43,6 +43,10 @@ function station_program_node_info() {
       'name' => t('Program'),
       'module' => 'station_program',
       'description' => t('A radio program that you can schedule.'),
+      'has_title' => TRUE,
+      'title_label' => t('Title'),
+      'has_body' => TRUE,
+      'body_label' => t('Description'),
     )
   );
 }

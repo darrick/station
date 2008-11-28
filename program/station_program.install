@@ -8,21 +8,6 @@ function station_program_install() {
   drupal_load('module', 'content');
   content_notify('install', 'station_program');
 
-//  switch ($GLOBALS['db_type']) {
-//    case 'mysql':
-//    case 'mysqli':
-//      db_query("
-//        CREATE TABLE {station_program} (
-//          `nid` int(10) unsigned NOT NULL default '0',
-//          `vid` int(10) unsigned NOT NULL default '0',
-//          `genre` varchar(200) NOT NULL default '',
-//          `url` varchar(255) default NULL ,
-//          PRIMARY KEY  (`nid`,`vid`)
-//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-//      ");
-//      break;
-//  }
-
   # var_export(content_fields('field_station_program_genre', 'station_program'));
   $genre_field = array (
     'field_name' => 'field_station_program_genre',
@@ -72,7 +57,7 @@ function station_program_install() {
     'db_storage' => '1',
     'module' => 'text',
     'active' => '1',
-    'locked' => '0',
+    'locked' => '1',
     'columns' =>
     array (
       'value' =>
@@ -227,16 +212,15 @@ function station_program_install() {
  * Implementation of hook_uninstall().
  */
 function station_program_uninstall() {
-  drupal_load('module', 'content');
-  content_notify('uninstall', 'station_program');
-/*
   if (module_exists('content')) {
-    module_load_include('inc', 'content', 'includes/content.crud');
+    drupal_load('module', 'content');
+    content_notify('uninstall', 'station_program');
 
-    content_field_instance_delete('station_program_genre', 'station_program');
-    content_field_instance_delete('station_program_link', 'station_program');
+    module_load_include('inc', 'content', 'includes/content.crud');
+    content_field_instance_delete('field_station_program_genre', 'station_program');
+    content_field_instance_delete('field_station_program_link', 'station_program');
   }
-*/
+
   variable_del('station_program_redirect_on_add');
 }
 
@@ -372,7 +356,7 @@ function station_program_update_6000() {
     'db_storage' => '1',
     'module' => 'text',
     'active' => '1',
-    'locked' => '0',
+    'locked' => '1',
     'columns' =>
     array (
       'value' =>
@@ -535,12 +519,14 @@ function station_program_update_6000() {
       'from_table' => 'station_program',
       'from_col' => 'genre',
       'to_col' => 'value',
+      'join_col' => 'vid',
     ),
     array(
       'cck_field' => $link_field,
       'from_table' => 'station_program',
       'from_col' => 'url',
       'to_col' => 'url',
+      'join_col' => 'vid',
     ),
   );
   foreach ($migrations as $migration) {
@@ -548,15 +534,15 @@ function station_program_update_6000() {
     // anything.
     $from_table = db_escape_table($migration['from_table']);
     $from_col = db_escape_table($migration['from_col']);
-
+    $join_col = db_escape_table($migration['join_col']);
     $db_info = content_database_info($migration['cck_field']);
     $to_table = db_escape_table($db_info['table']);
     $to_col = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
 
-	// Make sure there's a record in CCK's table for every one in the source
-	// table, then do an update of all the records.
-    $ret[] = update_sql("INSERT INTO {$to_table} (nid, vid) SELECT f.nid, f.vid FROM {$from_table} f WHERE NOT EXISTS ( SELECT * FROM {$to_table} t WHERE f.vid = t.vid)");
-	$ret[] = update_sql("UPDATE {$to_table} t INNER JOIN {$from_table} f ON t.vid = f.vid SET t.$to_col = f.$from_col");
+    // Make sure there's a record in CCK's table for every one in the source
+    // table, then do an update of all the records.
+    $ret[] = update_sql("INSERT INTO {$to_table} (nid, vid) SELECT n.nid, n.vid FROM {$from_table} f INNER JOIN {node} n ON f.$join_col = n.$join_col WHERE NOT EXISTS ( SELECT * FROM {$to_table} t WHERE f.$join_col = t.$join_col)");
+    $ret[] = update_sql("UPDATE {$to_table} t INNER JOIN {$from_table} f ON t.$join_col = f.$join_col SET t.$to_col = f.$from_col");
   }
 
   return $ret;

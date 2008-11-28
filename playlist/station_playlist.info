@@ -1,5 +1,11 @@
 ; $Id$
 name = Station Playlist
 description = Provides a program playlist node type.
-dependencies = station station_program views
 package = Station
+core = 6.x
+dependencies[] = station
+dependencies[] = station_program
+dependencies[] = views
+dependencies[] = content
+dependencies[] = nodereference
+dependencies[] = date

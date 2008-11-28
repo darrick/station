@@ -2,94 +2,75 @@
 
 define('STATION_PLAYLIST_CVS_ID', '$Id$');
 
-if (module_exists('views')) {
-  require_once(drupal_get_path('module', 'station_playlist') .'/views.inc');
-  require_once(drupal_get_path('module', 'station_playlist') .'/views_defaults.inc');
-}
-
 
 /**
- * Display help and module information
- * @param section which section of the site we're displaying help
- * @return help text for section
+ * Implementation of hook_help().
  */
-function station_playlist_help($section='') {
-  switch ($section) {
+function station_playlist_help($path, $arg) {
+  switch ($path) {
     case 'admin/settings/station/playlist':
       return t("These settings allow you to configure the playlist node.");
-    default:
-      return NULL;
   }
 }
 
-function station_playlist_menu($may_cache) {
-  if ($may_cache) {
-    $items[] = array(
-      'path' => 'admin/settings/station/playlist',
-      'title' => t('Playlist'),
-      'callback' => 'drupal_get_form',
-      'callback arguments' => array('station_playlist_admin_settings'),
-      'access' => user_access('administer site configuration'),
-      'type' => MENU_LOCAL_TASK
-    );
+/**
+ * Implementation of hook_menu().
+ */
+function station_playlist_menu() {
+  $items['admin/settings/station/playlist'] = array(
+    'title' => 'Playlist',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('station_playlist_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'station_playlist.admin.inc',
+    'type' => MENU_LOCAL_TASK
+  );
 
-    $items[] = array(
-      'path' => 'station/autocomplete/playlist',
-      'title' => t('Playlist Autocomplete'),
-      'callback' => 'station_playlist_autocomplete',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-  }
+  $items['station/autocomplete/playlist'] = array(
+    'title' => 'Playlist Autocomplete',
+    'page callback' => 'station_playlist_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
+/**
+ * Implementation of hook_theme().
+ */
+function station_playlist_theme() {
+  return array(
+    'station_playlist_track_form' => array(
+      'arguments' => array('form' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_node_info().
+ */
 function station_playlist_node_info() {
   return array(
     'station_playlist' => array(
       'name' => t('Program Playlist'),
       'module' => 'station_playlist',
       'description' => t("A playlist lets your listeners see a list of all the music played during a program. It also allows the music director to easily chart what's being played."),
+      'has_title' => TRUE,
+      'title_label' => t('Title'),
+      'has_body' => TRUE,
+      'body_label' => t('Description'),
     )
   );
 }
 
 /**
- * Valid permissions for this module
- * @return array An array of valid permissions for the station module
+  * Implementation of hook_perm().
  */
 function station_playlist_perm() {
   return array(
     'create playlists',
     'edit own playlists',
   );
-}
-
-function station_playlist_admin_settings() {
-  $form = array();
-  $form['dates'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Date formats'),
-    '#tree' => FALSE,
-    '#description' => t("See PHP's <a href='!date-url'>date()</a> function for more information date formatting. No hour or minute infomation is collected, so it will not be displayed correctly if you attempt to use those in the format.", array('!date-url' => url('http://php.net/date'))),
-  );
-  $form['dates']['station_playlist_title_dateformat'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Date format in playlist title'),
-    '#default_value' => variable_get('station_playlist_title_dateformat', 'm/d/Y'),
-    '#description' => t("The playlist's date is put into the title as a string. This setting lets you control how it is formatted."),
-  );
-  $form['dates']['station_playlist_program_dateformat'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Date format on program node'),
-    '#default_value' => variable_get('station_playlist_program_dateformat', 'F j, Y'),
-    '#description' => t("The playlist's date is also displayed on the the program node. This setting lets you control how it is formatted."),
-  );
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_PLAYLIST_CVS_ID .'</pre>',
-  );
-  return system_settings_form($form);
 }
 
 /**
@@ -121,35 +102,37 @@ function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
         return $links;
 
       case 'station_playlist':
-        return array('station_program_program_view' => array(
-          'title' => t('View program'),
-          'href' => 'node/'. $node->program_nid,
-        ));
+        if (!empty($node->field_station_program[0]['nid'])) {
+          return array('station_program_program_view' => array(
+            'title' => t('View program'),
+             'href' => 'node/'. $node->field_station_program[0]['nid'],
+          ));
+        }
     }
   }
   return array();
 }
 
-
-function station_playlist_access($op, $node) {
-  global $user;
-
-  if (user_access('administer schedule')) {
+/**
+ * Implementation of hook_access().
+ */
+function station_playlist_access($op, $node, $account) {
+  if (user_access('administer schedule', $account)) {
     return TRUE;
   }
 
   switch ($op) {
     case 'view':
-      return user_access('access content');
+      return user_access('access content', $account);
       break;
 
     case 'create':
-      return user_access('create playlists');
+      return user_access('create playlists', $account);
       break;
 
     case 'update':
     case 'delete':
-      if (user_access('edit own playlists') && ($user->uid == $node->uid)) {
+      if (user_access('edit own playlists') && ($account->uid == $node->uid)) {
         return TRUE;
       }
       break;
@@ -158,60 +141,28 @@ function station_playlist_access($op, $node) {
 }
 
 /**
+ * Implementation of hook_form().
+ *
  * Build a form for playlist nodes.
  */
 function station_playlist_form(&$node) {
+  // TODO Port this:
   // if this is a new node (with no nid) and we've got a numeric argument,
   // assume that's the program we should attach to.
-  if (!$node->nid) {
+  if (empty($node->nid)) {
     if (is_numeric(arg(3))) {
-      $node->program_nid = (int) arg(3);
+      $node->field_station_program[0]['nid'] = (int) arg(3);
     }
-    // and new nodes need a default date
-    $date = getdate();
-    $node->program_date = array(
-      'month' => $date['mon'],
-      'day' => $date['mday'],
-      'year' => $date['year']
-    );
+  }
+  if (!isset($node->tracks)) {
+    $node->tracks = array();
   }
 
-  // make sure we've got a valid program title
-  if (!isset($node->program_title) && isset($node->program_nid)) {
-    $program = node_load(array(
-      'nid' => $node->program_nid,
-      'type' => 'station_program'
-    ));
-    $node->program_title = $program->title;
-  }
-
-  $form['program_nid'] = array(
-    '#type' => 'value',
-    '#value' => $node->program_nid,
-  );
-  $form['program_title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Program'),
-    '#default_value' => $node->program_title,
-    '#maxlength' => 128,
-    '#autocomplete_path' => 'station/autocomplete/program',
-    '#required' => TRUE,
-    '#description' => t('The name of the program. If you filled in for someone else, enter the name of their program.'),
-  );
-  $form['timestamp'] = array(
-    '#type' => 'value',
-    '#value' => $node->timestamp,
-  );
-  $form['program_date'] = array(
-    '#type' => 'date',
-    '#title' => t('Program date'),
-    '#default_value' => $node->program_date,
-    '#required' => TRUE,
-    '#description' => t('The date the program aired.'),
-  );
   $form['tracks'] = array(
     '#type' => 'fieldset', '#title' => t('Tracks'),
-    '#tree' => TRUE, '#collapsible' => FALSE, '#weight'=>1,
+    '#tree' => TRUE,
+    '#collapsible' => FALSE,
+    '#weight' => 1,
     '#theme' => 'station_playlist_track_form',
     '#description' => t('Enter the tracks played on the show, the artist and title are required. If you provide a link, it needs to begin with <code>http://</code> or you will get a link to a page on this site.') .'<br />'
       . t('The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
@@ -226,148 +177,131 @@ function station_playlist_form(&$node) {
 
 
   $blanks = 10;
-  $weight = 0;
   $max = max(20, $blanks + count($node->tracks) + 1);
-  for($i = -1; $i < $max; $i++) {
-    $weights[$i] = $i;
-  }
 
   // load current tracks
-  foreach ((array)$node->tracks as $key => $track) {
+  $weight = 0;
+  foreach ($node->tracks as $key => $track) {
     $form['tracks'][$weight]['artist'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
-      '#default_value' => $track['artist'],
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+      '#default_value' => isset($track['artist']) ? $track['artist'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/artist',
     );
     $form['tracks'][$weight]['album'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
-      '#default_value' => $track['album'],
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+      '#default_value' => isset($track['album']) ? $track['album'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/album',
     );
     $form['tracks'][$weight]['title'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
-      '#default_value' => $track['title'],
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+      '#default_value' => isset($track['title']) ? $track['title'] : '',
     );
     $form['tracks'][$weight]['label'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
-      '#default_value' => $track['label'],
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+      '#default_value' => isset($track['label']) ? $track['label'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/label',
     );
     $form['tracks'][$weight]['link'] = array(
-      '#type' => 'textfield', '#size' => 30, '#maxlength' => 255,
-      '#default_value' => $track['link'],
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+      '#default_value' => isset($track['link']) ? $track['link'] : '',
     );
     $form['tracks'][$weight]['weight'] = array(
-      '#type' => 'select', '#options' => $weights, '#default_value' => $weight,
+      '#type' => 'weight', '#delta' => $max, '#default_value' => $weight,
     );
     $weight++;
   }
   // add some empty tracks
   for ($i = 0; $i < $blanks; $i++) {
-    $form['tracks'][$weight]['artist'] = array('#type'=>'textfield',
-      '#size' => 30, '#maxlength' => 255,
+    $form['tracks'][$weight]['artist'] = array(
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
       '#autocomplete_path' => 'station/autocomplete/playlist/artist',
     );
-    $form['tracks'][$weight]['album'] = array('#type'=>'textfield',
-      '#size' => 30, '#maxlength' => 255,
+    $form['tracks'][$weight]['album'] = array(
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
       '#autocomplete_path' => 'station/autocomplete/playlist/album',
     );
-    $form['tracks'][$weight]['title'] = array('#type'=>'textfield',
-      '#size' => 30, '#maxlength' => 255,
+    $form['tracks'][$weight]['title'] = array(
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
     );
-    $form['tracks'][$weight]['label'] = array('#type'=>'textfield',
-      '#size' => 30, '#maxlength' => 255,
+    $form['tracks'][$weight]['label'] = array(
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
       '#autocomplete_path' => 'station/autocomplete/playlist/label',
     );
-    $form['tracks'][$weight]['link'] = array('#type'=>'textfield',
-      '#size' => 30, '#maxlength' => 255,
+    $form['tracks'][$weight]['link'] = array(
+      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
     );
-    $form['tracks'][$weight]['weight'] = array('#type' => 'select',
-      '#options' => $weights, '#default_value' => $weight,
+    $form['tracks'][$weight]['weight'] = array(
+      '#type' => 'weight', '#delta' => $max, '#default_value' => $weight,
     );
     $weight++;
   }
 
+  $form['#submit'][] = 'station_playlist_node_form_submit';
   return $form;
 }
 
 function theme_station_playlist_track_form($form) {
-  $header = array(t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'));
+  // To have the drag and drop not totally wack out the formatting we need
+  // the first column in the table with no form element.
+  $header = array('', t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'));
 
   $rows = array();
   foreach (element_children($form) as $key) {
     $row = array();
+    $row[] = '';
     $row[] = drupal_render($form[$key]['artist']);
     $row[] = drupal_render($form[$key]['title']);
     $row[] = drupal_render($form[$key]['album']);
     $row[] = drupal_render($form[$key]['label']);
     $row[] = drupal_render($form[$key]['link']);
+    $form[$key]['weight']['#attributes']['class'] = 'track-weight';
     $row[] = drupal_render($form[$key]['weight']);
-    $rows[] = $row;
+    $rows[] = array('data' => $row, 'class' => 'draggable');
   }
 
-  if (count($rows) == 0) {
-    $output = '';
-  }
-  else {
-    $output = theme('table', $header, $rows);
+  $output = '';
+  if (count($rows)) {
+    drupal_add_tabledrag('station-playlist-tracks', 'order', 'sibling', 'track-weight');
+    $output .= theme('table', $header, $rows, array('id' => 'station-playlist-tracks'));
   }
 
   return $output . drupal_render($form);
-}
 
-// use this hook to convert form elements to node values
-function station_playlist_validate(&$node, &$form) {
-  // convert the programs title into a node id
-  if (isset($node->program_title)) {
-    $prog = node_load(array('type' => 'station_program', 'title' => $node->program_title));
-    if ($prog) {
-      $node->program_nid = $prog->nid;
-      form_set_value($form['program_nid'], $node->program_nid);
-    }
-  }
-  if (!isset($node->program_nid)) {
-    form_set_error('program_title', t('A valid program name must be provided.'));
-  }
-
-  // check for track errors
-  foreach ($node->tracks as $track) {
-    if (($track['album'] || $track['label']) && !($track['artist'] || $track['title'])) {
-      form_set_error('tracks]['. $track['weight'] . '][artist', t("You must provide either an artist or a title."));
-      form_set_error('tracks]['. $track['weight'] . '][title');
-    }
-  }
-
-  // convert the date into a timestamp
-  $node->timestamp = mktime(0, 0, 0, $node->program_date['month'], $node->program_date['day'], $node->program_date['year']);
-  form_set_value($form['timestamp'], $node->timestamp);
-
-  // set the title
-  form_set_value($form['title'], t('!program-title playlist for !date', array(
-    '!program-title' => $node->program_title,
-    '!date' => format_date($node->timestamp, 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')),
-  )));
 }
 
 /**
- * Load a playlist.
+ * Implementation of hook_validate().
+ *
+ * Use this hook to convert form elements to node values.
+ */
+function station_playlist_validate(&$node, &$form) {
+  // check for track errors
+  foreach ($node->tracks as $track) {
+    if (($track['album'] || $track['label']) && !($track['artist'] || $track['title'])) {
+      form_set_error('tracks]['. $track['weight'] .'][artist', t("You must provide either an artist or a title."));
+      form_set_error('tracks]['. $track['weight'] .'][title');
+    }
+  }
+}
+
+/**
+ * Form submit handler to set the node's title().
+ */
+function station_playlist_node_form_submit($form, &$form_state) {
+  // Compute the title.
+  $form_state['values']['title'] = t('!program-title playlist for !date', array(
+    '!program-title' => _nodereference_titles($form_state['values']['field_station_program'][0]['nid']),
+    '!date' => format_date($form_state['values']['field_station_playlist_date'][0]['value'], 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')),
+  ));
+}
+
+
+/**
+ * Implementation of hook_load().
  */
 function station_playlist_load($node) {
-  // id and time
-  $extras = db_fetch_object(db_query('SELECT program_nid, timestamp FROM {station_playlist} WHERE nid = %d', $node->nid));
-
-  // program title
-  $prog = node_load($extras->program_nid);
-  $extras->program_title = $prog->title;
-
-  // program date
-  $extras->program_date = array(
-    'day' => date('j', $extras->timestamp),
-    'month' => date('n', $extras->timestamp),
-    'year' => date('Y', $extras->timestamp)
-  );
-
-  // tracks
+  // Tracks
+  $extras = new stdClass();
   $extras->tracks = array();
   $result = db_query('SELECT weight, album, artist, title, label, link FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
   while ($track = db_fetch_array($result)) {
@@ -381,11 +315,10 @@ function station_playlist_load($node) {
  * Insert a new playlist
  */
 function station_playlist_insert($node) {
-  db_query("INSERT INTO {station_playlist} (nid, program_nid, timestamp) VALUES (%d, %d, %d)", $node->nid, $node->program_nid, $node->timestamp);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label, link) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')",
-        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']), trim($track['link']));
+      $record = array_merge($track, array('nid' => $node->nid, 'vid' => $node->vid));
+      db_write_record('station_playlist_track', $record);
     }
   }
 }
@@ -394,7 +327,6 @@ function station_playlist_insert($node) {
  * Delete a playlist.
  */
 function station_playlist_delete($node) {
-  db_query('DELETE FROM {station_playlist} WHERE nid = %d', $node->nid);
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
 }
 
@@ -402,13 +334,12 @@ function station_playlist_delete($node) {
  * Update a playlist.
  */
 function station_playlist_update($node) {
-  db_query("UPDATE {station_playlist} SET program_nid = %d, timestamp= %d WHERE nid = %d", $node->program_nid, $node->timestamp, $node->nid);
   // delete and re-add tracks
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
-      db_query("INSERT INTO {station_playlist_track} (nid, weight, artist, album, title, label, link) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')",
-        $node->nid, trim($track['weight']), trim($track['artist']), trim($track['album']), trim($track['title']), trim($track['label']), trim($track['link']));
+      $record = array_merge($track, array('nid' => $node->nid, 'vid' => $node->vid));
+      drupal_write_record('station_playlist_track', $record);
     }
   }
 }
@@ -420,62 +351,60 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
   $node = node_prepare($node, $teaser);
 
   if ($page) {
-    $breadcrumb = array(
-      array('path' => 'station/programs', 'title' => t('Programs')),
-      array('path' => 'node/'. $node->program_nid, 'title' => $node->program_title),
-      array('path' => 'station/playlists/'. $node->program_nid, 'title' => t('Playlists')),
-      array('path' => 'node/'. $node->nid),
-    );
-    menu_set_location($breadcrumb);
+    $program_nid = $node->field_station_program[0]['nid'];
+    $breadcrumb = drupal_get_breadcrumb();
+    $breadcrumb[] = l(t('Station'), 'station');
+    $breadcrumb[] = l(t('Programs'), 'station/programs');
+    $breadcrumb[] = l(_nodereference_titles($program_nid), 'node/'. $program_nid);
+    drupal_set_breadcrumb($breadcrumb);
   }
 
   if (!$teaser) {
-    if (count($node->tracks) > 0) {
-      $rows = array();
-      // make one pass to figure out what fields we've got...
-      $hasAlbum = $hasLabel = $hasLink = FALSE;
-      foreach ((array) $node->tracks as $track) {
-        $hasAlbum |= (bool) ($track['album']);
-        $hasLabel |= (bool) ($track['label']);
-        $hasLink |= (bool) ($track['link']);
-      }
-      $header = array(t('Artist'), t('Title'));
-      if ($hasAlbum) {
-        $header[] = t('Album');
-      }
-      if ($hasLabel) {
-        $header[] = t('Label');
-      }
-      if ($hasLink) {
-        $header[] = t('Link');
-      }
-      // ...then put the into the table
-      foreach ((array) $node->tracks as $track) {
-        if ($track['artist'] || $track['title']) {
-          $row = array(
-            check_plain($track['artist']),
-            check_plain($track['title']),
-          );
-          if ($hasAlbum) {
-            $row[] = check_plain($track['album']);
-          }
-          if ($hasLabel) {
-            $row[] = check_plain($track['label']);
-          }
-          if ($hasLink) {
-            if ($track['link']) {
-              // Use the host name as a link text
-              $parts = parse_url(url($track['link'], NULL, NULL, TRUE));
-              $row[] = l($parts['host'], $track['link']);
-            }
-            else {
-              $row[] = '';
-            }
-          }
-          $rows[] = $row;
+    $rows = array();
+    // make one pass to figure out what fields we've got...
+    $has_album = $has_label = $has_link = FALSE;
+    foreach ((array) $node->tracks as $track) {
+      $has_album |= !empty($track['album']);
+      $has_label |= !empty($track['label']);
+      $has_link |= !empty($track['link']);
+    }
+    $header = array(t('Artist'), t('Title'));
+    if ($has_album) {
+      $header[] = t('Album');
+    }
+    if ($has_label) {
+      $header[] = t('Label');
+    }
+    if ($has_link) {
+      $header[] = t('Link');
+    }
+    // ...then put the into the table
+    foreach ((array) $node->tracks as $track) {
+      if ($track['artist'] || $track['title']) {
+        $row = array(
+          check_plain($track['artist']),
+          check_plain($track['title']),
+        );
+        if ($has_album) {
+          $row[] = check_plain($track['album']);
         }
+        if ($has_label) {
+          $row[] = check_plain($track['label']);
+        }
+        if ($has_link) {
+          if ($track['link']) {
+            // Use the host name as a link text
+            $parts = parse_url(url($track['link'], array('absolute' => TRUE)));
+            $row[] = l($parts['host'], $track['link']);
+          }
+          else {
+            $row[] = '';
+          }
+        }
+        $rows[] = $row;
       }
-
+    }
+    if (count($rows)) {
       $node->content['tracks'] = array(
         '#value' => theme('table', $header, $rows, array('class' => 'station-playlist-tracks')),
         '#title' => 'Tracks',
@@ -490,49 +419,24 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
  * Implementation of hook_nodeapi().
  */
 function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == 'station_program'){
-    switch ($op) {
-      case 'view':
-        if (!$teaser) {
-          // playlists
-          $time = time();
-          $time_format = variable_get('station_playlist_program_dateformat', 'F j, Y');
-
-          // pull all future playlists
-          $future_lists = array();
-          $result = db_query('SELECT p.nid, p.timestamp FROM {station_playlist} p INNER JOIN {node} n ON p.program_nid = n.nid WHERE n.status = 1 AND p.program_nid = %d AND p.timestamp > %d ORDER BY timestamp', $node->nid, $time);
-          while ($playlist = db_fetch_object($result)) {
-            $future_lists[] = l(format_date($playlist->timestamp, 'custom', $time_format, 0), 'node/'. $playlist->nid);
-          }
-          if ($future_lists) {
-            $node->content['playlists_future'] = array(
-              '#type' => 'item',
-              '#value' => '<ul><li>'. implode('</li><li>', $future_lists) .'</li></ul>',
-              '#title' => 'Upcoming shows',
-              '#weight' => 1,
-            );
-          }
-
-          // pull N recent playlists
-          $past_lists = array();
-          $result = db_query_range('SELECT p.nid, p.timestamp FROM {station_playlist} p INNER JOIN {node} n ON p.program_nid = n.nid WHERE n.status = 1 AND p.program_nid = %d AND p.timestamp < %d ORDER BY timestamp DESC', $node->nid, $time, 0, 5);
-          while ($playlist = db_fetch_object($result)) {
-            $past_lists[] = l(format_date($playlist->timestamp, 'custom', $time_format, 0), 'node/'. $playlist->nid);
-          }
-          if ($past_lists) {
-            $node->content['playlists_past'] = array(
-              '#type' => 'item',
-              '#value' => '<ul><li>'. implode('</li><li>', $past_lists) .'</li></ul>',
-              '#title' => 'Previous shows',
-              '#weight' => 2,
-            );
-          }
+  if ($node->type == 'station_program' && $op == 'view') {
+    $block_content_mapping = array(
+      'block_1' => 'playlists_future',
+      'block_2' => 'playlists_past',
+    );
+    foreach ($block_content_mapping as $display_id => $content_key) {
+      if ($view = views_get_view('station_program_playlists')) {
+        if ($view->access($display_id)) {
+          $block = $view->execute_display($display_id);
+          $node->content[$content_key]['#type'] = 'item';
+          $node->content[$content_key]['#title'] = $block['subject'];
+          $node->content[$content_key]['#value'] = $block['content'];
         }
-        break;
+        $view->destroy();
+      }
     }
   }
 }
-
 
 /**
  * Retrieve a pipe delimited string of autocomplete suggestions for playlist
@@ -551,40 +455,42 @@ function station_playlist_autocomplete($field = '', $string = '') {
 }
 
 /**
- * Implementation of hook_token_list().
+ * Implementation of hook_content_extra_fields.
+ *
+ * Let CCK know about the playlist stuff we're putting on nodes.
  */
-function station_playlist_token_list($type = 'all') {
-  if ($type == 'node' || $type == 'all') {
-    $tokens['node']['station-playlist-yyyy']  = t("The year of this playlist's show.");
-    $tokens['node']['station-playlist-mm']    = t("The two-digit month (01-12) of this playlist's show.");
-    $tokens['node']['station-playlist-mon']   = t("The three-letter month (jan-dec) of this playlist's show.");
-    $tokens['node']['station-playlist-dd']    = t("The two-digit day of the month (01-31) of this playlist's show.");
-    $tokens['node']['station-playlist-day']   = t("The three-letter day of the week (sun-sat) of this playlist's show.");
-    $tokens['node']['station-playlist-week']  = t("The week number (1-52) of the year of this playlist's show.");
-    $tokens['node']['station-playlist-show']  = t("Name of the show this playlist is for");
-    $tokens['node']['station-playlist-show-raw'] = t("Unfiltered name of the show this playlist is for. WARNING - raw user input.");
-    return $tokens;
+function station_playlist_content_extra_fields($type_name) {
+  switch ($type_name) {
+    case 'station_playlist':
+      return array(
+        'tracks' => array(
+          'label' => t('Tracks'),
+          'description' => t('Station Playlist module form.'),
+          'weight' => 0,
+        ),
+      );
+
+    case 'station_program':
+      return array(
+        'playlists_future' => array(
+          'label' => t('Upcoming shows'),
+          'description' => t('Station Playlist module form.'),
+          'weight' => 1,
+        ),
+        'playlists_past' => array(
+          'label' => t('Previous shows'),
+          'description' => t('Station Playlist module form.'),
+          'weight' => 2,
+        ),
+      );
   }
 }
 
 /**
- * Implementation of hook_token_values().
+ * Implementation of hook_view_api().
  */
-function station_playlist_token_values($type, $object = NULL) {
-  if ($type == 'node' && $object->type == 'station_playlist') {
-    $node = $object;
-    $program_date = mktime(0, 0, 0, $node->program_date['month'], $node->program_date['day'], $node->program_date['year']); 
-
-    $tokens['station-playlist-yyyy'] = date('Y', $program_date);
-    $tokens['station-playlist-mm']   = date('m', $program_date);
-    $tokens['station-playlist-mon']  = date('M', $program_date);
-    $tokens['station-playlist-dd']   = date('d', $program_date);
-    $tokens['station-playlist-day']  = date('D', $program_date);
-    $tokens['station-playlist-week'] = date('W', $program_date);
-
-    $tokens['station-playlist-show'] = check_plain($node->program_title);
-    $tokens['station-playlist-show-raw'] = $node->program_title;
-
-    return $tokens;
-  }
+function station_playlist_views_api() {
+  return array(
+    'api' => 2.0,
+  );
 }

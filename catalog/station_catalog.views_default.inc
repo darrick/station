@@ -9,7 +9,7 @@ function station_catalog_views_default_views() {
   $view = new view;
   $view->name = 'station_catalog';
   $view->description = 'Station Catalog search view';
-  $view->tag = '';
+  $view->tag = 'station';
   $view->view_php = '';
   $view->base_table = 'node';
   $view->is_cacheable = FALSE;

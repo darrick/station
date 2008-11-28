@@ -6,31 +6,33 @@
  * Install the initial schema.
  */
 function station_schedule_install() {
+  drupal_install_schema('station_schedule');
+
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      db_query("
-        CREATE TABLE {station_schedule} (
-          `nid` int unsigned NOT NULL default '0',
-          `increment` int unsigned NOT NULL default '0',
-          `streams` longtext,
-          `unscheduled_message` VARCHAR(255) NOT NULL default '',
-          PRIMARY KEY(`nid`)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-      ");
-      db_query("
-        CREATE TABLE {station_schedule_item} (
-          `iid` int unsigned NOT NULL default '0',
-          `schedule_nid` int unsigned NOT NULL default '0',
-          `program_nid` int unsigned NOT NULL default '0',
-          `start` int unsigned NOT NULL default '0',
-          `finish` int unsigned NOT NULL default '0',
-          `may_archive` tinyint NOT NULL default '1',
-          PRIMARY KEY  (`iid`),
-          KEY `station_schedule_start` (`schedule_nid`, `start`),
-          KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-      ");
+//      db_query("
+//        CREATE TABLE {station_schedule} (
+//          `nid` int unsigned NOT NULL default '0',
+//          `increment` int unsigned NOT NULL default '0',
+//          `streams` longtext,
+//          `unscheduled_message` VARCHAR(255) NOT NULL default '',
+//          PRIMARY KEY(`nid`)
+//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+//      ");
+//      db_query("
+//        CREATE TABLE {station_schedule_item} (
+//          `iid` int unsigned NOT NULL default '0',
+//          `schedule_nid` int unsigned NOT NULL default '0',
+//          `program_nid` int unsigned NOT NULL default '0',
+//          `start` int unsigned NOT NULL default '0',
+//          `finish` int unsigned NOT NULL default '0',
+//          `may_archive` tinyint NOT NULL default '1',
+//          PRIMARY KEY  (`iid`),
+//          KEY `station_schedule_start` (`schedule_nid`, `start`),
+//          KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
+//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+//      ");
       db_query("
         CREATE TABLE {station_dj} (
           `uid` int(10) unsigned NOT NULL default '0' COMMENT 'User Id',
@@ -46,8 +48,8 @@ function station_schedule_install() {
  * Implementation of hook_uninstall().
  */
 function station_schedule_uninstall() {
-  db_query('DROP TABLE {station_schedule}');
-  db_query('DROP TABLE {station_schedule_item}');
+  drupal_uninstall_schema('station_schedule');
+
   db_query('DROP TABLE {station_dj}');
 
   variable_del('station_schedule_redirect_old_urls');
@@ -55,6 +57,123 @@ function station_schedule_uninstall() {
   variable_del('station_schedule_dj_role');
   variable_del('station_schedule_dj_title');
 }
+
+
+/**
+ * Implementation of hook_schema().
+ */
+function station_schedule_schema() {
+//  CREATE TABLE {station_schedule} (
+//    `nid` int unsigned NOT NULL default '0',
+//    `increment` int unsigned NOT NULL default '0',
+//    `streams` longtext,
+//    `unscheduled_message` VARCHAR(255) NOT NULL default '',
+//    PRIMARY KEY(`nid`)
+//  ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+//");
+  $schema['station_schedule'] = array(
+    'description' => t('Information about station schedules.'),
+    'fields' => array(
+      'nid' => array(
+        'description' => t("The schedule's {node}.nid."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'increment' => array(
+        'description' => t('Increment of the schedule block size in minutes.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'streams' => array(
+        'description' => t('Web stream URLs.'),
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+        'serialize' => TRUE,
+      ),
+      'unscheduled_message' => array(
+        'description' => t('Message to display during unscheduled periods.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('nid'),
+  );
+
+//  CREATE TABLE {station_schedule_item} (
+//    `iid` int unsigned NOT NULL default '0',
+//    `schedule_nid` int unsigned NOT NULL default '0',
+//    `program_nid` int unsigned NOT NULL default '0',
+//    `start` int unsigned NOT NULL default '0',
+//    `finish` int unsigned NOT NULL default '0',
+//    `may_archive` tinyint NOT NULL default '1',
+//    PRIMARY KEY  (`iid`),
+//    KEY `station_schedule_start` (`schedule_nid`, `start`),
+//    KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
+//  ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+//");
+  $schema['station_schedule_item'] = array(
+    'description' => t('Information about station schedules.'),
+    'fields' => array(
+      'iid' => array(
+        'description' => t('The primary identifier a station schedule item.'),
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'schedule_nid' => array(
+        'description' => t("The schedule's {node}.nid."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'program_nid' => array(
+        'description' => t("The program's {node}.nid."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'start' => array(
+        'description' => t("Starting minute from Sunday midnight."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'finish' => array(
+        'description' => t("Finishing minute from Sunday midnight."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'may_archive' => array(
+        'description' => t("Can this item be scaved in the archive?"),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'size' => 'tiny',
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'station_schedule_start'   => array('schedule_nid', 'start'),
+      'station_schedule_program' => array('schedule_nid', 'program_nid'),
+    ),
+    'primary key' => array('nid'),
+  );
+
+  return $schema;
+}
+
 
 /**
  * Update the tables to UTF-8
@@ -292,11 +411,11 @@ function station_schedule_update_5200() {
       $node->changed = time();
       $node->uid = 1;
       $node->title = t('Default');
-      db_query("INSERT INTO {node} (nid, vid, title, type, uid, status, created, changed, comment, promote, sticky) 
+      db_query("INSERT INTO {node} (nid, vid, title, type, uid, status, created, changed, comment, promote, sticky)
       	VALUES (%d, %d, '%s', 'station_schedule', 1, %d, %d, %d, 0, 0, 0)",
         $node->nid, $node->vid, $node->title, $node->uid, $node->created, $node->changed
       );
-      db_query("INSERT INTO {node_revisions} (nid, vid, title, body, teaser, timestamp, uid, format, log) 
+      db_query("INSERT INTO {node_revisions} (nid, vid, title, body, teaser, timestamp, uid, format, log)
         VALUES (%d, %d, '%s', '', '', %d, %d, 0, '')",
         $node->nid, $node->vid, $node->title, $node->created, $node->uid
       );
@@ -345,7 +464,7 @@ function station_schedule_update_5202() {
   }
   return $ret;
 }
- 
+
 /**
  * Move the streams from variables into the schedule table.
  */
@@ -381,3 +500,20 @@ function station_schedule_update_5203() {
   }
   return $ret;
 }
+
+function station_schedule_update_6000() {
+  $ret = array();
+
+  // Change the iid field to a serial type
+  // FROM `iid` int unsigned NOT NULL default '0' to
+  $iid_field = array(
+    'description' => t('The primary identifier a station schedule item.'),
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  );
+  db_change_field($ret, 'station_schedule_item', 'iid', 'iid', $iid_field);
+
+  return $ret;
+}
+

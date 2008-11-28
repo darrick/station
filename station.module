@@ -50,6 +50,15 @@ function station_theme() {
     'station_block_current_program' => array(
       'arguments' => array('schedule' => NULL, 'program' => NULL),
     ),
+    'station_dayhour_range' => array(
+      'arguments' => array('start' => NULL, 'finish' => NULL),
+    ),
+    'station_hour' => array(
+      'arguments' => array('time' => NULL),
+    ),
+    'station_hour_range' => array(
+      'arguments' => array('start' => NULL, 'finish' => NULL),
+    ),
     'station_streams' => array(
       'arguments' => array('streams' => NULL),
     ),

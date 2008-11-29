@@ -6,62 +6,6 @@
  * Implementation of hook_views_default_views().
  */
 function station_schedule_views_default_views() {
-  $view = new stdClass();
-  $view->name = 'station_schedule';
-  $view->description = 'Schedules';
-  $view->access = array (
-);
-  $view->view_args_php = '';
-  $view->page = TRUE;
-  $view->page_title = 'Schedule listing';
-  $view->page_header = '';
-  $view->page_header_format = '1';
-  $view->page_footer = '';
-  $view->page_footer_format = '1';
-  $view->page_empty = '';
-  $view->page_empty_format = '1';
-  $view->page_type = 'list';
-  $view->url = 'station/schedules';
-  $view->use_pager = TRUE;
-  $view->nodes_per_page = '10';
-  $view->menu = TRUE;
-  $view->menu_title = 'Schedules';
-  $view->menu_tab = FALSE;
-  $view->menu_tab_weight = '0';
-  $view->menu_tab_default = FALSE;
-  $view->menu_tab_default_parent = NULL;
-  $view->menu_tab_default_parent_type = 'existing';
-  $view->menu_parent_tab_weight = '0';
-  $view->menu_parent_title = '';
-  $view->sort = array (
-  );
-  $view->argument = array (
-  );
-  $view->field = array (
-    array (
-      'tablename' => 'node',
-      'field' => 'title',
-      'label' => '',
-      'handler' => 'views_handler_field_nodelink',
-      'options' => 'link',
-    ),
-  );
-  $view->filter = array (
-    array (
-      'tablename' => 'node',
-      'field' => 'type',
-      'operator' => 'OR',
-      'options' => '',
-      'value' => array (
-  0 => 'station_schedule',
-),
-    ),
-  );
-  $view->exposed_filter = array (
-  );
-  $view->requires = array(node);
-  $views[$view->name] = $view;
-
 
 
   $view = new stdClass();

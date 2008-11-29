@@ -494,83 +494,64 @@ function station_schedule_user($op, &$edit, &$user, $category = NULL) {
 function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
   if ($node->type == 'station_program') {
     switch ($op) {
-      case 'validate':
-        $roles = user_roles(TRUE);
-        $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
+//      case 'presave':
+//        // make a copy of the djs and put them back in the expected form
+//        $djs = (array) $node->djs;
+//        $node->djs = array();
+//        foreach ($djs as $key => $name) {
+//          if (!empty($name)) {
+//            $user = user_load(array('name' => $name));
+//            if ($user->uid) {
+//              $node->djs[$user->uid] = $user->name;
+//            }
+//          }
+//        }
+//        break;
 
-        // validate the users
-        foreach ($node->djs as $key => $name) {
-          if (!empty($name)) {
-            $user = user_load(array('name' => $name));
-            if (!$user->uid) {
-              form_set_error("djs][$key", t('You need to specify a valid user name.'));
-            }
-            if (!isset($user->roles[$dj_role])) {
-              form_set_error("djs][$key", t('%username is not a member of the %rolename role.',
-                  array('%username' => $name, '%rolename' => $roles[$dj_role])));
-            }
-          }
-        }
-        break;
+//      case 'insert':
+//        // dj additions
+//        foreach ($node->djs as $uid => $username) {
+//          db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
+//          _station_send_notice('dj', 'add', array('program_nid' => $node->nid, 'uid' => $uid));
+//        }
+//        break;
 
-      case 'presave':
-        // make a copy of the djs and put them back in the expected form
-        $djs = (array) $node->djs;
-        $node->djs = array();
-        foreach ($djs as $key => $name) {
-          if (!empty($name)) {
-            $user = user_load(array('name' => $name));
-            if ($user->uid) {
-              $node->djs[$user->uid] = $user->name;
-            }
-          }
-        }
-        break;
-
-      case 'insert':
-        // dj additions
-        foreach ($node->djs as $uid => $username) {
-          db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
-          _station_send_notice('dj', 'add', array('program_nid' => $node->nid, 'uid' => $uid));
-        }
-        break;
-
-      case 'update':
-        // only schedule admins should be able to add or remove djs
-        if (user_access('administer schedule')) {
-          $current_djs = _station_schedule_program_load_djs($node->nid);
-
-          // dj removals
-          $removals = array_diff_assoc($current_djs, $node->djs);
-          foreach ($removals as $uid => $username) {
-            db_query('DELETE FROM {station_dj} WHERE uid = %d AND program_nid = %d', $uid, $node->nid);
-            _station_send_notice('dj', 'remove', array('program_nid' => $node->nid, 'uid' => $uid));
-          }
-
-          // dj additions
-          $additions = array_diff_assoc($node->djs, $current_djs);
-          foreach ($additions as $uid => $username) {
-            db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
-            _station_send_notice('dj', 'add', array('program_nid' => $node->nid, 'uid' => $uid));
-          }
-        }
-        break;
+//      case 'update':
+//        // only schedule admins should be able to add or remove djs
+//        if (user_access('administer schedule')) {
+//          $current_djs = _station_schedule_program_load_djs($node->nid);
+//
+//          // dj removals
+//          $removals = array_diff_assoc($current_djs, $node->djs);
+//          foreach ($removals as $uid => $username) {
+//            db_query('DELETE FROM {station_dj} WHERE uid = %d AND program_nid = %d', $uid, $node->nid);
+//            _station_send_notice('dj', 'remove', array('program_nid' => $node->nid, 'uid' => $uid));
+//          }
+//
+//          // dj additions
+//          $additions = array_diff_assoc($node->djs, $current_djs);
+//          foreach ($additions as $uid => $username) {
+//            db_query('INSERT INTO {station_dj} (uid, program_nid) VALUES (%d, %d)', $uid, $node->nid);
+//            _station_send_notice('dj', 'add', array('program_nid' => $node->nid, 'uid' => $uid));
+//          }
+//        }
+//        break;
 
       case 'delete':
-        // Remove the DJs and provide notice.
-        $removals = _station_schedule_program_load_djs($node->nid);
-        db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
-        foreach ($removals as $uid => $username) {
-          _station_send_notice('dj', 'remove', array('program_nid' => $node->nid, 'uid' => $uid));
-        }
+//        // Remove the DJs and provide notice.
+//        $removals = _station_schedule_program_load_djs($node->nid);
+//        db_query('DELETE FROM {station_dj} WHERE program_nid = %d', $node->nid);
+//        foreach ($removals as $uid => $username) {
+//          _station_send_notice('dj', 'remove', array('program_nid' => $node->nid, 'uid' => $uid));
+//        }
 
         // Remove the schedule item.
         db_query('DELETE FROM {station_schedule_item} WHERE program_nid = %d', $node->nid);
         break;
 
       case 'load':
-        // load the program's users under djs.
-        $node->djs = _station_schedule_program_load_djs($node->nid);
+//        // load the program's users under djs.
+//        $node->djs = _station_schedule_program_load_djs($node->nid);
 
         $node->times = array();
         // Load the schedule items in order of start time while taking into
@@ -595,33 +576,33 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         $times_by_schedule = station_schedule_program_get_themed_times($node);
 
         if ($teaser) {
-          if ($djs) {
-            $node->content['djs'] = array(
-              '#value' => t(' with !djs', array('!djs' => station_anded_list($djs))),
-              '#weight' => -1,
-            );
-          }
+//          if ($djs) {
+//            $node->content['djs'] = array(
+//              '#value' => t(' with !djs', array('!djs' => station_anded_list($djs))),
+//              '#weight' => -1,
+//            );
+//          }
           $scheduled = array();
           foreach ($times_by_schedule as $schedule_nid => $times) {
             $scheduled[] = t('@title @times', array('@title' => $schedules[$schedule_nid]['title'], '@times' => station_anded_list($times)));
           }
-          $node->content['times'] = array(
+          $node->content['schedule'] = array(
             '#value' => $scheduled ? t(' on @scheduling.', array('@scheduling' => station_anded_list($scheduled))) : t(' is not currently scheduled.'),
             '#weight' => 0,
           );
         }
         else {
-          if ($djs) {
-            $node->content['djs'] = array(
-              '#type' => 'item',
-              '#title' => variable_get('station_schedule_dj_title', 'DJs'),
-              '#value' => theme('item_list', $djs),
-              '#weight' => -5,
-            );
-          }
-          $node->content['times']['#weight'] = -4;
+//          if ($djs) {
+//            $node->content['djs'] = array(
+//              '#type' => 'item',
+//              '#title' => variable_get('station_schedule_dj_title', 'DJs'),
+//              '#value' => theme('item_list', $djs),
+//              '#weight' => -5,
+//            );
+//          }
+          $node->content['schedule']['#weight'] = -4;
           foreach ($times_by_schedule as $schedule_nid => $times) {
-            $node->content['times'][$schedule_nid] = array(
+            $node->content['schedule'][$schedule_nid] = array(
               '#type' => 'item',
               '#title' => t('Listen on <a href="!link">@title</a> at', array('@title' => $schedules[$schedule_nid]['title'], '!link' => url('node/'. $schedule_nid))),
               '#value' => $times ? theme('item_list', $times) : t('This program is currently unscheduled.'),
@@ -640,9 +621,9 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
 function station_schedule_form_alter(&$form, $form_state, $form_id) {
   // We only alter audio node edit forms
   if ($form_id == 'station_program_node_form') {
-    $node = $form['#node'];
-
     if (user_access('administer schedule')) {
+      $node = $form['#node'];
+
       $form['schedule'] = array(
         '#type' => 'fieldset',
         '#title' => t('Station Schedule'),
@@ -653,7 +634,7 @@ function station_schedule_form_alter(&$form, $form_state, $form_id) {
       );
 
       // if it's a saved display the scheduled times.
-      if ($node->nid) {
+      if (!empty($node->nid)) {
         $schedules = station_get_schedules();
 
         $form['schedule']['#description'] = count($schedules) ? '' : t("There are no schedules on this site.");
@@ -684,49 +665,49 @@ function station_schedule_form_alter(&$form, $form_state, $form_id) {
         }
       }
 
-      $roles = user_roles(TRUE);
-      $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
-      $form['djs'] = array(
-        '#type' => 'fieldset',
-        '#title' => variable_get('station_schedule_dj_title', 'DJs'),
-        '#weight' => 1,
-        '#tree' => TRUE,
-        '#description' => t("Enter the names of users you'd like to add as @dj-title. The users must be members of the %role-name role.",
-            array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs'), '%role-name' => $roles[$dj_role])),
-      );
-      if ($node->djs) {
-        foreach ((array)$node->djs as $uid => $username) {
-          $form['djs'][$uid] = array(
-            '#type' => 'textfield', '#maxlength' => 60,
-            '#autocomplete_path' => 'user/autocomplete',
-            '#default_value' => $username,
-          );
-        }
-      }
-      // add some blank username textfields
-      for ($i = 0; $i < 4; $i++) {
-        $form['djs']['new'. $i] = array(
-          '#type' => 'textfield', '#maxlength' => 60,
-          '#autocomplete_path' => 'user/autocomplete',
-        );
-      }
+//      $roles = user_roles(TRUE);
+//      $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
+//      $form['djs'] = array(
+//        '#type' => 'fieldset',
+//        '#title' => variable_get('station_schedule_dj_title', 'DJs'),
+//        '#weight' => 1,
+//        '#tree' => TRUE,
+//        '#description' => t("Enter the names of users you'd like to add as @dj-title. The users must be members of the %role-name role.",
+//            array('@dj-title' => variable_get('station_schedule_dj_title', 'DJs'), '%role-name' => $roles[$dj_role])),
+//      );
+//      if ($node->djs) {
+//        foreach ((array)$node->djs as $uid => $username) {
+//          $form['djs'][$uid] = array(
+//            '#type' => 'textfield', '#maxlength' => 60,
+//            '#autocomplete_path' => 'user/autocomplete',
+//            '#default_value' => $username,
+//          );
+//        }
+//      }
+//      // add some blank username textfields
+//      for ($i = 0; $i < 4; $i++) {
+//        $form['djs']['new'. $i] = array(
+//          '#type' => 'textfield', '#maxlength' => 60,
+//          '#autocomplete_path' => 'user/autocomplete',
+//        );
+//      }
     }
   }
 }
 
-/**
- * Return an array of DJ info for a given program. The key is the user's uid
- * and the value is the user's name.
- */
-function _station_schedule_program_load_djs($program_nid) {
-  // load the dj's users users under the djs item.
-  $djs = array();
-  $result = db_query('SELECT d.uid, u.name FROM {station_dj} d INNER JOIN {users} u ON d.uid = u.uid WHERE d.program_nid = %d ORDER BY u.name', $program_nid);
-  while ($dj = db_fetch_object($result)) {
-    $djs[$dj->uid] = $dj->name;
-  }
-  return $djs;
-}
+///**
+// * Return an array of DJ info for a given program. The key is the user's uid
+// * and the value is the user's name.
+// */
+//function _station_schedule_program_load_djs($program_nid) {
+//  // load the dj's users users under the djs item.
+//  $djs = array();
+//  $result = db_query('SELECT d.uid, u.name FROM {station_dj} d INNER JOIN {users} u ON d.uid = u.uid WHERE d.program_nid = %d ORDER BY u.name', $program_nid);
+//  while ($dj = db_fetch_object($result)) {
+//    $djs[$dj->uid] = $dj->name;
+//  }
+//  return $djs;
+//}
 
 /**
  * Returns an array of themed DJs.
@@ -734,11 +715,9 @@ function _station_schedule_program_load_djs($program_nid) {
 function station_schedule_program_get_themed_djs($program_node) {
   // make djs into links
   $djs = array();
-  foreach ((array) $program_node->djs as $uid => $name) {
-    if (!empty($name)) {
-      $user = user_load(array('uid' => $uid));
-      $djs[] = theme('username', $user);
-    }
+  foreach ((array) $program->field_station_program_dj as $entry) {
+    $user = user_load($entry);
+    $djs[] = theme('username', $user);
   }
   return $djs;
 }
@@ -982,4 +961,33 @@ function station_schedule_stream_m3u($stream) {
   }
   print $output;
   exit();
+}
+
+
+
+/**
+ * Implementation of hook_content_extra_fields.
+ *
+ * Let CCK know about the playlist stuff we're putting on nodes.
+ */
+function station_schedule_content_extra_fields($type_name) {
+  switch ($type_name) {
+    case 'station_program':
+      return array(
+        'schedule' => array(
+          'label' => t('Schedule'),
+          'description' => t('Station Program module form.'),
+          'weight' => -4,
+        ),
+      );
+  }
+}
+
+/**
+ * Implementation of hook_view_api().
+ */
+function station_schedule_views_api() {
+  return array(
+    'api' => 2.0,
+  );
 }

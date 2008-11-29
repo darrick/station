@@ -5,25 +5,6 @@
  * Admin settings form.
  */
 function station_schedule_admin_settings() {
-  $form['djs'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('DJ settings'),
-  );
-  $form['djs']['station_schedule_dj_title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('DJ title'),
-    '#default_value' => variable_get('station_schedule_dj_title', 'DJs'),
-    '#description' => t("This setting lets you determine what you'd like to call the users associated with programs. It should be plural."),
-    '#required' => TRUE,
-  );
-  $form['djs']['station_schedule_dj_role'] = array(
-    '#type' => 'select',
-    '#title' => t('DJs role'),
-    '#default_value' => variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID),
-    '#options' => user_roles(TRUE),
-    '#description' => t("This lets you restrict DJs to members of a specific role. If you don't want any restrictions, select <em>authenticated user</em>s."),
-  );
-
   $form['bc'] = array(
     '#type' => 'fieldset',
     '#title' => t('Backwards compatibility'),

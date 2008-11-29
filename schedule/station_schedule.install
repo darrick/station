@@ -8,40 +8,84 @@
 function station_schedule_install() {
   drupal_install_schema('station_schedule');
 
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-//      db_query("
-//        CREATE TABLE {station_schedule} (
-//          `nid` int unsigned NOT NULL default '0',
-//          `increment` int unsigned NOT NULL default '0',
-//          `streams` longtext,
-//          `unscheduled_message` VARCHAR(255) NOT NULL default '',
-//          PRIMARY KEY(`nid`)
-//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-//      ");
-//      db_query("
-//        CREATE TABLE {station_schedule_item} (
-//          `iid` int unsigned NOT NULL default '0',
-//          `schedule_nid` int unsigned NOT NULL default '0',
-//          `program_nid` int unsigned NOT NULL default '0',
-//          `start` int unsigned NOT NULL default '0',
-//          `finish` int unsigned NOT NULL default '0',
-//          `may_archive` tinyint NOT NULL default '1',
-//          PRIMARY KEY  (`iid`),
-//          KEY `station_schedule_start` (`schedule_nid`, `start`),
-//          KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
-//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-//      ");
-      db_query("
-        CREATE TABLE {station_dj} (
-          `uid` int(10) unsigned NOT NULL default '0' COMMENT 'User Id',
-          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program Id',
-          PRIMARY KEY  (`uid`,`program_nid`)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-      ");
-      break;
-  }
+  # var_export(content_fields('field_station_program_dj', 'station_program'));
+  $dj_field = array (
+    'field_name' => 'field_station_program_dj',
+    'type_name' => 'station_program',
+    'display_settings' =>
+    array (
+      'label' =>
+      array (
+        'format' => 'above',
+      ),
+      'teaser' =>
+      array (
+        'format' => 'default',
+      ),
+      'full' =>
+      array (
+        'format' => 'default',
+      ),
+      0 =>
+      array (
+        'format' => 'above',
+      ),
+      'token' =>
+      array (
+        'format' => 'default',
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'userreference',
+    'required' => '0',
+    'multiple' => '1',
+    'db_storage' => '0',
+    'module' => 'userreference',
+    'active' => '1',
+    'locked' => '0',
+    'columns' =>
+    array (
+      'uid' =>
+      array (
+        'type' => 'int',
+        'unsigned' => true,
+        'not null' => false,
+      ),
+    ),
+    'referenceable_roles' =>
+    array (
+      2 => 2,
+    ),
+    'referenceable_status' =>
+    array (
+      1 => 1,
+      0 => 0,
+    ),
+    'advanced_view' => '',
+    'advanced_view_args' => '',
+    'widget' =>
+    array (
+      'reverse_link' => 0,
+      'default_value' =>
+      array (
+        0 =>
+        array (
+          'uid' => NULL,
+          '_error_element' => 'default_value_widget][field_station_program_dj][0][uid][uid',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'DJs',
+      'weight' => '1',
+      'description' => 'Enter the names of users you\'d like to add as DJ.',
+      'type' => 'userreference_autocomplete',
+      'module' => 'userreference',
+    ),
+  );
+
+  // Create the fields.
+  module_load_include('inc', 'content', 'includes/content.crud');
+  content_field_instance_create($dj_field);
 }
 
 /**
@@ -50,12 +94,17 @@ function station_schedule_install() {
 function station_schedule_uninstall() {
   drupal_uninstall_schema('station_schedule');
 
-  db_query('DROP TABLE {station_dj}');
+  if (module_exists('content')) {
+    drupal_load('module', 'content');
+    content_notify('uninstall', 'station_program');
+
+    module_load_include('inc', 'content', 'includes/content.crud');
+    content_field_instance_delete('field_station_program_genre', 'station_program');
+    content_field_instance_delete('field_station_program_link', 'station_program');
+  }
 
   variable_del('station_schedule_redirect_old_urls');
   variable_del('station_schedule_default');
-  variable_del('station_schedule_dj_role');
-  variable_del('station_schedule_dj_title');
 }
 
 
@@ -168,82 +217,10 @@ function station_schedule_schema() {
       'station_schedule_start'   => array('schedule_nid', 'start'),
       'station_schedule_program' => array('schedule_nid', 'program_nid'),
     ),
-    'primary key' => array('nid'),
+    'primary key' => array('iid'),
   );
 
   return $schema;
-}
-
-
-/**
- * Update the tables to UTF-8
- */
-function station_schedule_update_2() {
-  return _system_update_utf8(array(
-    'station_dj', 'station_program', 'station_schedule',
-  ));
-}
-
-/**
- * Add playlist tables.
- */
-function station_schedule_update_3() {
-  $ret = array();
-
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql(
-<<<MYSQL_UPDATE
-        CREATE TABLE {station_playlist} (
-          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
-          `program_nid` int(10) unsigned NOT NULL default '0' COMMENT 'Program node id',
-          `timestamp` int(11) NOT NULL default '0' COMMENT 'Timestamp of show'
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-MYSQL_UPDATE
-      );
-      $ret[] = update_sql(
-<<<MYSQL_UPDATE
-        CREATE TABLE {station_playlist_track} (
-          `nid` int(10) unsigned NOT NULL default '0' COMMENT 'Playlist node id',
-          `weight` tinyint(4) unsigned NOT NULL default '0' COMMENT 'Ordering weight',
-          `artist` varchar(128) NOT NULL default '',
-          `album` varchar(128) NOT NULL default '',
-          `title` varchar(128) NOT NULL default '',
-          KEY `station_playlist_artist` (`artist`),
-          KEY `station_playlist_nid_weight` (`nid`,`weight`),
-          KEY `station_playlist_title` (`title`),
-          KEY `station_playlist_album` (`title`)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-MYSQL_UPDATE
-      );
-      break;
-  }
-  return $ret;
-}
-
-/**
- * Add a label to the playlist table.
- */
-function station_schedule_update_4() {
-  $ret = array();
-
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql(
-<<<MYSQL_UPDATE
-        ALTER TABLE {station_playlist_track}
-          MODIFY COLUMN `artist` VARCHAR(255) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          MODIFY COLUMN `album` VARCHAR(255) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          MODIFY COLUMN `title` VARCHAR(255) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          ADD COLUMN `label` VARCHAR(255) NOT NULL DEFAULT '' AFTER `title`,
-          ADD INDEX `station_playlist_label`(`label`);
-MYSQL_UPDATE
-      );
-      break;
-  }
-  return $ret;
 }
 
 /**
@@ -517,3 +494,143 @@ function station_schedule_update_6000() {
   return $ret;
 }
 
+
+function station_schedule_update_6001() {
+  $ret = array();
+
+  // Make sure they've enabled CCK and link modules
+  if (!module_exists('content') || !module_exists('userreference')) {
+    $ret['#abort'] = array('success' => FALSE, 'query' => t('Station Playlist now requires CCK and User Reference modules. Some updates are still pending.<br/>Please re-run the update script.'));
+    return $ret;
+  }
+  // Make sure there's no pending CCK udpates
+  drupal_load('module', 'content');
+  if ($abort = content_check_update('station_playlist')) {
+    return $abort;
+  }
+  if ($abort = content_check_update('userreference')) {
+    return $abort;
+  }
+
+  $roles = user_roles(TRUE);
+  $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
+  $dj_title = variable_get('station_schedule_dj_title', 'DJs');
+
+  # var_export(content_fields('field_station_program_dj', 'station_program'));
+  $dj_field = array (
+    'field_name' => 'field_station_program_dj',
+    'type_name' => 'station_program',
+    'display_settings' =>
+    array (
+      'label' =>
+      array (
+        'format' => 'above',
+      ),
+      'teaser' =>
+      array (
+        'format' => 'default',
+      ),
+      'full' =>
+      array (
+        'format' => 'default',
+      ),
+      0 =>
+      array (
+        'format' => 'above',
+      ),
+      'token' =>
+      array (
+        'format' => 'default',
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'userreference',
+    'required' => '0',
+    'multiple' => '1',
+    'db_storage' => '0',
+    'module' => 'userreference',
+    'active' => '1',
+    'locked' => '0',
+    'columns' =>
+    array (
+      'uid' =>
+      array (
+        'type' => 'int',
+        'unsigned' => true,
+        'not null' => false,
+      ),
+    ),
+    'referenceable_roles' =>
+    array (
+      $dj_role => $dj_role,
+    ),
+    'referenceable_status' =>
+    array (
+      1 => 1,
+      0 => 0,
+    ),
+    'advanced_view' => '',
+    'advanced_view_args' => '',
+    'widget' =>
+    array (
+      'reverse_link' => 0,
+      'default_value' =>
+      array (
+        0 =>
+        array (
+          'uid' => NULL,
+          '_error_element' => 'default_value_widget][field_station_program_dj][0][uid][uid',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => $dj_title,
+      'weight' => '1',
+      'description' => t('Enter the names of users you\'d like to add as @dj-title. The users must be members of the %role-name role.', array('@dj-title' => $dj_title, '%role-name' => $roles[$dj_role])),
+      'type' => 'userreference_autocomplete',
+      'module' => 'userreference',
+    ),
+  );
+
+  // Create the fields.
+  module_load_include('inc', 'content', 'includes/content.crud');
+  content_field_instance_create($dj_field);
+
+
+  // Now the tricky part is to migrate the data.
+  // The procedure I'm using here is a bit overkill for migrating two fields
+  // but I'm planning on re-using it so it makes sense to go ahead and just be
+  // robust.
+  // We've got to assume that CCK's table might only have records for half of
+  // the nodes we're migrating so the strategy is to INSERT then UPDATE.
+  $migrations = array(
+    array(
+      'cck_field' => $dj_field,
+      'from_table' => 'station_dj',
+      'from_col' => 'uid',
+      'to_col' => 'uid',
+      'join_col' => 'program_nid'
+    ),
+  );
+  foreach ($migrations as $migration) {
+    // Might be needlessly escaping the names here but it shouldn't hurt
+    // anything.
+    $from_table = db_escape_table($migration['from_table']);
+    $from_col = db_escape_table($migration['from_col']);
+    $join_col = db_escape_table($migration['join_col']);
+    $db_info = content_database_info($migration['cck_field']);
+    $to_table = db_escape_table($db_info['table']);
+    $to_col = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
+
+    // Make sure there's a record in CCK's table for every one in the source
+    // table, then do an update of all the records.
+    $ret[] = update_sql("INSERT INTO {$to_table} (nid, vid) SELECT n.nid, n.vid FROM {$from_table} f INNER JOIN {node} n ON f.$join_col = n.$join_col WHERE NOT EXISTS ( SELECT * FROM {$to_table} t WHERE f.$join_col = t.$join_col)");
+    $ret[] = update_sql("UPDATE {$to_table} t INNER JOIN {$from_table} f ON t.$join_col = f.$join_col SET t.$to_col = f.$from_col");
+  }
+
+  // Since these are now on the field we don't really need them any more..
+  variable_del('station_schedule_dj_role');
+  variable_del('station_schedule_dj_title');
+
+
+  return $ret;
+}

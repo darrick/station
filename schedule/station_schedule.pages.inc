@@ -28,8 +28,13 @@ function theme_station_schedule_item($start, $finish, $program) {
   $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
   $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
   $output .= '<span class="station-sch-title">'. check_plain($program->title) .'</span>';
-  if ($program->djs) {
-    $output .= '<span class="station-sch-djs">'. check_plain(implode(', ', $program->djs)) .'</span>';
+  if (count($program->field_station_program_dj)) {
+    $djs = array();
+    foreach ($program->field_station_program_dj as $entry) {
+      $user = user_load($entry);
+      $djs[] .= $user->name;
+    }
+    $output .= '<span class="station-sch-djs">'. check_plain(implode(', ', $djs)) .'</span>';
   }
   $output .= "</a></div>\n";
   return $output;
@@ -92,7 +97,7 @@ function station_schedule_item_add($schedule, $program_id = NULL, $start = 0, $f
   $schedule_item = new stdClass;
   $schedule_item->schedule_nid = $schedule->nid;
   $schedule_item->iid = NULL;
-  $schedule_item->program_id = $program_id;
+  $schedule_item->program_nid = $program_id;
   $schedule_item->start = (int) $start;
   $schedule_item->finish = (int) $finish;
   $schedule_item->may_archive = TRUE;

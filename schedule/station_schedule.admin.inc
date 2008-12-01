@@ -58,7 +58,7 @@ function theme_station_schedule_admin_nonitem($node, $start, $finish) {
 function theme_station_schedule_admin_item($node, $item) {
   $class = 'station-sch-box station-sch-scheduled';
   $height = ($item->finish - $item->start);
-  $link = url("node/{$node->nid}/schedule/edit/{$item->iid}");
+  $link = url("node/{$node->nid}/schedule/{$item->iid}/edit");
 
   $output = "<div class='{$class}'><a id='schedule-{$item->start}' href='{$link}' style='height: {$height}px;'>";
   $output .= '<span class="station-sch-time">'. theme('station_hour_range', $item->start, $item->finish) .'</span>';

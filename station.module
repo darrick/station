@@ -52,12 +52,19 @@ function station_theme() {
     ),
     'station_dayhour_range' => array(
       'arguments' => array('start' => NULL, 'finish' => NULL),
+      'file' => 'dayhour.inc',
+    ),
+    'station_hour_duration' => array(
+      'arguments' => array('start' => NULL, 'finish' => NULL),
+      'file' => 'dayhour.inc',
     ),
     'station_hour' => array(
       'arguments' => array('time' => NULL),
+      'file' => 'dayhour.inc',
     ),
     'station_hour_range' => array(
       'arguments' => array('start' => NULL, 'finish' => NULL),
+      'file' => 'dayhour.inc',
     ),
     'station_streams' => array(
       'arguments' => array('streams' => NULL),

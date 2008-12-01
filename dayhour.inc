@@ -184,14 +184,14 @@ function station_time_from_minute($minutes) {
 }
 
 /**
- * Format a range of minutes into a day hour string, e.g. 
+ * Format a range of minutes into a day hour string, e.g.
  * "Sunday 11pm - Monday 1am".
- * 
+ *
  * @param $start
  *   Integer specifying minutes.
  * @param $finish
  *   Integer specifying minutes.
- * @return 
+ * @return
  *   Formatted string.
  */
 function theme_station_dayhour_range($start, $finish) {
@@ -226,7 +226,7 @@ function theme_station_dayhour_range($start, $finish) {
  *   Integer specifying minutes.
  * @param $finish
  *   Integer specifying minutes.
- * @return 
+ * @return
  *   Formatted string.
  */
 function theme_station_hour_range($start, $finish) {
@@ -246,11 +246,25 @@ function theme_station_hour_range($start, $finish) {
 }
 
 /**
+ * Print the amount of time between start and finish.
+ *
+ * @param $start
+ *   Integer specifying minutes.
+ * @param $finish
+ *   Integer specifying minutes.
+ * @return
+ *   Formatted string.
+ */
+function theme_station_hour_duration($start, $finish) {
+  return format_interval(($finish - $start) * 60);
+}
+
+/**
  * Format minutes into a hour string, e.g. "1am".
  *
  * @param $time
  *   Integer specifying minutes.
- * @return 
+ * @return
  *   Formatted string.
  */
 function theme_station_hour($time) {

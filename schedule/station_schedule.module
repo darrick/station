@@ -498,34 +498,45 @@ function station_schedule_archive_links($program_nid, $short = FALSE) {
 /**
  * Implements hook_user() to associate programs with the users.
  */
-function station_schedule_user($op, &$edit, &$user, $category = NULL) {
+function station_schedule_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
-  case 'load':
-    $user->programs = array();
-    $result = db_query('SELECT n.nid, n.title FROM {node} n INNER JOIN {station_dj} d ON n.nid = d.program_nid WHERE d.uid = %d ORDER BY n.title', $user->uid);
-    while ($program = db_fetch_object($result)) {
-      $user->programs[$program->nid] = $program->title;
-    }
-    break;
+    case 'load':
+      $field = content_fields('field_station_program_dj', 'station_program');
+      $db_info = content_database_info($field);
+      $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n INNER JOIN {". $db_info['table'] ."} f ON n.vid = f.vid WHERE f.". $db_info['columns']['uid']['column'] ."=". $account->uid ." AND n.status = 1"));
+      while ($program = db_fetch_object($result)) {
+        $account->programs[$program->nid] = $program->title;
+      }
+      break;
 
   case 'view':
-    if ($user->programs) {
-      foreach ((array) $user->programs as $nid => $title) {
+    if (count($account->programs)) {
+      $account->content['station'] = array(
+        '#type' => 'user_profile_category',
+        '#attributes' => array('class' => 'user-member'),
+        '#title' => t('Programs'),
+        '#weight' => 10,
+      );
+      foreach ((array) $account->programs as $nid => $title) {
         $node = node_load($nid);
         $node = node_build_content($node, TRUE, FALSE);
-        $items[] = array('title' => l($title, 'node/'. $nid),
-          'class' => 'program',
-          'value' => $node->content['genre']['#value'] . $node->content['times']['#value'],
+dsm($node);
+        $account->content['station'][] = array(
+          '#type' => 'user_profile_item',
+          '#attributes' => array('class' => 'user-member'),
+          '#title' => l($title, 'node/'. $nid),
+          '#value' => $node->content['field_station_program_genre'][0]['safe'] . $node->content['station_schedule_times']['#value'],
         );
       }
-      return array(t('Programs') => $items);
     }
     break;
 
   case 'delete':
-    db_query('DELETE FROM {station_dj} WHERE uid = %d', $user->uid);
-    foreach ((array) $user->programs as $nid => $title) {
-      _station_send_notice('dj', 'remove', array('program_nid' => $nid, 'uid' => $user->uid));
+    $field = content_fields('field_station_program_dj', 'station_program');
+    $db_info = content_database_info($field);
+    db_query("DELETE FROM {". $db_info['table'] ."} WHERE ". $db_info['columns']['uid']['column'] ."=". $account->uid);
+    foreach ((array) $account->programs as $nid => $title) {
+      _station_send_notice('dj', 'remove', array('program_nid' => $nid, 'uid' => $account->uid));
     }
     break;
   }
@@ -599,15 +610,15 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
           foreach ($times_by_schedule as $schedule_nid => $times) {
             $scheduled[] = t('@title @times', array('@title' => $schedules[$schedule_nid]['title'], '@times' => station_anded_list($times)));
           }
-          $node->content['schedule'] = array(
-            '#value' => $scheduled ? t(' on @scheduling.', array('@scheduling' => station_anded_list($scheduled))) : t(' is not currently scheduled.'),
+          $node->content['station_schedule_times'] = array(
+            '#value' => count($scheduled) ? t(' on @scheduling.', array('@scheduling' => station_anded_list($scheduled))) : t(' is not currently scheduled.'),
             '#weight' => 0,
           );
         }
         else {
-          $node->content['schedule']['#weight'] = -4;
+          $node->content['station_schedule_times']['#weight'] = -4;
           foreach ($times_by_schedule as $schedule_nid => $times) {
-            $node->content['schedule'][$schedule_nid] = array(
+            $node->content['station_schedule_times'][$schedule_nid] = array(
               '#type' => 'item',
               '#title' => t('Listen on <a href="!link">@title</a> at', array('@title' => $schedules[$schedule_nid]['title'], '!link' => url('node/'. $schedule_nid))),
               '#value' => $times ? theme('item_list', $times) : t('This program is currently unscheduled.'),

@@ -318,7 +318,7 @@ function station_playlist_insert($node) {
   foreach ($node->tracks as $track) {
     if ($track['artist'] || $track['title']) {
       $record = array_merge($track, array('nid' => $node->nid, 'vid' => $node->vid));
-      db_write_record('station_playlist_track', $record);
+      drupal_write_record('station_playlist_track', $record);
     }
   }
 }

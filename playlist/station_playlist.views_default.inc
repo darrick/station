@@ -228,6 +228,8 @@ function station_playlist_views_default_views() {
   $handler->override_option('block_description', 'Program\'s previous playlists');
   $handler->override_option('block_caching', -1);
   $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('style_plugin', 'default');
+  $handler->override_option('style_options', NULL);
   $handler->override_option('path', 'station/playlists');
   $handler->override_option('menu', array(
     'type' => 'normal',
@@ -240,6 +242,7 @@ function station_playlist_views_default_views() {
     'title' => '',
     'weight' => 0,
   ));
+
   $views[$view->name] = $view;
 
 

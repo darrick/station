@@ -79,33 +79,38 @@ function station_playlist_perm() {
  * This is implemented so that an edit link is displayed for users who have
  * the rights to edit a node.
  */
-function station_playlist_link($type, $node = NULL, $teaser = FALSE) {
+function station_playlist_link($type, $object, $teaser = FALSE) {
   if ($type == 'node') {
-    switch ($node->type) {
+    switch ($object->type) {
       case 'station_program':
         $links = array();
-        if ($result = db_result(db_query("SELECT COUNT(nid) FROM {station_playlist} sp WHERE sp.program_nid = %d", $node->nid))) {
+
+        $field = content_fields('field_station_program', 'station_playlist');
+        $db_info = content_database_info($field);
+        $col = $db_info['columns']['nid']['column'];
+        $result = db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {{$db_info['table']}} sp ON n.nid = sp.$col WHERE sp.$col = %d AND n.status = 1"), $object->nid);
+        if (db_result($result)) {
           $links['station_station_playlist_view'] = array(
             'title' => t('View all playlists'),
-            'href' => 'station/playlists/'. $node->nid,
+            'href' => 'station/playlists/'. $object->nid,
           );
         }
 
         if (!$teaser) {
-          if (node_access('update', $node)) {
+          if (node_access('update', $object)) {
             $links['station_station_playlist_add'] = array(
               'title' => t('Add new playlist'),
-              'href' => 'node/add/station-playlist/'. $node->nid,
+              'href' => 'node/add/station-playlist/'. $object->nid,
             );
           }
         }
         return $links;
 
       case 'station_playlist':
-        if (!empty($node->field_station_program[0]['nid'])) {
+        if (!empty($object->field_station_program[0]['nid'])) {
           return array('station_program_program_view' => array(
             'title' => t('View program'),
-             'href' => 'node/'. $node->field_station_program[0]['nid'],
+             'href' => 'node/'. $object->field_station_program[0]['nid'],
           ));
         }
     }

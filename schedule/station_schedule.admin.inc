@@ -41,29 +41,3 @@ function station_schedule_admin_settings() {
 
   return system_settings_form($form);
 }
-
-function theme_station_schedule_admin_nonitem($node, $start, $finish) {
-  $class = 'station-sch-box station-sch-unscheduled';
-  $height = ($finish - $start);
-  $link = url("node/{$node->nid}/schedule/add/0/{$start}/{$finish}");
-
-  $output = "<div class='{$class}'><a id='schedule-{$start}' href='{$link}' style='height: {$height}px;'>";
-  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
-  $output .= '<span class="station-sch-title">'. t('<em>Unscheduled</em>') .'</span>';
-  $output .= "</a></div>\n";
-
-  return $output;
-}
-
-function theme_station_schedule_admin_item($node, $item) {
-  $class = 'station-sch-box station-sch-scheduled';
-  $height = ($item->finish - $item->start);
-  $link = url("node/{$node->nid}/schedule/{$item->iid}/edit");
-
-  $output = "<div class='{$class}'><a id='schedule-{$item->start}' href='{$link}' style='height: {$height}px;'>";
-  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $item->start, $item->finish) .'</span>';
-  $output .= '<span class="station-sch-title">'. check_plain($item->program->title) .'</span>';
-  $output .= "</a></div>\n";
-
-  return $output;
-}

@@ -97,7 +97,7 @@ function station_schedule_menu() {
     'page arguments' => array(1),
     'access callback' => 'station_schedule_node_edit_access',
     'access arguments' => array(1),
-    'file' => 'station_schedule.pages.inc',
+    'file' => 'station_schedule.edit.inc',
     'type' => MENU_LOCAL_TASK,
   );
   $items["node/%node/schedule/list"] = array(
@@ -111,7 +111,7 @@ function station_schedule_menu() {
     'page arguments' => array(1),
     'access callback' => 'station_schedule_node_edit_access',
     'access arguments' => array(1),
-    'file' => 'station_schedule.pages.inc',
+    'file' => 'station_schedule.edit.inc',
     'type' => MENU_LOCAL_TASK,
   );
   $items["node/%node/schedule/%station_schedule_item/edit"] = array(
@@ -120,7 +120,7 @@ function station_schedule_menu() {
     'page arguments' => array(1, 3),
     'access callback' => 'station_schedule_node_edit_access',
     'access arguments' => array(1),
-    'file' => 'station_schedule.pages.inc',
+    'file' => 'station_schedule.edit.inc',
     'type' => MENU_CALLBACK
   );
   $items["node/%node/schedule/%station_schedule_item/remove"] = array(
@@ -129,7 +129,7 @@ function station_schedule_menu() {
     'page arguments' => array('station_schedule_item_remove_form', 1, 3),
     'access callback' => 'station_schedule_node_edit_access',
     'access arguments' => array(1),
-    'file' => 'station_schedule.pages.inc',
+    'file' => 'station_schedule.edit.inc',
     'type' => MENU_CALLBACK
   );
 
@@ -177,11 +177,11 @@ function station_schedule_theme() {
     ),
     'station_schedule_admin_item' => array(
       'arguments' => array('node' => NULL, 'item' => NULL),
-      'file' => 'station_schedule.admin.inc',
+      'file' => 'station_schedule.edit.inc',
     ),
     'station_schedule_admin_nonitem' => array(
       'arguments' => array('node' => NULL, 'start' => NULL, 'finish' => NULL),
-      'file' => 'station_schedule.admin.inc',
+      'file' => 'station_schedule.edit.inc',
     ),
     'station_schedule_form_streams' => array(
       'arguments' => array('form' => NULL),
@@ -297,7 +297,7 @@ function station_schedule_form($node) {
       '#type' => 'textarea',
       '#rows' => 2,
       '#cols' => 20,
-      '#default_value' => implode("\n", $stream['urls']),
+      '#default_value' => empty($stream['urls']) ? '' : implode("\n", $stream['urls']),
     );
   }
 
@@ -520,12 +520,11 @@ function station_schedule_user($op, &$edit, &$account, $category = NULL) {
       foreach ((array) $account->programs as $nid => $title) {
         $node = node_load($nid);
         $node = node_build_content($node, TRUE, FALSE);
-dsm($node);
         $account->content['station'][] = array(
           '#type' => 'user_profile_item',
           '#attributes' => array('class' => 'user-member'),
           '#title' => l($title, 'node/'. $nid),
-          '#value' => $node->content['field_station_program_genre'][0]['safe'] . $node->content['station_schedule_times']['#value'],
+          '#value' => $node->field_station_program_genre[0]['safe'] . $node->content['station_schedule_times']['#value'],
         );
       }
     }

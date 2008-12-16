@@ -18,8 +18,8 @@ function station_program_help($path, $arg) {
 function station_program_menu() {
   $items['admin/settings/station/program'] = array(
     'title' => 'Program',
-    'callback' => 'drupal_get_form',
-    'callback arguments' => array('station_program_admin_settings'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('station_program_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'station_program.admin.inc',
     'type' => MENU_LOCAL_TASK,

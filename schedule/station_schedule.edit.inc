@@ -1,6 +1,39 @@
 <?php
 // $Id$
 
+function station_schedule_item_list($node) {
+  drupal_add_css(drupal_get_path('module', 'station_schedule') .'/station_schedule.css');
+  drupal_set_title(check_plain($node->title));
+
+  $header = array();
+  $row = array();
+  foreach ($node->schedule as $day => $items) {
+    $header[$day] = station_day_name($day);
+    $row[$day] = '';
+
+    // The last finish pointer starts at the beginning of the day.
+    $last_finish = $day * MINUTES_IN_DAY;
+    $day_finish = ($day + 1) * MINUTES_IN_DAY;
+    foreach ($items as $item) {
+      // Display blocks for unscheduled time periods
+      if ($last_finish != $item->start) {
+        $row[$day] .= theme('station_schedule_admin_nonitem', $node, $last_finish, $item->start);
+      }
+      $last_finish = $item->finish;
+
+      // Display the schedule item
+      $item->program = node_load($item->program_nid);
+      $row[$day] .= theme('station_schedule_admin_item', $node, $item);
+    }
+    // Display a block for any remaining time during the day.
+    if ($last_finish < $day_finish) {
+      $row[$day] .= theme('station_schedule_admin_nonitem', $node, $last_finish, $day_finish);
+    }
+  }
+
+  // Render the table
+  return theme('table', $header, array($row), array('id' => 'station-sch', 'class' => 'station-sch-admin'));
+}
 
 function theme_station_schedule_admin_nonitem($node, $start, $finish) {
   $class = 'station-sch-box station-sch-unscheduled';

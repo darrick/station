@@ -30,16 +30,6 @@ function station_catalog_menu() {
 }
 
 /**
- * Implementation of hook_view_api().
- */
-function station_catalog_views_api() {
-  return array(
-    'api' => 2.0,
-  );
-}
-
-
-/**
  * Implementation of hook_node_info().
  */
 function station_catalog_node_info() {
@@ -247,6 +237,7 @@ function station_catalog_album_node_form_submit($form, &$form_state) {
   // Compute the title.
   $form_state['values']['title'] = $form_state['values']['album']['artist'] .' - '. $form_state['values']['album']['album'];
 }
+
 /**
  * Implementation of hook_load().
  */
@@ -445,4 +436,13 @@ dvm($url);
 dvm($doc->savexml());
   }
   return $ret;
+}
+
+/**
+ * Implementation of hook_view_api().
+ */
+function station_catalog_views_api() {
+  return array(
+    'api' => 2.0,
+  );
 }

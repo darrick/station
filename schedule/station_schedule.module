@@ -256,7 +256,7 @@ function station_schedule_form($node) {
     '#type' => 'select',
     '#title' => t('Time increment'),
     '#default_value' => isset($node->settings['increment']) ? $node->settings['increment'] : 60,
-    '#options' => array(15 => t('15 Minutes'), 30 => t('30 Minutes'), 60 => t('1 Hour'), 120 => t('2 Hours')),
+    '#options' => array(1 => t('1 Minute'), 5 => t('5 Minutes'), 15 => t('15 Minutes'), 30 => t('30 Minutes'), 60 => t('1 Hour'), 120 => t('2 Hours')),
     '#description' => t("This is the minimum increment that programs can be scheduled in. <strong>Caution:</strong> Increasing this value on an existing schedule will probably cause weirdness."),
   );
   $form['settings']['unscheduled_message'] = array(

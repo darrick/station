@@ -44,10 +44,10 @@ function theme_station_schedule_item($start, $finish, $program) {
  * Print a day's schedule page.
  */
 function station_schedule_day_page($node, $day) {
-  if ($view = views_get_view('station_schedule_items')) {
+  if ($view = views_get_view('station_schedule_day')) {
     $display_id = 'default';
     if ($view->access($display_id)) {
-      return $view->execute_display($display_id);
+      return $view->execute_display($display_id, array($day));
     }
     $view->destroy();
   }

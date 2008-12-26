@@ -51,12 +51,12 @@ function station_schedule_views_handlers() {
 function station_schedule_views_plugins() {
   return array(
     'module' => 'station_schedule', // This just tells our themes are elsewhere.
-    'argument validator' => array(
-      'station_schedule_day' => array(
-        'title' => t('Validate day'),
-        'handler' => 'station_schedule_plugin_argument_validate_day',
-      ),
-    ),
+//    'argument validator' => array(
+//      'station_schedule_day' => array(
+//        'title' => t('Validate day'),
+//        'handler' => 'station_schedule_plugin_argument_validate_day',
+//      ),
+//    ),
   );
 }
 

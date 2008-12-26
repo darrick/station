@@ -6,7 +6,7 @@
  */
 function station_schedule_views_handlers() {
   return array(
-     'info' => array(
+    'info' => array(
       'path' => drupal_get_path('module', 'station_schedule') . '/views',
     ),
     'handlers' => array(
@@ -27,13 +27,41 @@ function station_schedule_views_handlers() {
         'parent' => 'station_schedule_handler_field_iid_link',
       ),
 
+      // Sort handlers
+      'station_schedule_handler_sort_time' => array(
+        'parent' => 'views_handler_sort',
+      ),
+
+      // Argument handlers
+      'station_schedule_handler_argument_day' => array(
+        'parent' => 'views_handler_argument',
+      ),
+
       // Filter handlers
-      'station_schedule_handler_filter_time' => array(
-        'parent' => 'views_handler_filter_numeric',
+//      'station_schedule_handler_filter_time' => array(
+//        'parent' => 'views_handler_filter_numeric',
+//      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_views_plugins().
+ */
+function station_schedule_views_plugins() {
+  return array(
+    'module' => 'station_schedule', // This just tells our themes are elsewhere.
+    'argument validator' => array(
+      'station_schedule_day' => array(
+        'title' => t('Validate day'),
+        'handler' => 'station_schedule_plugin_argument_validate_day',
       ),
     ),
   );
 }
+
+
+
 /**
  * Implementation of hook_views_data().
  */
@@ -164,13 +192,16 @@ function station_schedule_views_data() {
     'field' => array(
       'handler' => 'station_schedule_handler_field_start_time',
       'click sortable' => TRUE,
-     ),
-     'filter' => array(
-       'handler' => 'station_schedule_handler_filter_time',
-       'label' => t('Start'),
-     ),
+    ),
+    'argument' => array(
+      'handler' => 'station_schedule_handler_argument_day',
+    ),
+//    'filter' => array(
+//      'handler' => 'station_schedule_handler_filter_time',
+//      'label' => t('Start'),
+//    ),
     'sort' => array(
-      'handler' => 'views_handler_sort',
+      'handler' => 'station_schedule_handler_sort_time',
     ),
   );
   $data['station_schedule_item']['finish'] = array(
@@ -180,12 +211,12 @@ function station_schedule_views_data() {
       'handler' => 'station_schedule_handler_field_finish_time',
       'click sortable' => TRUE,
      ),
-     'filter' => array(
-       'handler' => 'station_schedule_handler_filter_time',
-       'label' => t('Finish'),
-     ),
+//     'filter' => array(
+//       'handler' => 'station_schedule_handler_filter_time',
+//       'label' => t('Finish'),
+//     ),
     'sort' => array(
-      'handler' => 'views_handler_sort',
+      'handler' => 'station_schedule_handler_sort_time',
     ),
   );
   $data['station_schedule_item']['may_archive'] = array(

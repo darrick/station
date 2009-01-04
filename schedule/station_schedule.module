@@ -834,6 +834,9 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
 
 /**
  * Load the schedule item by its id.
+ *
+ * This function also serves as a menu item loader.
+ *
  * @param $iid schedule item id
  * @return schedule item object
  */
@@ -856,7 +859,7 @@ function station_schedule_view($node, $teaser = FALSE, $page = FALSE) {
   if ($page) {
     $breadcrumb = drupal_get_breadcrumb();
     $breadcrumb[] = l(t('Station'), 'station');
-    $breadcrumb[] = l(t('Schedules'), 'station/schedule');
+    $breadcrumb[] = l(t('Schedules'), 'station/schedules');
     drupal_set_breadcrumb($breadcrumb);
   }
 

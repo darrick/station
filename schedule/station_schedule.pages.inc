@@ -47,7 +47,7 @@ function station_schedule_day_page($node, $day) {
   if ($view = views_get_view('station_schedule_day')) {
     $display_id = 'default';
     if ($view->access($display_id)) {
-      return $view->execute_display($display_id, array($day));
+      return $view->execute_display($display_id, array($node->nid, $day));
     }
     $view->destroy();
   }

@@ -47,7 +47,7 @@ function station_playlist_views_default_views() {
   ));
   $handler->override_option('arguments', array(
     'field_station_program_nid' => array(
-      'default_action' => 'ignore',
+      'default_action' => 'default',
       'style_plugin' => 'default_summary',
       'style_options' => array(),
       'wildcard' => 'all',
@@ -228,6 +228,64 @@ function station_playlist_views_default_views() {
   $handler->override_option('block_description', 'Program\'s previous playlists');
   $handler->override_option('block_caching', -1);
   $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('arguments', array(
+    'field_station_program_nid' => array(
+      'default_action' => 'ignore',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '%1 Playlists',
+      'default_argument_type' => 'node',
+      'default_argument' => '',
+      'validate_type' => 'node',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'field_station_program_nid',
+      'table' => 'node_data_field_station_program',
+      'field' => 'field_station_program_nid',
+      'relationship' => 'none',
+      'default_options_div_prefix' => '',
+      'default_argument_user' => 0,
+      'default_argument_fixed' => '',
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(
+        'station_program' => 'station_program',
+        'blog' => 0,
+        'poll' => 0,
+        'audio' => 0,
+        'image' => 0,
+        'station_album' => 0,
+        'station_playlist' => 0,
+        'station_schedule' => 0,
+        'book' => 0,
+        'location' => 0,
+        'page' => 0,
+        'story' => 0,
+        'video' => 0,
+      ),
+      'validate_argument_node_access' => 1,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(
+        '1' => 0,
+        '2' => 0,
+        '4' => 0,
+        '5' => 0,
+        '3' => 0,
+      ),
+      'validate_argument_type' => 'tid',
+      'validate_argument_php' => '',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'image_size' => array(
+        '_original' => '_original',
+        'thumbnail' => 'thumbnail',
+        'preview' => 'preview',
+      ),
+    ),
+  ));
   $handler->override_option('style_plugin', 'default');
   $handler->override_option('style_options', NULL);
   $handler->override_option('path', 'station/playlists');

@@ -60,7 +60,14 @@ function station_schedule_views_plugins() {
   );
 }
 
-
+/**
+ * Implementation of views_query_substitutions().
+ */
+function station_schedule_views_query_substitutions($view) {
+  $timestamp = station_local_ts(time());
+  $minute = station_minute_from_day_hour(date('w', $timestamp), date('G', $timestamp));
+  return array('***CURRENT_STATION_MINUTE***' => $minute);
+}
 
 /**
  * Implementation of hook_views_data().
@@ -195,6 +202,7 @@ function station_schedule_views_data() {
     ),
     'argument' => array(
       'handler' => 'station_schedule_handler_argument_day',
+      'label' => t('Day of week'),
     ),
 //    'filter' => array(
 //      'handler' => 'station_schedule_handler_filter_time',

@@ -9,7 +9,7 @@ function station_schedule_views_default_views() {
   $view = new view;
   $view->name = 'station_schedules';
   $view->description = 'Station Schedules';
-  $view->tag = '';
+  $view->tag = 'station';
   $view->view_php = '';
   $view->base_table = 'node';
   $view->is_cacheable = FALSE;
@@ -72,7 +72,8 @@ function station_schedule_views_default_views() {
     ),
   ));
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'perm',
+    'perm' => 'access content',
   ));
   $handler->override_option('title', 'Schedule listing');
   $handler->override_option('style_plugin', 'list');
@@ -100,7 +101,7 @@ function station_schedule_views_default_views() {
   $view = new view;
   $view->name = 'station_scheduled_programs';
   $view->description = 'Scheduled programs';
-  $view->tag = '';
+  $view->tag = 'station';
   $view->view_php = '';
   $view->base_table = 'node';
   $view->is_cacheable = FALSE;
@@ -185,7 +186,8 @@ function station_schedule_views_default_views() {
     ),
   ));
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'perm',
+    'perm' => 'access content',
   ));
   $handler->override_option('title', 'Scheduled programs');
   $handler->override_option('use_pager', '1');
@@ -375,7 +377,7 @@ function station_schedule_views_default_views() {
   $view = new view;
   $view->name = 'station_schedule_day';
   $view->description = 'Station Schedule\'s day view';
-  $view->tag = 'tag';
+  $view->tag = 'station';
   $view->view_php = '';
   $view->base_table = 'station_schedule_item';
   $view->is_cacheable = FALSE;
@@ -464,6 +466,56 @@ function station_schedule_views_default_views() {
     ),
   ));
   $handler->override_option('arguments', array(
+    'nid' => array(
+      'default_action' => 'not found',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'default_argument_type' => 'fixed',
+      'default_argument' => '',
+      'validate_type' => 'node',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'nid',
+      'table' => 'node',
+      'field' => 'nid',
+      'relationship' => 'schedule_nid',
+      'default_options_div_prefix' => '',
+      'default_argument_user' => 0,
+      'default_argument_fixed' => '',
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(
+        'station_schedule' => 'station_schedule',
+        'blog' => 0,
+        'poll' => 0,
+        'audio' => 0,
+        'image' => 0,
+        'station_album' => 0,
+        'station_playlist' => 0,
+        'station_program' => 0,
+        'book' => 0,
+        'location' => 0,
+        'page' => 0,
+        'story' => 0,
+        'video' => 0,
+      ),
+      'validate_argument_node_access' => 1,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(
+        '1' => 0,
+        '2' => 0,
+      ),
+      'validate_argument_type' => 'tid',
+      'image_size' => array(
+        '_original' => '_original',
+        'thumbnail' => 'thumbnail',
+        'preview' => 'preview',
+      ),
+      'validate_argument_php' => '',
+    ),
     'start_3' => array(
       'default_action' => 'empty',
       'style_plugin' => 'default_summary',
@@ -532,23 +584,10 @@ function station_schedule_views_default_views() {
       'field' => 'status_extra',
       'relationship' => 'program_nid',
     ),
-    'status_extra_1' => array(
-      'operator' => '=',
-      'value' => '',
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'status_extra_1',
-      'table' => 'node',
-      'field' => 'status_extra',
-      'relationship' => 'schedule_nid',
-    ),
   ));
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'perm',
+    'perm' => 'access content',
   ));
   $handler->override_option('empty', 'There are no programs scheduled for this day.');
   $handler->override_option('empty_format', '1');

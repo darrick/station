@@ -167,7 +167,8 @@ function station_catalog_views_default_views() {
     ),
   ));
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'perm',
+    'perm' => 'view catalog',
   ));
   $handler->override_option('title', 'Catalog');
   $handler->override_option('use_pager', '1');

@@ -66,27 +66,31 @@ function station_program_perm() {
  * Implementation of hook_access().
  */
 function station_program_access($op, $node, $account) {
+  if (user_access('administer programs', $account)) {
+    return TRUE;
+  }
+
   switch ($op) {
+    // Only users with 'administer programs' permissions can create or delete
+    // programs.
+
+    case 'view':
+      return TRUE;
+
     case 'update':
+      // If the schedule is enabled, defer to that permision.
+      if (module_exists('station_schedule') && user_access('administer schedule', $account)) {
+        return TRUE;
+      }
       if (user_access('edit program content', $account)) {
         return TRUE;
       }
-
       // Node owner and DJs can also edit the program.
       $djs = _station_schedule_program_load_djs($node->nid);
       if ($node->uid == $account->uid || isset($djs[$account->uid])) {
-        return user_access('edit own program content');
+        return user_access('edit own program content', $account);
       }
-      break;
-
-    case 'delete':
-    case 'create':
-    default:
-      // If the schedule is enabled, defer to that permision.
-      if (module_exists('station_schedule')) {
-        return user_access('administer schedule', $account);
-      }
-      return user_access('administer programs', $account);
+      return FALSE;
   }
 }
 

@@ -828,7 +828,7 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
       // can easily figure out which one.
       $node->may_archive = $schedule_item->may_archive;
       // put this in so they can use a pretty url
-      $node->node_url = url('node/'. $node->nid, NULL, NULL, TRUE);
+      $node->node_url = url('node/'. $node->nid, array('absolute' => TRUE));
       return $node;
     }
   }

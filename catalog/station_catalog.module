@@ -383,7 +383,7 @@ function _station_catalog_musicbrainz_album($artist, $title) {
     'artist' => $artist,
     'title' => $title
   );
-  $url = url('http://musicbrainz.org/ws/1/release/', drupal_query_string_encode($args));
+  $url = url('http://musicbrainz.org/ws/1/release/', array('query' => drupal_query_string_encode($args)));
 
   $ret = array();
 
@@ -427,7 +427,7 @@ function _station_catalog_musicbrainz_label($release_id) {
     'type' => 'xml',
     'inc' => 'labels',
   );
-  $url = url('http://musicbrainz.org/ws/1/release/'. $release_id, drupal_query_string_encode($args));
+  $url = url('http://musicbrainz.org/ws/1/release/'. $release_id, array('query' => drupal_query_string_encode($args)));
 dvm($url);
   $ret = array();
   $response = drupal_http_request($url);

@@ -188,7 +188,9 @@ function station_default_schedule() {
     $id = variable_get('station_remote_schedule_nid', 0);
   }
   $schedules = station_get_schedules();
-  return $schedules[$id];
+  // Return the default schedule if one has been selected, if not just use the
+  // first one.
+  return isset($schedules[$id]) ? $schedules[$id] : reset($schedules);
 }
 
 /**

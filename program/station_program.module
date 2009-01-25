@@ -78,18 +78,31 @@ function station_program_access($op, $node, $account) {
       return TRUE;
 
     case 'update':
-      // If the schedule is enabled, defer to that permision.
-      if (module_exists('station_schedule') && user_access('administer schedule', $account)) {
-        return TRUE;
-      }
       if (user_access('edit program content', $account)) {
         return TRUE;
       }
-      // Node owner and DJs can also edit the program.
-      $djs = _station_schedule_program_load_djs($node->nid);
-      if ($node->uid == $account->uid || isset($djs[$account->uid])) {
-        return user_access('edit own program content', $account);
+
+      // The node owner can edit the program.
+      if ($node->uid == $account->uid && user_access('edit own program content', $account)) {
+        return TRUE;
       }
+
+      // If the schedule is enabled, let it also control access.
+      if (module_exists('station_schedule')) {
+        if (user_access('administer schedule', $account)) {
+          return TRUE;
+        }
+
+        // DJs can edit the program.
+        if (user_access('edit own program content', $account) && !empty($node->field_station_program_dj)) {
+          foreach ($node->field_station_program_dj as $user) {
+            if ($user->uid == $account->uid) {
+              return TRUE;
+            }
+          }
+        }
+      }
+
       return FALSE;
   }
 }

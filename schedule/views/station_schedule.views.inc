@@ -129,8 +129,8 @@ function station_schedule_views_data() {
   $data['station_schedule_item']['table']['group']  = t('Station schedule item');
   $data['station_schedule_item']['table']['base'] = array(
     'field' => 'iid',
-    'title' => t('Schedule item'),
-    'help' => t('An item on a station schedule.'),
+    'title' => t('Station Schedule Item'),
+    'help' => t("Items on the station's schedules."),
   );
 
   // For other base tables, explain how we join

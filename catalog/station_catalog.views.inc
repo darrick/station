@@ -54,7 +54,7 @@ function station_catalog_views_data() {
   );
   $data['station_catalog']['album'] = array(
     'title' => t('Album title'),
-    'help' => t("Album time."),
+    'help' => t("Album title."),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,

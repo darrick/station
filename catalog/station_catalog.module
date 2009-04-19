@@ -50,33 +50,35 @@ function station_catalog_node_info() {
  */
 function station_catalog_perm() {
   return array(
-    'view catalog',
-    'create album content',
-    'edit album content',
-    'administer catalog',
+    'administer station catalog',
+    'view station album content',
+    'create station album content',
+    'edit any station album content',
+    'delete any station album content',
   );
 }
 
 /**
  * Implementation of hook_access().
  */
-function station_catalog_album_accesss($op, $node, $account) {
-
+function station_catalog_album_access($op, $node, $account) {
   // Admins can do anything.
-  if (user_access('administer catalog', $account)) {
+  if (user_access('administer station catalog', $account)) {
     return TRUE;
   }
 
   switch ($op) {
     case 'view':
-      return user_access('view catalog', $account);
+      return user_access('view station album content', $account);
 
     case 'create':
-      return user_access('create album content', $account);
+      return user_access('create station album content', $account);
 
     case 'update':
+      return user_access('edit any station album content', $account);
+
     case 'delete':
-      return user_access('edit album content', $account);
+      return user_access('delete any station album content', $account);
   }
 }
 

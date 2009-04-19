@@ -26,7 +26,8 @@ class station_schedule_handler_field_iid_link extends views_handler_field {
   }
 
   function access() {
-    return user_access('administer schedule');
+// @TODO figure out a more granular way to handle permissions here.
+    return user_access('administer station schedule');
   }
 
   function query() {

@@ -95,7 +95,7 @@ function station_schedule_menu() {
     'title' => 'Alter schedule',
     'page callback' => 'station_schedule_item_list',
     'page arguments' => array(1),
-    'access callback' => 'station_schedule_node_edit_access',
+    'access callback' => 'station_schedule_node_update_access',
     'access arguments' => array(1),
     'file' => 'station_schedule.edit.inc',
     'type' => MENU_LOCAL_TASK,
@@ -109,7 +109,7 @@ function station_schedule_menu() {
     'title' => 'Add item',
     'page callback' => 'station_schedule_item_add',
     'page arguments' => array(1),
-    'access callback' => 'station_schedule_node_edit_access',
+    'access callback' => 'station_schedule_node_update_access',
     'access arguments' => array(1),
     'file' => 'station_schedule.edit.inc',
     'type' => MENU_LOCAL_TASK,
@@ -118,7 +118,7 @@ function station_schedule_menu() {
     'title' => 'Edit item',
     'page callback' => 'station_schedule_item_edit',
     'page arguments' => array(1, 3),
-    'access callback' => 'station_schedule_node_edit_access',
+    'access callback' => 'station_schedule_node_update_access',
     'access arguments' => array(1),
     'file' => 'station_schedule.edit.inc',
     'type' => MENU_CALLBACK
@@ -127,7 +127,7 @@ function station_schedule_menu() {
     'title' => 'Remove item',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('station_schedule_item_remove_form', 1, 3),
-    'access callback' => 'station_schedule_node_edit_access',
+    'access callback' => 'station_schedule_node_update_access',
     'access arguments' => array(1),
     'file' => 'station_schedule.edit.inc',
     'type' => MENU_CALLBACK
@@ -137,11 +137,11 @@ function station_schedule_menu() {
 }
 
 function station_schedule_node_view_access($node) {
-  return ($node->type == 'station_schedule' && user_access('access content'));
+  return ($node->type == 'station_schedule' && node_access('view', $node));
 }
 
-function station_schedule_node_edit_access($node) {
-  return ($node->type == 'station_schedule' && user_access('administer schedule'));
+function station_schedule_node_update_access($node) {
+  return ($node->type == 'station_schedule' && node_access('update', $node));
 }
 
 
@@ -206,7 +206,12 @@ function station_schedule_theme() {
  */
 function station_schedule_perm() {
   return array(
-    'administer schedule',
+    'administer station schedule',
+    'view station schedule content',
+    'create station schedule content',
+    'edit any station schedule content',
+    'edit own station schedule content',
+    'delete any station schedule content',
   );
 }
 
@@ -228,14 +233,25 @@ function station_schedule_node_info() {
  * Implementation of hook_access().
  */
 function station_schedule_access($op, $node, $account) {
+  if (user_access('administer station schedule', $account)) {
+    return TRUE;
+  }
+
   switch ($op) {
     case 'view':
-      return TRUE;
+      return user_access('view station schedule content', $account);
+
+    case 'create':
+      return user_access('create station schedule content', $account);
 
     case 'update':
+      if (user_access('edit own station schedule content', $account) && ($account->uid == $node->uid)) {
+        return TRUE;
+      }
+      return user_access('edit any station schedule content', $account);
+
     case 'delete':
-    case 'create':
-      return user_access('administer schedule', $account);
+      return user_access('delete any station schedule content', $account);
   }
 }
 
@@ -637,10 +653,11 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
  * implementation of hook_form_alter()
  */
 function station_schedule_form_alter(&$form, $form_state, $form_id) {
-  // We only alter audio node edit forms
+  // We only alter station_program node edit forms
   if ($form_id == 'station_program_node_form') {
-    if (user_access('administer schedule')) {
-      $node = $form['#node'];
+    $node = $form['#node'];
+// @TODO: figure out how to handle the permissions here.
+    if (user_access('administer station schedule')) {
 
       $form['schedule'] = array(
         '#type' => 'fieldset',

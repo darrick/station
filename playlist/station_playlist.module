@@ -68,8 +68,13 @@ function station_playlist_node_info() {
  */
 function station_playlist_perm() {
   return array(
-    'create playlists',
-    'edit own playlists',
+    'administer station playlists',
+    'view station playlist content',
+    'create station playlist content',
+    'edit any station playlist content',
+    'edit own station playlist content',
+    'delete any station playlist content',
+    'delete own station playlist content',
   );
 }
 
@@ -122,23 +127,28 @@ function station_playlist_link($type, $object, $teaser = FALSE) {
  * Implementation of hook_access().
  */
 function station_playlist_access($op, $node, $account) {
-  if (user_access('administer schedule', $account)) {
+  if (user_access('administer station playlists', $account)) {
     return TRUE;
   }
 
   switch ($op) {
     case 'view':
-      return TRUE;
+      return user_access('view station playlist content', $account);
 
     case 'create':
-      return user_access('create playlists', $account);
+      return user_access('create station playlist content', $account);
 
     case 'update':
-    case 'delete':
-      if (user_access('edit own playlists') && ($account->uid == $node->uid)) {
+      if (user_access('edit own station playlist content', $account) && ($account->uid == $node->uid)) {
         return TRUE;
       }
-      return FALSE;
+      return user_access('edit any station playlist content', $account);
+
+    case 'delete':
+      if (user_access('delete own station playlist content', $account) && ($account->uid == $node->uid)) {
+        return TRUE;
+      }
+      return user_access('delete any station playlist content', $account);
   }
 }
 

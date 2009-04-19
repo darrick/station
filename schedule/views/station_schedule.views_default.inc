@@ -73,7 +73,7 @@ function station_schedule_views_default_views() {
   ));
   $handler->override_option('access', array(
     'type' => 'perm',
-    'perm' => 'access content',
+    'perm' => 'view station schedule content',
   ));
   $handler->override_option('title', 'Schedule listing');
   $handler->override_option('style_plugin', 'list');
@@ -187,7 +187,7 @@ function station_schedule_views_default_views() {
   ));
   $handler->override_option('access', array(
     'type' => 'perm',
-    'perm' => 'access content',
+    'perm' => 'view station program content',
   ));
   $handler->override_option('title', 'Scheduled programs');
   $handler->override_option('use_pager', '1');
@@ -587,7 +587,7 @@ function station_schedule_views_default_views() {
   ));
   $handler->override_option('access', array(
     'type' => 'perm',
-    'perm' => 'access content',
+    'perm' => 'view schedule content',
   ));
   $handler->override_option('empty', 'There are no programs scheduled for this day.');
   $handler->override_option('empty_format', '1');

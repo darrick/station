@@ -145,7 +145,7 @@ function station_playlist_views_default_views() {
   ));
   $handler->override_option('access', array(
     'type' => 'perm',
-    'perm' => 'access content',
+    'perm' => 'view station playlist content',
   ));
   $handler->override_option('title', 'Playlists');
   $handler->override_option('use_pager', '1');

@@ -78,7 +78,7 @@ function station_theme() {
 function station_block($op = 'list', $delta = 0, $edit = array()) {
   switch ($op) {
   case 'view':
-    if (user_access('access content')) {
+    if (user_access('view station schedule content')) {
       switch ($delta) {
         case 0:
           $block['subject'] = t('On Air');

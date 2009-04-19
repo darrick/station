@@ -56,9 +56,12 @@ function station_program_node_info() {
  */
 function station_program_perm() {
   return array(
-    'edit program content',
-    'edit own program content',
-    'administer programs',
+    'administer station programs',
+    'view station program content',
+    'create station program content',
+    'edit any station program content',
+    'edit own station program content',
+    'delete any station program content',
   );
 }
 
@@ -66,44 +69,43 @@ function station_program_perm() {
  * Implementation of hook_access().
  */
 function station_program_access($op, $node, $account) {
-  if (user_access('administer programs', $account)) {
+  if (user_access('administer station programs', $account)) {
     return TRUE;
   }
 
   switch ($op) {
-    // Only users with 'administer programs' permissions can create or delete
-    // programs.
-
     case 'view':
-      return TRUE;
+      return user_access('view station program content', $account);
+
+    case 'create':
+      return user_access('create station program content', $account);
 
     case 'update':
-      if (user_access('edit program content', $account)) {
+      if (user_access('edit any station program content', $account)) {
         return TRUE;
       }
 
       // The node owner can edit the program.
-      if ($node->uid == $account->uid && user_access('edit own program content', $account)) {
-        return TRUE;
-      }
-
-      // If the schedule is enabled, let it also control access.
-      if (module_exists('station_schedule')) {
-        if (user_access('administer schedule', $account)) {
+      if (user_access('edit own station program content', $account)) {
+        if ($node->uid == $account->uid) {
           return TRUE;
         }
 
-        // DJs can edit the program.
-        if (user_access('edit own program content', $account) && !empty($node->field_station_program_dj)) {
-          foreach ($node->field_station_program_dj as $user) {
-            if ($user->uid == $account->uid) {
-              return TRUE;
+        // If the schedule is enabled, let DJs edit the program.
+        if (module_exists('station_schedule')) {
+          if (!empty($node->field_station_program_dj)) {
+            foreach ($node->field_station_program_dj as $user) {
+              if ($user->uid == $account->uid) {
+                return TRUE;
+              }
             }
           }
         }
       }
-
       return FALSE;
+
+    case 'delete':
+      return user_access('delete any station program content', $account);
   }
 }
 

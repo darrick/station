@@ -325,24 +325,19 @@ function station_playlist_schema() {
       'station_playlist_album'      => array('album'),
       'station_playlist_label'      => array('label'),
     ),
-//    'primary key' => array('vid, weight'),
+//    'primary key' => array('vid', 'weight'),
   );
 
   return $schema;
 }
 
 /**
- * Add a link field to the track.
+ * Implementation of hook_update_last_removed().
  */
-function station_playlist_update_101() {
-  $ret = array();
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {station_playlist_track} ADD COLUMN `link` VARCHAR(255) NOT NULL DEFAULT '' AFTER `label`;");
-    break;
-  }
-  return $ret;
+function station_playlist_update_last_removed() {
+  // We've removed the 5.x-1.x version of mymodule, including database updates.
+  // The next update function is mymodule_update_5200().
+  return 5110100;
 }
 
 /**

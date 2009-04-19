@@ -11,33 +11,14 @@ function station_uninstall() {
   variable_del('station_remote_schedule_url');
 }
 
-
 /**
- * Rename some variables
+ * Implementation of hook_update_last_removed().
  */
-function station_update_1() {
-  _station_var_rename('station_archive_station_url', 'station_remote_station_url');
-  _station_var_rename('station_schedule_archive_url', 'station_remote_archive_url');
-
-  return array();
+function station_update_last_removed() {
+  // We've removed the 5.x-1.x version of mymodule, including database updates.
+  // The next update function is mymodule_update_5200().
+  return 100;
 }
-
-
-function _station_var_rename($from, $to) {
-  $value = variable_get($from, FALSE);
-  if ($value) {
-    variable_set($to, $value);
-  }
-  variable_del($from);
-}
-
-/**
- * Empty update to set a schema number for Drupal 5.0.
- */
-function station_update_100() {
-  return array();
-}
-
 
 /**
  * Rename the module's permissions to make them consistent with core.

@@ -5,74 +5,64 @@
 /**
  * Implementation of hook_views_tables().
  */
-function station_archive_views_tables() {
-  $tables['station_archive_item'] = array(
-    'name' => 'station_archive_item',
-    'join' => array(
-      'left' => array(
-        'table' => 'node',
-        'field' => 'nid'
-      ),
-      'right' => array(
-        'field' => 'audio_nid'
-      )
-    ),
-    'fields' => array(
-      'aired' => array(
-        'name' => t('Station Archive: Air date'),
-        'sortable' => TRUE,
-        'handler' => views_handler_field_dates(),
-        'option' => 'string',
-        'help' => t('Date the audio was aired.'),
-      ),
-      'imported' => array(
-        'name' => t('Station Archive: Import date'),
-        'sortable' => TRUE,
-        'handler' => views_handler_field_dates(),
-        'option' => 'string',
-        'help' => t('Date the audio was imported into the station archive.'),
-      ),
-    ),
-    'filters' => array(
-      'permanent' => array(
-        'name' => t('Station Archive: Is in permanent archive'),
-        'operator' => array('=' => 'Equals'),
-        'list' => 'views_handler_operator_yesno',
-        'list-type' => 'select',
-        'help' => t('Filter whether the node is part of the permanent archive.'),
-      ),
-    ),
+function station_archive_views_data() {
+  $data['station_archive_item']['table']['group']  = t('Station archive');
+  $data['station_archive_item']['table']['join']['node'] = array(
+    'left_field' => 'nid',
+    'field' => 'audio_nid'
   );
-  $tables['station_archive_program'] = array(
-    'name' => 'station_archive_program',
-    'join' => array(
-      'left' => array(
-        'table' => 'station_archive_item',
-        'field' => 'program_nid'
-      ),
-      'right' => array(
-        'field' => 'program_nid'
-      )
-    ),
-    'fields' => array(
-      'title' => array(
-        'name' => t('Station Archive: Program title'),
-        'sortable' => TRUE,
-        'handler' => 'station_archive_handler_audio_program_title_field',
-        'option' => array(
-           '#type' => 'select',
-           '#options' => array(
-             'link' => 'As link',
-             'nolink' => 'Without link'
-           ),
-        ),
-        'addlfields' => array('program_nid'),
-        'help' => t('The program that this audio is a recording of.'),
-      ),
+
+  $data['station_archive_item']['aired'] = array(
+    'title' => t('Station Archive: Air date'),
+    'help' => t('Date the audio was aired.'),
+    'field' => array(
+      'click sortable' => TRUE,
+      'handler' => 'views_handler_field_date',
     ),
   );
 
-  return $tables;
+  $data['station_archive_item']['imported'] = array(
+    'title' => t('Station Archive: Import date'),
+    'help' => t('Date the audio was imported into the station archive.'),
+    'field' => array('sortable' => TRUE,
+    'handler' => 'views_handler_field_date',
+      'option' => 'string',
+    ),
+  );
+
+  $data['station_archive_item']['permanent'] = array(
+    'title' => t('Station Archive: Is in permanent archive'),
+    'help' => t('Filter whether the node is part of the permanent archive.'),
+    'filters' => array(),
+  );
+  $data['station_archive_item']['program_nid'] = array(
+    'title' => t('Station Archive: Audio by Program'),
+    'help' => t('The Program NID argument allows visitors to filter archived audio to those of the specified program.'),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    )
+  );
+  $data['station_archive_program']['table']['join']['station_archive_item'] = array(
+     'left_field' => 'program_nid',
+     'field' => 'program_nid',
+  );
+
+  $data['station_archive_program']['title'] = array(
+    'title' => t('Station Archive: Program title'),
+    'help' => t('The program that this audio is a recording of.'),
+    'field' => array(
+      'sortable' => TRUE,
+      'handler' => 'station_archive_handler_audio_program_title_field',
+      'option' => array(
+        '#type' => 'select',
+        '#options' => array(
+          'link' => 'As link',
+          'nolink' => 'Without link'
+        ),
+      ),
+    ),
+  );
+  return $data;
 }
 
 /**

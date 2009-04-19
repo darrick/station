@@ -2,11 +2,6 @@
 
 define('STATION_ARCHIVE_CVS_ID', '$Id$');
 
-if (module_exists('views')) {
-  require_once(drupal_get_path('module', 'station_archive') .'/views.inc');
-  require_once(drupal_get_path('module', 'station_archive') .'/views_defaults.inc');
-}
-
 /**
  * Implementation of hook_help().
  */
@@ -14,55 +9,50 @@ function station_archive_help($section = '') {
   switch ($section) {
     case 'admin/settings/station/archive':
       return t("These settings let you configure the way the station's webstream is archived into audio nodes. Audio is imported into the archive as part of Drupal's cron task. You'll need to ensure that that is properly configured. ");
-    default:
-      return NULL;
   }
 }
 
 /**
  * Implementation of hook_menu().
  */
-function station_archive_menu($may_cache) {
-  $items = array();
-  if ($may_cache) {
-    // legacy menus, views is where it's at now...
-    $items[] = array(
-      'path' => 'last',
-      'title' => t('Show archive'),
-      'callback' => 'station_archive_view_html',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-    $items[] = array(
-      'path' => 'last/hours',
-      'callback' => 'station_archive_view_hours_html',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-    $items[] = array(
-      'path' => 'rss',
-      'title' => t('RSS show archive'),
-      'callback' => 'station_archive_view_rss',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-    $items[] = array(
-      'path' => 'rss/hours',
-      'callback' => 'station_archive_view_hours_rss',
-      'access' => user_access('access content'),
-      'type' => MENU_CALLBACK,
-    );
-    // end legacy menu items
+function station_archive_menu() {
+  // Legacy menu items. This functionality is handled by Views now.
+  $items['last'] = array(
+    'title' => t('Show archive'),
+    'page callback' => 'station_archive_view_html',
+    'access arguments' => array('access content'),
+    'file' => 'station_archive.legacy_pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['last/hours'] = array(
+    'page callback' => 'station_archive_view_hours_html',
+    'access arguments' => array('access content'),
+    'file' => 'station_archive.legacy_pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['rss'] = array(
+    'title' => t('RSS show archive'),
+    'page callback' => 'station_archive_view_rss',
+    'access arguments' => array('access content'),
+    'file' => 'station_archive.legacy_pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['rss/hours'] = array(
+    'page callback' => 'station_archive_view_hours_rss',
+    'access arguments' => array('access content'),
+    'file' => 'station_archive.legacy_pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // end legacy menu items
 
-    $items[] = array('path' => 'admin/settings/station/archive',
-      'title' => t('Archive'),
-      'callback' => 'drupal_get_form',
-      'callback arguments' => array('station_archive_admin_settings'),
-      'access' => user_access('administer site configuration'),
-      'type' => MENU_LOCAL_TASK
-    );
-  }
-
+  $items['admin/settings/station/archive'] = array(
+    'title' => t('Archive'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('station_archive_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'station_archive.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
   return $items;
 }
 
@@ -71,85 +61,8 @@ function station_archive_menu($may_cache) {
  */
 function station_archive_perm() {
   return array(
-    'administer archive',
+    'administer station archive',
   );
-}
-
-function station_archive_view_html($dayname = NULL, $hourname = NULL) {
-  if (!is_null($dayname)) {
-    $day = station_valid_day($dayname);
-    $vid = _station_archive_get_vid();
-    if ($dayterm = _station_archive_get_day_term($vid, $day)) {
-      $tid = $dayterm['tid'];
-
-      if (!is_null($hourname)) {
-        $hour = station_valid_hour($hourname);
-        if ($hourterm = _station_archive_get_hour_term($dayterm, $hour)) {
-          $tid = $hourterm['tid'];
-        }
-      }
-      drupal_goto('taxonomy/term/'. $tid);
-    }
-  }
-  drupal_not_found();
-}
-
-function station_archive_view_rss($dayname = NULL, $hourname = NULL) {
-  if (!is_null($dayname)) {
-    $day = station_valid_day($dayname);
-    $vid = _station_archive_get_vid();
-    if ($dayterm = _station_archive_get_day_term($vid, $day)) {
-      $tid = $dayterm['tid'];
-
-      if (!is_null($hourname)) {
-        $hour = station_valid_hour($hourname);
-        if ($hourterm = _station_archive_get_hour_term($dayterm, $hour)) {
-          $tid = $hourterm['tid'];
-        }
-      }
-
-      drupal_goto('taxonomy/term/'. $tid .'/0/feed');
-    }
-  }
-  drupal_not_found();
-}
-
-function station_archive_view_hours_html($hour_string) {
-  $title = t('Shows on...');
-  $rss_url = url('rss/hours/'. str_replace(' ', '+', $hour_string));
-
-  $attributes = array(
-    'rel' => 'alternate',
-    'type' => 'application/rss+xml',
-    'title' => t('RSS - %title', array('%title' => $title)),
-    'href' => $rss_url,
-  );
-  drupal_add_link($attributes);
-  drupal_set_title($title);
-
-  $vid = _station_archive_get_vid();
-  $tids = _station_archive_get_hour_tids($vid, $hour_string);
-  $result = taxonomy_select_nodes($tids, 'or', 0, FALSE);
-  while ($node = db_fetch_object($result)) {
-    $output .= node_view(node_load($node), 1);
-  }
-  $output .= theme('feed_icon', $rss_url);
-
-  return $output;
-}
-
-function station_archive_view_hours_rss($hour_string) {
-  $title = t('Shows on...');
-  $desc = t('Description of shows...');
-
-  $vid = _station_archive_get_vid();
-  $tids = _station_archive_get_hour_tids($vid, $hour_string);
-  $result = taxonomy_select_nodes($tids, 'or', 'all', FALSE);
-
-  $channel['title'] = $title;
-  $channel['description'] = $desc;
-
-  return node_feed($result, $channel);
 }
 
 /**
@@ -189,107 +102,6 @@ function _station_archive_browse_block() {
     }
     return theme('item_list', $items);
   }
-}
-
-/**
- * Archive settings form.
- */
-function station_archive_admin_settings() {
-  $times = array(86400, 172800, 259200, 345600, 432000, 518400, 604800, 1209600, 1814400, 2419200, 3024000, 3628800, 4233600, 4838400, 5443200, 6048000);
-  $ageoptions = drupal_map_assoc($times, 'format_interval');
-
-  $form['import'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Import'),
-    '#collapsible' => FALSE,
-  );
-  $form['import']['station_archive_import_new'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Import new audio'),
-    '#default_value' => variable_get('station_archive_import_new', 1),
-    '#description' => t("If this is checked, audio files left in the import directory will be added to the archive. The only reason to uncheck this is if you're running into a bug and want to stop imports until it can be fixed."),
-  );
-  $form['import']['station_archive_import_dir'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Import path'),
-    '#default_value' => variable_get('station_archive_import_dir', drupal_get_path('module', 'station_archive') .'/import'),
-    '#after_build' => array('system_check_directory'),
-    '#required' => TRUE,
-    '#description' => t('The directory where new MP3s are left by the stream ripper script. Drupal will need to have write access to this directory so we can move the file.'),
-  );
-  $form['import']['title_format']['station_archive_title_format'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Title format'),
-    '#default_value' => variable_get('station_archive_title_format', '[audio-tag-title-raw]'),
-    '#required' => TRUE,
-    '#description' => t('This will be used as the title format for the audio nodes. You can use the tokens listed below to insert information into the title. <strong>Note:</strong> it is safe to use the -raw tokens.'),
-  );
-  $form['import']['title_format']['token_help'] = array(
-    '#title' => t('Token list'),
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#description' => t('This is a list of the tokens that can be used in the title of audio nodes.'),
-    'help' => array('#value' => theme('token_help', 'node')),
-  );
-  $form['import']['scheduled'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Scheduled'),
-    '#collapsible' => FALSE,
-    '#description' => t("These settings apply to audio recorded during a time when a program is scheduled. The program's information will be used to fill in the audio node's title, artist and genre tags."),
-  );
-  $form['import']['scheduled']['station_archive_promote_scheduled'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Promote scheduled audio'),
-    '#default_value' => variable_get('station_archive_promote_scheduled', 1),
-    '#description' => t("If this is checked, audio nodes recorded during scheduled programs will be promoted to the front page."),
-  );
-  $form['import']['unscheduled'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Uncheduled'),
-    '#collapsible' => FALSE,
-    '#description' => t("These settings apply to audio recorded during a time when no program is scheduled. "),
-  );
-  $form['import']['unscheduled']['station_archive_delete_unscheduled'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Discard unscheduled audio'),
-    '#default_value' => variable_get('station_archive_delete_unscheduled', 0),
-    '#description' => t("If this is checked, any audio recorded during an unscheduled time will be deleted rather than imported."),
-  );
-  $form['import']['unscheduled']['station_archive_unscheduled_title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Unscheduled audio title'),
-    '#default_value' => variable_get('station_archive_unscheduled_title', t('DJ Auto mix')),
-    '#required' => TRUE,
-    '#description' => t("This value will be used for the audio node's title tag field when importing audio recorded during an unscheduled time."),
-  );
-
-  $form['cleanup'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Clean up'),
-    '#collapsible' => FALSE,
-  );
-  $form['cleanup']['station_archive_cleanup_old'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Remove old audio'),
-    '#default_value' => variable_get('station_archive_cleanup_old', 1),
-    '#description' => t("If this is checked, audio that's older than the maximum age will be removed."),
-  );
-  $form['cleanup']['station_archive_max_age'] = array(
-    '#type' => 'select',
-    '#title' => t('Maximum age'),
-    '#default_value' => variable_get('station_archive_max_age', 604800),
-    '#options' => $ageoptions,
-    '#description' => t("Audio that's been in the archive longer than this will be removed."),
-    '#required' => TRUE,
-  );
-
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_ARCHIVE_CVS_ID .'</pre>',
-  );
-
-  return system_settings_form($form);
 }
 
 /**
@@ -351,7 +163,7 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
         break;
 
       case 'update':
-        if (isset($node->station_archive) && user_access('administer archive')) {
+        if (isset($node->station_archive) && user_access('administer station archive')) {
           // Remove any existing records.
           db_query("DELETE FROM {station_archive_item} WHERE audio_nid = %d", $node->nid);
           // If this should be in the archive, create a new record.
@@ -362,7 +174,8 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
             if (empty($node->station_archive['imported'])) {
               $node->station_archive['imported'] = time();
             }
-            db_query("INSERT INTO {station_archive_item} (audio_nid, program_nid, aired, imported, permanent) VALUES (%d, %d, %d, %d, %d)", $node->nid, $node->station_archive['program_nid'], $node->station_archive['aired'], $node->station_archive['imported'], $node->station_archive['permanent']);
+            $record = array_merge($node->station_archive, array('nid' => $node->nid));
+            drupal_write_record('station_archive_item', $record);
           }
         }
         break;
@@ -390,10 +203,10 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
           $breadcrumb[] = array('path' => 'station/archives', 'title' => t('Archives'));
           $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);
           $breadcrumb[] = array('path' => 'node/'. $node->nid);
-          menu_set_location($breadcrumb);
+          drupal_set_breadcrumb($breadcrumb);
 
           // Provide information to admins on the import and deletion dates.
-          if (user_access('administer archive')) {
+          if (user_access('administer station archive')) {
             $node->content['station_archive'] = array(
               '#type' => 'fieldset',
               '#title' => t('Station Archive Admin Info'),
@@ -433,7 +246,7 @@ function station_archive_form_alter($form_id, &$form) {
   if ($form_id == 'audio_node_form') {
     $node = $form['#node'];
 
-    if (isset($node->station_archive) || user_access('administer archive')) {
+    if (isset($node->station_archive) || user_access('administer station archive')) {
       $form['station_archive'] = array(
         '#type' => 'fieldset',
         '#title' => t('Station Archive'),
@@ -443,7 +256,7 @@ function station_archive_form_alter($form_id, &$form) {
         '#tree' => TRUE,
         station_archive_node_info_form($node),
       );
-      if (user_access('administer archive')) {
+      if (user_access('administer station archive')) {
         $program_options = array();
         foreach (station_archive_get_programs() as $nid => $program) {
           $program_options[$nid] = $program->title;
@@ -635,7 +448,7 @@ function _station_archive_update_program_list() {
 
   foreach ($programs as $program) {
     db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program['nid']);
-    db_query("INSERT INTO {station_archive_program} (program_nid, title) VALUES (%d, '%s')", $program['nid'], $program['title']);
+    drupal_write_record('station_archive_program', $program);
   }
 }
 
@@ -878,3 +691,11 @@ function _station_archive_get_hour_term($dayterm, $hour) {
   return db_fetch_array($result);
 }
 
+/**
+ * Implementation of hook_view_api().
+ */
+function station_archive_views_api() {
+  return array(
+    'api' => 2.0,
+  );
+}

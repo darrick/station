@@ -27,6 +27,8 @@ function station_update_6000() {
   $ret = array();
 
   $replacements = array(
+    // Archive
+    'administer archive' => array('administer station archive'),
     // Catalog
     'administer catalog' => array('administer station catalog'),
     'view catalog' => array('view station album content'),

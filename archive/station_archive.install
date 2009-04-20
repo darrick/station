@@ -58,6 +58,13 @@ function station_archive_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'aired' => array(
+        'description' => 'The Unix timestamp when the audio aired.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'imported' => array(
         'description' => 'The Unix timestamp when the audio was imported.',
         'type' => 'int',

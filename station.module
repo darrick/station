@@ -219,8 +219,7 @@ function station_get_program_at($timestamp, $schedule_nid) {
 
   // Use the local schedule if one is available.
   if (module_exists('station_schedule')) {
-    $program = station_schedule_program_get_at($timestamp, $schedule_nid);
-    if ($program->nid) {
+    if ($program = station_schedule_program_get_at($timestamp, $schedule_nid) && !empty($program->nid)) {
       return $program;
     }
   }

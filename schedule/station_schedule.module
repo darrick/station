@@ -171,6 +171,9 @@ function station_schedule_access($op, $node) {
   global $user;
 
   switch ($op) {
+    case 'view':
+      return TRUE;
+
     case 'update':
     case 'delete':
     case 'create':

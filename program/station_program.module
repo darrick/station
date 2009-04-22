@@ -89,8 +89,22 @@ function station_program_admin_settings() {
 function station_program_access($op, $node) {
   global $user;
 
+  if (user_access('administer programs')) {
+    return TRUE;
+  }
+
   switch ($op) {
+    // Only users with 'administer programs' permissions can create or delete
+    // programs.
+
+    case 'view':
+      return TRUE;
+
     case 'update':
+      // If the schedule is enabled, defer to that permision.
+      if (module_exists('station_schedule') && user_access('administer schedule')) {
+        return TRUE;
+      }
       if (user_access('edit program content')) {
         return TRUE;
       }
@@ -100,16 +114,7 @@ function station_program_access($op, $node) {
       if ($node->uid == $user->uid || isset($djs[$user->uid])) {
         return user_access('edit own program content');
       }
-      break;
-
-    case 'delete':
-    case 'create':
-    default:
-      // If the schedule is enabled, defer to that permision.
-      if (module_exists('station_schedule')) {
-        return user_access('administer schedule');
-      }
-      return user_access('administer programs');
+      return FALSE;
   }
 }
 

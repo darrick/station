@@ -140,21 +140,15 @@ function station_playlist_access($op, $node) {
 
   switch ($op) {
     case 'view':
-      return user_access('access content');
-      break;
+      return TRUE;
 
     case 'create':
       return user_access('create playlists');
-      break;
 
     case 'update':
     case 'delete':
-      if (user_access('edit own playlists') && ($user->uid == $node->uid)) {
-        return TRUE;
-      }
-      break;
+      return (user_access('edit own playlists') && ($user->uid == $node->uid));
   }
-  return FALSE;
 }
 
 /**

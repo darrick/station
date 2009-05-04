@@ -440,12 +440,12 @@ function _station_archive_update_program_list() {
 
   // Insert a program for unschedule times. 
   $programs[0] = array(
-    'nid' => 0,
+    'program_nid' => 0,
     'title' => variable_get('station_archive_unscheduled_title', t('DJ Auto mix')),
   );
 
   foreach ($programs as $program) {
-    db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program['nid']);
+    db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program['program_nid']);
     drupal_write_record('station_archive_program', $program);
   }
 }

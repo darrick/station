@@ -220,8 +220,6 @@ function station_program_uninstall() {
     content_field_instance_delete('field_station_program_genre', 'station_program');
     content_field_instance_delete('field_station_program_link', 'station_program');
   }
-
-  variable_del('station_program_redirect_on_add');
 }
 
 /**

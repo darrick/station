@@ -19,7 +19,6 @@ function station_catalog_uninstall() {
     taxonomy_del_vocabulary($vid);
   }
   variable_del('station_catalog_vocabulary');
-  variable_del('station_catalog_redirect_on_add');
 }
 
 /**

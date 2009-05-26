@@ -16,15 +16,6 @@ function station_program_help($path, $arg) {
  * Implementation of hook_menu().
  */
 function station_program_menu() {
-  $items['admin/settings/station/program'] = array(
-    'title' => 'Program',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('station_program_admin_settings'),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'station_program.admin.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
   $items['station/autocomplete/program'] = array(
     'title' => 'program autocomplete',
     'page callback' => 'station_program_autocomplete',
@@ -114,12 +105,6 @@ function station_program_access($op, $node, $account) {
  */
 function station_program_form(&$node) {
   $type = node_get_types('type', $node);
-
-  // Make it a little easier when doing data entry and redirect back to the
-  // add form after submitting a new program.
-  if (empty($node->nid) && variable_get('station_program_redirect_on_add', TRUE)) {
-    $form['#redirect'] = 'node/add/station-program';
-  }
 
   $form['title'] = array(
     '#type' => 'textfield',

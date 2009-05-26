@@ -14,22 +14,6 @@ function station_catalog_help($path, $arg) {
 }
 
 /**
- * Implementation of hook_menu().
- */
-function station_catalog_menu() {
-  $items['admin/settings/station/catalog'] = array(
-    'title' => 'Catalog',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('station_catalog_admin_settings'),
-    'file' => 'station_catalog.admin.inc',
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK
-  );
-
-  return $items;
-}
-
-/**
  * Implementation of hook_node_info().
  */
 function station_catalog_node_info() {
@@ -124,12 +108,6 @@ function station_catalog_album_prepare(&$node) {
  */
 function station_catalog_album_form($node) {
   $type = node_get_types('type', $node);
-
-  // Make it a little easier when doing data entry and redirect back to the
-  // add form after submitting a new album.
-  if (empty($node->nid) && variable_get('station_catalog_redirect_on_add', TRUE)) {
-    $form['#redirect'] = 'node/add/station-album';
-  }
 
   $form['album'] = array(
     '#type' => 'fieldset',

@@ -75,3 +75,19 @@ function station_update_6000() {
 
   return $ret;
 }
+
+/**
+ * Remove the "Add multiple" options and suggest that using the Submit Again
+ * module instead.
+ */
+function station_update_6001() {
+  $ret = array();
+
+  if (variable_get('station_catalog_redirect_on_add', TRUE) || variable_get('station_program_redirect_on_add', TRUE)) {
+    $ret[] = array('success' => TRUE, 'query' => t("The Station module's add multiple feature has been removed. If you'd like to retain this functionality you should install the <a href='http://drupal.org/project/submitagain'>Submit Again</a> module."));
+  }
+  variable_del('station_catalog_redirect_on_add');
+  variable_del('station_program_redirect_on_add');
+
+  return $ret;
+}

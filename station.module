@@ -89,7 +89,11 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
     return $block;
 
   case 'list':
-    $blocks[0]['info'] = t('Station: Current Program');
+    $blocks[0] = array(
+      'info'   => t('Station: Current Program'),
+      'status' => TRUE,
+      'region' => 'left',
+    );
     return $blocks;
   }
 }

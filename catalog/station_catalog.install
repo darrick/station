@@ -115,29 +115,6 @@ function station_catalog_schema() {
   return $schema;
 }
 
-
-/**
- * Empty update to set a schema number for Drupal 5.0.
- */
-function station_catalog_update_100() {
-  return array();
-}
-
-/**
- * Change the album node name from 4.7 to 5.0.
- */
-function station_catalog_update_101() {
-  $ret = array();
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("UPDATE {node} SET type = 'station_album' WHERE type='album';");
-      $ret[] = update_sql("UPDATE {node_type} SET type = 'station_album' WHERE type='album';");
-    break;
-  }
-  return $ret;
-}
-
 /**
  * Remove the autonumber from the nid column and add a year column.
  */
@@ -196,3 +173,13 @@ function station_catalog_update_5202() {
 
   return array();
 }
+
+/**
+ * Implementation of hook_update_last_removed().
+ */
+function station_catalog_update_last_removed() {
+  // We've removed the 5.x-1.x version of the module, including database
+  // updates. The next update function is 5200.
+  return 101;
+}
+

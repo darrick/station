@@ -492,31 +492,35 @@ function station_schedule_update_6001() {
     array(
       'cck_field' => $dj_field,
       'from_table' => 'station_dj',
+      'from_join' => 'program_nid',
       'from_col' => 'uid',
+      'to_join' => 'nid',
       'to_col' => 'uid',
-      'join_col' => 'program_nid'
     ),
   );
   foreach ($migrations as $migration) {
     // Might be needlessly escaping the names here but it shouldn't hurt
     // anything.
     $from_table = db_escape_table($migration['from_table']);
-    $from_col = db_escape_table($migration['from_col']);
-    $join_col = db_escape_table($migration['join_col']);
-    $db_info = content_database_info($migration['cck_field']);
-    $to_table = db_escape_table($db_info['table']);
-    $to_col = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
+    $from_col   = db_escape_table($migration['from_col']);
+    $from_join  = db_escape_table($migration['from_join']);
+
+    $db_info    = content_database_info($migration['cck_field']);
+    $to_table   = db_escape_table($db_info['table']);
+    $to_col     = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
+    $to_join    = db_escape_table($migration['to_join']);
 
     // Make sure there's a record in CCK's table for every one in the source
     // table, then do an update of all the records.
-    $ret[] = update_sql("INSERT INTO {$to_table} (nid, vid) SELECT n.nid, n.vid FROM {$from_table} f INNER JOIN {node} n ON f.$join_col = n.$join_col WHERE NOT EXISTS ( SELECT * FROM {$to_table} t WHERE f.$join_col = t.$join_col)");
-    $ret[] = update_sql("UPDATE {$to_table} t INNER JOIN {$from_table} f ON t.$join_col = f.$join_col SET t.$to_col = f.$from_col");
+    $ret[] = update_sql("INSERT INTO {{$to_table}} (nid, vid) SELECT n.nid, n.vid FROM {{$from_table}} f INNER JOIN {node} n ON f.$from_join = n.nid WHERE NOT EXISTS ( SELECT * FROM {{$to_table}} t WHERE f.$from_join = t.$to_join)");
+    $ret[] = update_sql("UPDATE {{$to_table}} t INNER JOIN {{$from_table}} f ON t.$to_join = f.$from_join SET t.$to_col = f.$from_col");
   }
 
   // Since these are now on the field we don't really need them any more..
   variable_del('station_schedule_dj_role');
   variable_del('station_schedule_dj_title');
 
+#  db_drop_table($ret, 'station_dj');
 
   return $ret;
 }

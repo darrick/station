@@ -568,32 +568,38 @@ function station_playlist_update_6000() {
       'cck_field' => $program_field,
       'from_table' => 'station_playlist',
       'from_col' => 'program_nid',
+      'from_join' => 'nid',
       'to_col' => 'nid',
-      'join_col' => 'nid'
+      'to_join' => 'nid',
     ),
     array(
       'cck_field' => $date_field,
       'from_table' => 'station_playlist',
       'from_col' => 'timestamp',
+      'from_join' => 'nid',
       'to_col' => 'value',
-      'join_col' => 'nid'
+      'to_join' => 'nid',
     ),
   );
   foreach ($migrations as $migration) {
     // Might be needlessly escaping the names here but it shouldn't hurt
     // anything.
     $from_table = db_escape_table($migration['from_table']);
-    $from_col = db_escape_table($migration['from_col']);
-    $join_col = db_escape_table($migration['join_col']);
-    $db_info = content_database_info($migration['cck_field']);
-    $to_table = db_escape_table($db_info['table']);
-    $to_col = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
+    $from_col   = db_escape_table($migration['from_col']);
+    $from_join  = db_escape_table($migration['from_join']);
+
+    $db_info    = content_database_info($migration['cck_field']);
+    $to_table   = db_escape_table($db_info['table']);
+    $to_col     = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
+    $to_join    = db_escape_table($migration['to_join']);
 
     // Make sure there's a record in CCK's table for every one in the source
     // table, then do an update of all the records.
-    $ret[] = update_sql("INSERT INTO {$to_table} (nid, vid) SELECT n.nid, n.vid FROM {$from_table} f INNER JOIN {node} n ON f.$join_col = n.$join_col WHERE NOT EXISTS ( SELECT * FROM {$to_table} t WHERE f.$join_col = t.$join_col)");
-    $ret[] = update_sql("UPDATE {$to_table} t INNER JOIN {$from_table} f ON t.$join_col = f.$join_col SET t.$to_col = f.$from_col");
+    $ret[] = update_sql("INSERT INTO {{$to_table}} (nid, vid) SELECT n.nid, n.vid FROM {{$from_table}} f INNER JOIN {node} n ON f.$from_join = n.nid WHERE NOT EXISTS ( SELECT * FROM {{$to_table}} t WHERE f.$from_join = t.$to_join)");
+    $ret[] = update_sql("UPDATE {{$to_table}} t INNER JOIN {{$from_table}} f ON t.$to_join = f.$from_join SET t.$to_col = f.$from_col");
   }
+
+#  db_drop_table($ret, 'station_playlist');
 
   return $ret;
 }

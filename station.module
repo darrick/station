@@ -182,7 +182,7 @@ function station_get_schedules() {
 /**
  * Return the default schedule.
  *
- * @return Array with schedule info.
+ * @return Array with schedule info, or NULL if no schedules are available.
  */
 function station_default_schedule() {
   if (module_exists('station_schedule')) {
@@ -194,7 +194,13 @@ function station_default_schedule() {
   $schedules = station_get_schedules();
   // Return the default schedule if one has been selected, if not just use the
   // first one.
-  return isset($schedules[$id]) ? $schedules[$id] : reset($schedules);
+  if (isset($schedules[$id])) {
+    return $schedules[$id];
+  }
+  if (is_array($schedules)) {
+    return reset($schedules);
+  }
+  return NULL;
 }
 
 /**

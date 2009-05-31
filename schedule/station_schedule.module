@@ -54,19 +54,6 @@ function station_schedule_menu() {
     );
   }
 
-/*
-# TODO
-    // Stream M3U links
-    foreach ($node->settings['streams'] as $key => $stream) {
-      $items["node/%node/$key.m3u"] = array(
-        'type' => MENU_CALLBACK,
-        'page callback' => 'station_schedule_stream_m3u',
-        'page arguments' => array($stream),
-        'access callback' => 'station_schedule_node_view_access',
-        'access arguments' => array(1),
-      );
-    }
-*/
   $items["node/%node/view/week"] = array(
     'title' => 'Week',
     'page callback' => 'node_page_view',
@@ -332,6 +319,9 @@ function station_schedule_form($node) {
     $form['body_filter']['format'] = filter_form($node->format);
   }
 
+  // Stick in out submit handler to put the stream URLs back into an array.
+  $form['#submit'] = array('station_schedule_form_submit');
+
   return $form;
 }
 
@@ -363,7 +353,8 @@ function station_schedule_validate(&$node) {
       }
     }
 
-    foreach (explode("\n", $stream['urls']) as $url) {
+    $urls = is_array($stream['urls']) ? $stream['urls'] : explode("\n", $stream['urls']);
+    foreach ($urls as $url) {
       $url = trim($url);
       if (!empty($url) && !valid_url($url, TRUE)) {
         form_set_error("settings][streams][$key][urls", t('An invalid webstream URL was provided: %url', array('%url' => $url)));
@@ -375,19 +366,23 @@ function station_schedule_validate(&$node) {
 /**
  * Implementation of hook_submit().
  */
-function station_schedule_submit(&$node) {
+function station_schedule_form_submit($form, &$form_state) {
   $streams = array();
-  foreach ((array) $node->settings['streams'] as $key => $stream) {
+  foreach ((array) $form_state['values']['settings']['streams'] as $key => $stream) {
     // Skip empty rows.
     if (!empty($stream['name'])) {
-      // Convert URLs into an array.
-      $stream['urls'] = array_map('trim', explode("\n", $stream['urls']));
-      $streams[$stream['name']] = $stream;
+      if (!is_array($stream['urls'])) {
+        // Convert URLs into an array and remove adjacent white space.
+        $stream['urls'] = array_map('trim', explode("\n", $stream['urls']));
+      }
+      // Create a new key that's the name with non-alphanumeric characters
+      // converted to underscores.
+      $new_key = preg_replace('/[^-\w]+/', '_', $stream['name']);
+      $streams[$new_key] = $stream;
     }
   }
-  $node->settings['streams'] = $streams;
+  $form_state['values']['settings']['streams'] = $streams;
 }
-
 
 /**
  * Implementation of hook_load().
@@ -421,7 +416,7 @@ function station_schedule_load($node) {
     $settings['streams'] = array();
     foreach ($streams as $key => $stream) {
       // Add in the M3U URL.
-      $stream['m3u_url'] = url('node/'. $node->nid .'/'. $key .'.m3u', array('absolute' => TRUE));
+      $stream['m3u_url'] = file_create_url('station/'. $node->nid .'-'. $key .'.m3u');
       $settings['streams'][$key] = $stream;
     }
   }
@@ -441,12 +436,17 @@ function station_schedule_load($node) {
 function station_schedule_insert($node) {
   $record = array_merge($node->settings, array('nid' => $node->nid, 'vid' => $node->vid));
   drupal_write_record('station_schedule', $record);
+
+  station_schedule_write_m3u($node);
 }
 
 /**
  * Implementation of hook_delete().
  */
 function station_schedule_delete($node) {
+  // Remove any old streams files for this node.
+  file_scan_directory(file_create_path('station'), $node->nid .'-.*\.m3u', array('.', '..', 'CVS'), 'file_delete', FALSE);
+
   db_query("DELETE FROM {station_schedule_item} WHERE schedule_nid = %d", $node->nid);
   db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid);
 }
@@ -458,6 +458,8 @@ function station_schedule_update($node) {
   db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid);
   $record = array_merge($node->settings, array('nid' => $node->nid, 'vid' => $node->vid));
   drupal_write_record('station_schedule', $record);
+
+  station_schedule_write_m3u($node);
 }
 
 /**
@@ -792,7 +794,7 @@ function station_schedule_get_list() {
       $schedule['streams'] = array();
       foreach ($streams as $key => $stream) {
         // Add in the M3U URL.
-        $stream['m3u_url'] = url('node/'. $schedule['nid'] .'/'. $key .'.m3u', array('absolute' => TRUE));
+        $stream['m3u_url'] = file_create_url('station/'. $schedule['nid'] .'-'. $key .'.m3u');
         $schedule['streams'][$key] = $stream;
       }
     }
@@ -954,19 +956,24 @@ function station_schedule_week_page($node) {
 }
 
 /**
- * Send the client an M3U file of the streams.
+ * Write an M3U file to the files/station directory for each of the node's
+ * webstrem links.
  *
- * @param $stream An array with a 'urls' item containing an array of webstream
- *   URLs.
+ * @param $node A station_schedule node.
  */
-function station_schedule_stream_m3u($stream) {
-  drupal_set_header('Content-Type: audio/mpegurl');
-  $output = '';
-  foreach ($stream['urls'] as $url) {
-    $output .= $url ."\n";
+function station_schedule_write_m3u($node) {
+  // Create the files/station subdirectory.
+  $station_path = file_create_path('station');
+  file_check_directory($station_path, FILE_CREATE_DIRECTORY);
+
+  // Remove any old streams files for this node.
+  file_scan_directory($station_path, $node->nid .'-.*\.m3u', array('.', '..', 'CVS'), 'file_delete', FALSE);
+
+  // Write out new files.
+  foreach ($node->settings['streams'] as $key => $stream) {
+    $content = implode("\n", $stream['urls']);
+    file_save_data($content, "{$station_path}/{$node->nid}-{$key}.m3u",  FILE_EXISTS_REPLACE);
   }
-  print $output;
-  exit();
 }
 
 

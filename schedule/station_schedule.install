@@ -109,6 +109,9 @@ function station_schedule_uninstall() {
 
   variable_del('station_schedule_redirect_old_urls');
   variable_del('station_schedule_default');
+
+  // Remove any stream files.
+  file_scan_directory(file_create_path('station'), '.*\.m3u', array('.', '..', 'CVS'), 'file_delete', FALSE);
 }
 
 /**
@@ -403,7 +406,9 @@ function station_schedule_update_6000() {
   return $ret;
 }
 
-
+/**
+ * Move the program's DJ list into a node reference field.
+ */
 function station_schedule_update_6001() {
   $ret = array();
 
@@ -543,4 +548,21 @@ function station_schedule_update_6001() {
 #  db_drop_table($ret, 'station_dj');
 
   return $ret;
+}
+
+/**
+ * Resave the schedules so that the webstream links are saved as files.
+ */
+function station_schedule_update_6002() {
+  $result = db_query("SELECT n.nid FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
+  while ($node = db_fetch_array($result)) {
+    $node = node_load($node);
+    if ($node->nid) {
+      $node = node_validate($node);
+      $node = node_submit($node);
+      node_save($node);
+    }
+  }
+
+  return array();
 }

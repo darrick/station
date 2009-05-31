@@ -8,6 +8,10 @@
 function station_schedule_install() {
   drupal_install_schema('station_schedule');
 
+  $roles = user_roles(TRUE);
+  $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
+  $dj_title = variable_get('station_schedule_dj_title', 'DJs');
+
   # var_export(content_fields('field_station_program_dj', 'station_program'));
   $dj_field = array (
     'field_name' => 'field_station_program_dj',
@@ -54,7 +58,7 @@ function station_schedule_install() {
     ),
     'referenceable_roles' =>
     array (
-      2 => 2,
+      $dj_role => $dj_role,
     ),
     'referenceable_status' =>
     array (
@@ -75,9 +79,9 @@ function station_schedule_install() {
         ),
       ),
       'default_value_php' => NULL,
-      'label' => 'DJs',
+      'label' => $dj_title,
       'weight' => '1',
-      'description' => 'Enter the names of users you\'d like to add as DJ.',
+      'description' => t('Enter the names of users you\'d like to add as @dj-title. The users must be members of the %role-name role.', array('@dj-title' => $dj_title, '%role-name' => $roles[$dj_role])),
       'type' => 'userreference_autocomplete',
       'module' => 'userreference',
     ),
@@ -107,6 +111,25 @@ function station_schedule_uninstall() {
   variable_del('station_schedule_default');
 }
 
+/**
+ * Implementation of hook_requirements().
+ */
+function station_schedule_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  // The installer doesn't order modules by dependency, and since
+  // station_schedule sorts ahead of userreference it'll try to install us
+  // before userreference. See: http://drupal.org/node/357519
+  if ($phase == 'install' && !module_exists('userreference')) {
+    $requirements['station_schedule_userreference'] = array(
+      'description' => $t('Sadly the Station Schedule cannot be installed until the User Reference module has been fully installed. User Reference should now be installed, so please try installing Station Schedule again.'),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
+  return $requirements;
+}
 
 /**
  * Implementation of hook_schema().
@@ -391,9 +414,6 @@ function station_schedule_update_6001() {
   }
   // Make sure there's no pending CCK udpates
   drupal_load('module', 'content');
-  if ($abort = content_check_update('station_playlist')) {
-    return $abort;
-  }
   if ($abort = content_check_update('userreference')) {
     return $abort;
   }

@@ -3,10 +3,15 @@
 // $Id$
 
 /**
- * Install the initial schema.
+ * Implementation of hook_schema().
  */
 function station_schedule_install() {
   drupal_install_schema('station_schedule');
+
+  // To deal with the possibility that we're being installed at the same time
+  // as CCK and the field modules we depend on, we need to manually enable the
+  // the modules to ensure they're available before we create our fields.
+  module_enable(array('content', 'userreference'));
 
   $roles = user_roles(TRUE);
   $dj_role = variable_get('station_schedule_dj_role', DRUPAL_AUTHENTICATED_RID);
@@ -46,7 +51,7 @@ function station_schedule_install() {
     'db_storage' => '0',
     'module' => 'userreference',
     'active' => '1',
-    'locked' => '0',
+    'locked' => '1',
     'columns' =>
     array (
       'uid' =>
@@ -96,42 +101,19 @@ function station_schedule_install() {
  * Implementation of hook_uninstall().
  */
 function station_schedule_uninstall() {
-  drupal_uninstall_schema('station_schedule');
-
   if (module_exists('content')) {
-    drupal_load('module', 'content');
-    content_notify('uninstall', 'station_program');
-
     module_load_include('inc', 'content', 'includes/content.crud');
     content_field_instance_delete('field_station_program_genre', 'station_program');
     content_field_instance_delete('field_station_program_link', 'station_program');
   }
+
+  drupal_uninstall_schema('station_schedule');
 
   variable_del('station_schedule_redirect_old_urls');
   variable_del('station_schedule_default');
 
   // Remove any stream files.
   file_scan_directory(file_create_path('station'), '.*\.m3u', array('.', '..', 'CVS'), 'file_delete', FALSE);
-}
-
-/**
- * Implementation of hook_requirements().
- */
-function station_schedule_requirements($phase) {
-  $requirements = array();
-  $t = get_t();
-
-  // The installer doesn't order modules by dependency, and since
-  // station_schedule sorts ahead of userreference it'll try to install us
-  // before userreference. See: http://drupal.org/node/357519
-  if ($phase == 'install' && !module_exists('userreference')) {
-    $requirements['station_schedule_userreference'] = array(
-      'description' => $t('Sadly the Station Schedule cannot be installed until the User Reference module has been fully installed. User Reference should now be installed, so please try installing Station Schedule again.'),
-      'severity' => REQUIREMENT_ERROR,
-    );
-  }
-
-  return $requirements;
 }
 
 /**
@@ -417,7 +399,7 @@ function station_schedule_update_6001() {
     $ret['#abort'] = array('success' => FALSE, 'query' => t('Station Playlist now requires CCK and User Reference modules. Some updates are still pending.<br/>Please re-run the update script.'));
     return $ret;
   }
-  // Make sure there's no pending CCK udpates
+  // Make sure there's no pending CCK updates
   drupal_load('module', 'content');
   if ($abort = content_check_update('userreference')) {
     return $abort;
@@ -461,7 +443,7 @@ function station_schedule_update_6001() {
     'db_storage' => '0',
     'module' => 'userreference',
     'active' => '1',
-    'locked' => '0',
+    'locked' => '1',
     'columns' =>
     array (
       'uid' =>

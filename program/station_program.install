@@ -2,11 +2,13 @@
 // $Id$
 
 /**
- * Install the initial schema.
+ * Implementation of hook_schema().
  */
 function station_program_install() {
-  drupal_load('module', 'content');
-  content_notify('install', 'station_program');
+  // To deal with the possibility that we're being installed at the same time
+  // as CCK and the field modules we depend on, we need to manually enable the
+  // the modules to ensure they're available before we create our fields.
+  module_enable(array('content', 'text', 'link'));
 
   # var_export(content_fields('field_station_program_genre', 'station_program'));
   $genre_field = array (
@@ -57,7 +59,7 @@ function station_program_install() {
     'db_storage' => '1',
     'module' => 'text',
     'active' => '1',
-    'locked' => '1',
+    'locked' => '0',
     'columns' =>
     array (
       'value' =>
@@ -213,29 +215,10 @@ function station_program_install() {
  */
 function station_program_uninstall() {
   if (module_exists('content')) {
-    drupal_load('module', 'content');
-    content_notify('uninstall', 'station_program');
-
     module_load_include('inc', 'content', 'includes/content.crud');
     content_field_instance_delete('field_station_program_genre', 'station_program');
     content_field_instance_delete('field_station_program_link', 'station_program');
   }
-}
-
-/**
- * Implementation of hook_enable().
- */
-function station_program_enable() {
-  drupal_load('module', 'content');
-  content_notify('enable', 'station_program');
-}
-
-/**
- * Implementation of hook_disable().
- */
-function station_program_disable() {
-  drupal_load('module', 'content');
-  content_notify('disable', 'station_program');
 }
 
 /**
@@ -275,9 +258,9 @@ function station_program_update_6000() {
     $ret['#abort'] = array('success' => FALSE, 'query' => t('Station Program now requires CCK, Text and Link modules. Some updates are still pending.<br/>Please re-run the update script.'));
     return $ret;
   }
-  // Make sure there's no pending CCK udpates
+  // Make sure there's no pending CCK updates
   drupal_load('module', 'content');
-  if ($abort = content_check_update('station_program')) {
+  if ($abort = content_check_update('text')) {
     return $abort;
   }
   if ($abort = content_check_update('link')) {
@@ -333,7 +316,7 @@ function station_program_update_6000() {
     'db_storage' => '1',
     'module' => 'text',
     'active' => '1',
-    'locked' => '1',
+    'locked' => '0',
     'columns' =>
     array (
       'value' =>

@@ -3,11 +3,15 @@
 // $Id$
 
 /**
- * Install the initial schema.
+ * Implementation of hook_schema().
  */
 function station_playlist_install() {
-  content_notify('install', 'station_playlist');
   drupal_install_schema('station_playlist');
+
+  // To deal with the possibility that we're being installed at the same time
+  // as CCK and the field modules we depend on, we need to manually enable the
+  // the modules to ensure they're available before we create our fields.
+  module_enable(array('content', 'nodereference', 'date'));
 
   # var_export(content_fields('field_station_program', 'station_playlist'));
   $program_field = array (
@@ -230,9 +234,6 @@ function station_playlist_install() {
  */
 function station_playlist_uninstall() {
   if (module_exists('content')) {
-    drupal_load('module', 'content');
-    content_notify('uninstall', 'station_playlist');
-
     module_load_include('inc', 'content', 'includes/content.crud');
     content_field_instance_delete('field_station_program', 'station_playlist');
     content_field_instance_delete('field_station_playlist_date', 'station_playlist');
@@ -243,23 +244,6 @@ function station_playlist_uninstall() {
   variable_del('station_playlist_title_dateformat');
   variable_del('station_playlist_program_dateformat');
 }
-
-/**
- * Implementation of hook_enable().
- */
-function station_playlist_enable() {
-  drupal_load('module', 'content');
-  content_notify('enable', 'station_playlist');
-}
-
-/**
- * Implementation of hook_disable().
- */
-function station_playlist_disable() {
-  drupal_load('module', 'content');
-  content_notify('disable', 'station_playlist');
-}
-
 
 /**
  * Implementation of hook_schema().
@@ -351,11 +335,8 @@ function station_playlist_update_6000() {
     $ret['#abort'] = array('success' => FALSE, 'query' => t('Station Playlist now requires CCK, Node Reference, and Link modules. Some updates are still pending.<br/>Please re-run the update script.'));
     return $ret;
   }
-  // Make sure there's no pending CCK udpates
+  // Make sure there's no pending CCK updates
   drupal_load('module', 'content');
-  if ($abort = content_check_update('station_playlist')) {
-    return $abort;
-  }
   if ($abort = content_check_update('nodereference')) {
     return $abort;
   }

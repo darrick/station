@@ -3,7 +3,7 @@
 // $Id$
 
 /**
- * Install the initial schema.
+ * Implementation of hook_schema().
  */
 function station_archive_install() {
   drupal_install_schema('station_archive');

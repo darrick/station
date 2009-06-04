@@ -21,9 +21,5 @@ function station_playlist_admin_settings() {
     '#default_value' => variable_get('station_playlist_program_dateformat', 'F j, Y'),
     '#description' => t("The playlist's date is also displayed on the the program node. This setting lets you control how it is formatted."),
   );
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_PLAYLIST_CVS_ID .'</pre>',
-  );
   return system_settings_form($form);
 }

@@ -23,16 +23,5 @@ function station_schedule_admin_settings() {
     '#description' => t("This you select the schedule that will be used as the default for backwards compatibility."),
   );
 
-  $form['station_schedule_program_node_type'] = array(
-    '#type' => 'item',
-    '#title' => t('Scheduled node type'),
-    '#value' => t('The schedule is using the %type node provided by the %module module.', array('%type' => 'station_program', '%module' => node_get_types('module', 'station_program'))),
-  );
-
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_SCHEDULE_CVS_ID .'</pre>',
-  );
-
   return system_settings_form($form);
 }

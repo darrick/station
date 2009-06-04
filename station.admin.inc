@@ -71,11 +71,6 @@ function station_admin_settings() {
     );
   }
 
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_CVS_ID .'</pre>',
-  );
-
   return system_settings_form($form);
 }
 

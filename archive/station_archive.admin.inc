@@ -93,10 +93,5 @@ function station_archive_admin_settings() {
     '#required' => TRUE,
   );
 
-  $form['module_cvs_id'] = array(
-    '#type' => 'item',
-    '#value' => '<pre>'. STATION_ARCHIVE_CVS_ID .'</pre>',
-  );
-
   return system_settings_form($form);
 }

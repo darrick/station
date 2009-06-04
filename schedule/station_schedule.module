@@ -1,7 +1,5 @@
 <?php
-
-define('STATION_SCHEDULE_CVS_ID', '$Id$');
-
+// $Id$
 
 /**
  * Implementation of hook_help().

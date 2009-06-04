@@ -15,6 +15,10 @@ function station_schedule_admin_settings() {
     '#default_value' => variable_get('station_schedule_redirect_old_urls', 0),
     '#description' => t("Checking this will ensure that the station module continues to redirect old <code>/schedule</code> and <code>/station/schedule</code> links."),
   );
+  $schedules = array();
+  foreach (station_get_schedules() as $nid => $schedule) {
+    $schedules[$nid] = $schedule['title'];
+  }
   $form['bc']['station_schedule_default'] = array(
     '#type' => 'select',
     '#title' => t('Default schedule'),

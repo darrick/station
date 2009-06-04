@@ -92,6 +92,7 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
       'info'   => t('Station: Current Program'),
       'status' => TRUE,
       'region' => 'left',
+      'cache'  => BLOCK_NO_CACHE,
     );
     return $blocks;
   }
@@ -330,11 +331,11 @@ function theme_station_block_current_program($schedule, $program) {
  *   Schedule's streams.
  */
 function theme_station_streams($streams) {
-  if (is_array($streams) && count($streams)) {
-    $items = array();
-    foreach ($streams as $key => $stream) {
-      $items[] = l($stream['name'], $stream['m3u_url'], array('title' => $stream['description']));
-    }
+  $items = array();
+  foreach ((array) $streams as $key => $stream) {
+    $items[] = l($stream['name'], $stream['m3u_url'], array('title' => $stream['description']));
+  }
+  if (count($items)) {
     return t('Tune in: ') . station_ored_list($items);
   }
 }

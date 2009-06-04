@@ -402,12 +402,14 @@ function _station_send_notice($type, $op, $data) {
 /**
  * Implementation of hook_station_notices to display simple notices about
  * station changes.
+ *
  * @param $type 'dj' or 'schedule'
  * @param $op 'add', 'remove', 'change' - Change only applies to schedule
  *    items.
  * @param $data associative array with details like: nid, sid, uid.
  */
-function station_station_notice($type, $op, $data) {
+# Renamed this since it's basically just for debugging.
+function _station_station_notice($type, $op, $data) {
   if ($type == 'dj') {
     $pid = $data['program_nid'];
     $uid = $data['uid'];

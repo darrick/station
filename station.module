@@ -232,7 +232,7 @@ function station_get_program_at($timestamp, $schedule_nid) {
     if ($program = station_schedule_program_get_at($timestamp, $schedule_nid)) {
       if (!empty($program->nid)) {
         return $program;
-      } 
+      }
     }
   }
   else {

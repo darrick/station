@@ -428,12 +428,31 @@ function station_schedule_views_default_views() {
   $handler->override_option('fields', array(
     'title' => array(
       'label' => 'Title',
-      'link_to_node' => 0,
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 1,
       'exclude' => 0,
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
       'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
     ),
     'field_station_program_genre_value' => array(
       'label' => '',
@@ -453,7 +472,23 @@ function station_schedule_views_default_views() {
       'relationship' => 'none',
     ),
     'field_station_program_dj_uid' => array(
-      'label' => '',
+      'label' => 'DJs',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
       'link_to_node' => 0,
       'label_type' => 'widget',
       'format' => 'default',
@@ -468,6 +503,9 @@ function station_schedule_views_default_views() {
       'table' => 'node_data_field_station_program_dj',
       'field' => 'field_station_program_dj_uid',
       'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
     ),
   ));
   $handler->override_option('sorts', array(
@@ -506,14 +544,39 @@ function station_schedule_views_default_views() {
     'type' => 'perm',
     'perm' => 'view station program content',
   ));
-  $handler->override_option('title', 'Scheduled programs');
+  $handler->override_option('title', 'Programs');
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_options', array(
+    'grouping' => '',
+    'override' => 1,
+    'sticky' => 1,
+    'order' => 'asc',
+    'columns' => array(
+      'title' => 'title',
+      'field_station_program_genre_value' => 'field_station_program_genre_value',
+      'field_station_program_dj_uid' => 'field_station_program_dj_uid',
+    ),
+    'info' => array(
+      'title' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_station_program_genre_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_station_program_dj_uid' => array(
+        'separator' => '',
+      ),
+    ),
+    'default' => '-1',
+  ));
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'station/programs/schedule');
   $handler->override_option('menu', array(
-    'type' => 'default tab',
-    'title' => 'Scheduled',
+    'type' => 'normal',
+    'title' => 'Programs',
     'description' => '',
     'weight' => '0',
     'name' => 'navigation',
@@ -622,5 +685,6 @@ function station_schedule_views_default_views() {
 
   return $views;
 }
+
 
 

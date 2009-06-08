@@ -23,18 +23,19 @@ class station_schedule_handler_sort_time extends views_handler_sort {
   function query() {
     $this->ensure_my_table();
 
+    $minutes_in_day = MINUTES_IN_DAY;
+    $minutes_in_week = MINUTES_IN_WEEK;
+
     switch ($this->options['start_from']) {
       case 'begin_week':
-        $minutes_in_day = MINUTES_IN_DAY;
-        $formula = "CAST($this->table_alias.$this->real_field / $minutes_in_day AS UNSIGNED INTEGER)";
+        $formula = "$this->table_alias.$this->real_field";
         $first_day = 7 - variable_get('date_first_day', 0);
         if ($first_day != 0) {
-          $formula = "($formula + $first_day) %% 7";
+          $formula = "($formula + ($first_day * $minutes_in_day)) %% $minutes_in_week";
         }
         break;
 
       case 'now':
-        $minutes_in_week = MINUTES_IN_WEEK;
         $formula = "(($this->table_alias.$this->real_field - ***CURRENT_STATION_MINUTE***) + $minutes_in_week) %% $minutes_in_week";
         break;
 

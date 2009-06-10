@@ -184,6 +184,24 @@ function station_time_from_minute($minutes) {
 }
 
 /**
+ * Format minutes into a day hour string, e.g. "Sunday 11:15pm".
+ *
+ * @param $time
+ *   Integer specifying minutes.
+ * @return
+ *   Formatted string.
+ */
+function theme_station_dayhour($time) {
+  $time = station_time_from_minute($time);
+  $format_params = array(
+    '@day' => station_day_name($time['w']), '@hour' => $time['g'],
+    '@time' => $time['time'], '@ampm' => $time['a'],
+  );
+
+  return t('@day @time@ampm', $format_params);
+}
+
+/**
  * Format a range of minutes into a day hour string, e.g.
  * "Sunday 11pm - Monday 1am".
  *

@@ -22,6 +22,7 @@ class station_schedule_handler_field_start_time extends views_handler_field {
       '#options' => array(
         'station_hour' => t('Time'),
         'station_hour_range' => t('Time range'),
+        'station_dayhour' => t('Day time'),
         'station_dayhour_range' => t('Day time range'),
       ),
       '#default_value' => $this->options['style'],

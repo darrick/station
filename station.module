@@ -49,16 +49,20 @@ function station_theme() {
     'station_block_current_program' => array(
       'arguments' => array('schedule' => NULL, 'program' => NULL),
     ),
-    'station_dayhour_range' => array(
-      'arguments' => array('start' => NULL, 'finish' => NULL),
+    'station_hour' => array(
+      'arguments' => array('time' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_hour_duration' => array(
       'arguments' => array('start' => NULL, 'finish' => NULL),
       'file' => 'dayhour.inc',
     ),
-    'station_hour' => array(
+    'station_dayhour' => array(
       'arguments' => array('time' => NULL),
+      'file' => 'dayhour.inc',
+    ),
+    'station_dayhour_range' => array(
+      'arguments' => array('start' => NULL, 'finish' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_hour_range' => array(

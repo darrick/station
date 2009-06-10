@@ -21,6 +21,7 @@ class station_schedule_handler_field_finish_time extends views_handler_field {
       '#title' => t('Style'),
       '#options' => array(
         'station_hour' => t('Time'),
+        'station_dayhour' => t('Day time'),
         'station_hour_duration' => t('Duration'),
       ),
       '#default_value' => $this->options['style'],

@@ -37,6 +37,21 @@ function station_playlist_views_data() {
       'label' => t('Playlist'),
     ),
   );
+  $data['station_playlist_track']['weight'] = array(
+    'title' => t('Weight'),
+    'help' => t('The track weight field.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+      'label' => t('Weight'),
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
   $data['station_playlist_track']['artist'] = array(
     'title' => t('Artist'),
     'help' => t("Album artist name."),
@@ -47,14 +62,14 @@ function station_playlist_views_data() {
      'filter' => array(
        'handler' => 'views_handler_filter_string',
        'label' => t('Artist'),
-       ),
+     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
   );
   $data['station_playlist_track']['album'] = array(
-    'title' => t('Album title'),
-    'help' => t("Title of the album album."),
+    'title' => t('Album'),
+    'help' => t("Title of the album."),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
@@ -62,7 +77,7 @@ function station_playlist_views_data() {
      'filter' => array(
        'handler' => 'views_handler_filter_string',
        'label' => t('Album'),
-       ),
+     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -76,8 +91,34 @@ function station_playlist_views_data() {
      ),
      'filter' => array(
        'handler' => 'views_handler_filter_string',
-       'label' => t('Label'),
-       ),
+       'label' => t('Title'),
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['station_playlist_track']['label'] = array(
+    'title' => t('Label'),
+    'help' => t("Name of the label that released the album."),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Label'),
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['station_playlist_track']['link'] = array(
+    'title' => t('Link'),
+    'help' => t("Link to more info on the track."),
+    'field' => array(
+      'handler' => 'views_handler_field_url',
+      'click sortable' => TRUE,
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),

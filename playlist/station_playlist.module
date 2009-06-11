@@ -370,56 +370,18 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
   }
 
   if (!$teaser) {
-    $rows = array();
-    // make one pass to figure out what fields we've got...
-    $has_album = $has_label = $has_link = FALSE;
-    foreach ((array) $node->tracks as $track) {
-      $has_album |= !empty($track['album']);
-      $has_label |= !empty($track['label']);
-      $has_link |= !empty($track['link']);
-    }
-    $header = array(t('Artist'), t('Title'));
-    if ($has_album) {
-      $header[] = t('Album');
-    }
-    if ($has_label) {
-      $header[] = t('Label');
-    }
-    if ($has_link) {
-      $header[] = t('Link');
-    }
-    // ...then put the into the table
-    foreach ((array) $node->tracks as $track) {
-      if ($track['artist'] || $track['title']) {
-        $row = array(
-          check_plain($track['artist']),
-          check_plain($track['title']),
-        );
-        if ($has_album) {
-          $row[] = check_plain($track['album']);
+    if ($view = views_get_view('station_playlist_tracks')) {
+      $display_id = 'default';
+      if ($view->access($display_id)) {
+        if ($output = $view->preview($display_id, array($node->nid))) {
+          $node->content['tracks'] = array(
+            '#value' => $output,
+            '#title' => 'Tracks',
+            '#weight' => 0,
+          );
         }
-        if ($has_label) {
-          $row[] = check_plain($track['label']);
-        }
-        if ($has_link) {
-          if ($track['link']) {
-            // Use the host name as a link text
-            $parts = parse_url(url($track['link'], array('absolute' => TRUE)));
-            $row[] = l($parts['host'], $track['link']);
-          }
-          else {
-            $row[] = '';
-          }
-        }
-        $rows[] = $row;
       }
-    }
-    if (count($rows)) {
-      $node->content['tracks'] = array(
-        '#value' => theme('table', $header, $rows, array('class' => 'station-playlist-tracks')),
-        '#title' => 'Tracks',
-        '#weight' => 0,
-      );
+      $view->destroy();
     }
   }
   return $node;
@@ -437,7 +399,7 @@ function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
     foreach ($block_content_mapping as $display_id => $content_key) {
       if ($view = views_get_view('station_program_playlists')) {
         if ($view->access($display_id)) {
-          $block = $view->execute_display($display_id);
+          $block = $view->preview($display_id);
           $node->content[$content_key]['#type'] = 'item';
           $node->content[$content_key]['#title'] = $block['subject'];
           $node->content[$content_key]['#value'] = $block['content'];
@@ -502,5 +464,6 @@ function station_playlist_content_extra_fields($type_name) {
 function station_playlist_views_api() {
   return array(
     'api' => 2.0,
+    'path' => drupal_get_path('module', 'station_playlist'),
   );
 }

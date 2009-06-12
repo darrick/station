@@ -21,6 +21,7 @@ function station_catalog_node_info() {
       'module' => 'station_catalog_album',
       'description' => t("An album in the station's library."),
       'has_title' => FALSE,
+      'title_label' => '',
       'has_body' => TRUE,
       'body_label' => t('Description'),
     )

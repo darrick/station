@@ -145,10 +145,10 @@ function station_catalog_album_form($node) {
   $form['album']['label'] = array(
     '#type' => 'textfield',
     '#title' => t('Label'),
-    '#default_value' => isset($node->album['year']) ? $node->album['year'] : '',
+    '#default_value' => isset($node->album['label']) ? $node->album['label'] : '',
     '#required' => FALSE,
     '#maxlength' => 255,
-    '#description' => t("The year the album was released."),
+    '#description' => t("Name of the label that released the album."),
   );
   $form['album']['mb_release_id'] = array(
     '#type' => 'textfield',

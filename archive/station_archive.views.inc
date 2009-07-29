@@ -3,7 +3,7 @@
 // $Id$
 
 /**
- * Implementation of hook_views_tables().
+ * Implementation of hook_views_data().
  */
 function station_archive_views_data() {
   $data['station_archive_item']['table']['group']  = t('Station archive');

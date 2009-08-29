@@ -14,44 +14,44 @@ function station_playlist_install() {
   module_enable(array('content', 'nodereference', 'date'));
 
   # var_export(content_fields('field_station_program', 'station_playlist'));
-  $program_field = array (
+  $program_field = array(
     'field_name' => 'field_station_program',
     'type_name' => 'station_playlist',
     'display_settings' =>
-    array (
+    array(
       'weight' => '-2',
       'parent' => '',
       'label' =>
-      array (
+      array(
         'format' => 'hidden',
       ),
       'teaser' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       'full' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       4 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       2 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       3 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       'token' =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
@@ -65,27 +65,27 @@ function station_playlist_install() {
     'active' => '1',
     'locked' => '1',
     'columns' =>
-    array (
+    array(
       'nid' =>
-      array (
+      array(
         'type' => 'int',
-        'unsigned' => true,
-        'not null' => false,
+        'unsigned' => TRUE,
+        'not null' => FALSE,
       ),
     ),
     'referenceable_types' =>
-    array (
+    array(
       'station_program' => 'station_program',
     ),
     'advanced_view' => '--',
     'advanced_view_args' => '',
     'widget' =>
-    array (
+    array(
       'autocomplete_match' => 'contains',
       'default_value' =>
-      array (
+      array(
         0 =>
-        array (
+        array(
           'nid' => NULL,
           '_error_element' => 'default_value_widget][field_station_playlist_program][0][nid][nid',
         ),
@@ -100,44 +100,44 @@ function station_playlist_install() {
   );
 
   # var_export(content_fields('field_station_playlist_date', 'station_playlist'));
-  $date_field = array (
+  $date_field = array(
     'field_name' => 'field_station_playlist_date',
     'type_name' => 'station_playlist',
     'display_settings' =>
-    array (
+    array(
       'weight' => '-1',
       'parent' => '',
       'label' =>
-      array (
+      array(
         'format' => 'hidden',
       ),
       'teaser' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       'full' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       4 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       2 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       3 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       'token' =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
@@ -151,16 +151,16 @@ function station_playlist_install() {
     'active' => '1',
     'locked' => '1',
     'columns' =>
-    array (
+    array(
       'value' =>
-      array (
+      array(
         'type' => 'int',
-        'not null' => false,
-        'sortable' => true,
+        'not null' => FALSE,
+        'sortable' => TRUE,
       ),
     ),
     'granularity' =>
-    array (
+    array(
       'year' => 'year',
       'month' => 'month',
       'day' => 'day',
@@ -179,7 +179,7 @@ function station_playlist_install() {
     'output_format_date_short' => 'm/d/Y - H:i',
     'output_format_custom_short' => '',
     'widget' =>
-    array (
+    array(
       'default_value' => 'now',
       'default_value_code' => '',
       'default_value2' => 'same',
@@ -188,7 +188,7 @@ function station_playlist_install() {
       'input_format_custom' => '',
       'increment' => '1',
       'text_parts' =>
-      array (
+      array(
       ),
       'year_range' => '-3:+3',
       'label_position' => 'within',
@@ -345,44 +345,44 @@ function station_playlist_update_6000() {
   }
 
   # var_export(content_fields('field_station_program', 'station_playlist'));
-  $program_field = array (
+  $program_field = array(
     'field_name' => 'field_station_program',
     'type_name' => 'station_playlist',
     'display_settings' =>
-    array (
+    array(
       'weight' => '-2',
       'parent' => '',
       'label' =>
-      array (
+      array(
         'format' => 'hidden',
       ),
       'teaser' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       'full' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       4 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       2 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       3 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       'token' =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
@@ -396,27 +396,27 @@ function station_playlist_update_6000() {
     'active' => '1',
     'locked' => '1',
     'columns' =>
-    array (
+    array(
       'nid' =>
-      array (
+      array(
         'type' => 'int',
-        'unsigned' => true,
-        'not null' => false,
+        'unsigned' => TRUE,
+        'not null' => FALSE,
       ),
     ),
     'referenceable_types' =>
-    array (
+    array(
       'station_program' => 'station_program',
     ),
     'advanced_view' => '--',
     'advanced_view_args' => '',
     'widget' =>
-    array (
+    array(
       'autocomplete_match' => 'contains',
       'default_value' =>
-      array (
+      array(
         0 =>
-        array (
+        array(
           'nid' => NULL,
           '_error_element' => 'default_value_widget][field_station_playlist_program][0][nid][nid',
         ),
@@ -431,44 +431,44 @@ function station_playlist_update_6000() {
   );
 
   # var_export(content_fields('field_station_playlist_date', 'station_playlist'));
-  $date_field = array (
+  $date_field = array(
     'field_name' => 'field_station_playlist_date',
     'type_name' => 'station_playlist',
     'display_settings' =>
-    array (
+    array(
       'weight' => '-1',
       'parent' => '',
       'label' =>
-      array (
+      array(
         'format' => 'hidden',
       ),
       'teaser' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       'full' =>
-      array (
+      array(
         'format' => 'hidden',
         'exclude' => 0,
       ),
       4 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       2 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       3 =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
       'token' =>
-      array (
+      array(
         'format' => 'default',
         'exclude' => 0,
       ),
@@ -482,16 +482,16 @@ function station_playlist_update_6000() {
     'active' => '1',
     'locked' => '1',
     'columns' =>
-    array (
+    array(
       'value' =>
-      array (
+      array(
         'type' => 'int',
-        'not null' => false,
-        'sortable' => true,
+        'not null' => FALSE,
+        'sortable' => TRUE,
       ),
     ),
     'granularity' =>
-    array (
+    array(
       'year' => 'year',
       'month' => 'month',
       'day' => 'day',
@@ -510,7 +510,7 @@ function station_playlist_update_6000() {
     'output_format_date_short' => 'm/d/Y - H:i',
     'output_format_custom_short' => '',
     'widget' =>
-    array (
+    array(
       'default_value' => 'now',
       'default_value_code' => '',
       'default_value2' => 'same',
@@ -519,7 +519,7 @@ function station_playlist_update_6000() {
       'input_format_custom' => '',
       'increment' => '1',
       'text_parts' =>
-      array (
+      array(
       ),
       'year_range' => '-3:+3',
       'label_position' => 'within',

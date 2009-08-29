@@ -53,7 +53,7 @@
   display: block;
 }
 /* on hover force underlining (but not the DJ names) and colour the whole block */
-.station-sch-scheduled a:hover, .station-sch-unscheduled a:hover { 
+.station-sch-scheduled a:hover, .station-sch-unscheduled a:hover {
   background-color: #eee;
   text-decoration: none;
 }

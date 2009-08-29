@@ -96,11 +96,11 @@ function station_schedule_views_data() {
     'field' => array(
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
-     ),
+    ),
      'filter' => array(
        'handler' => 'views_handler_filter_numeric',
        'label' => t('Number'),
-       ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -111,11 +111,11 @@ function station_schedule_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
      'filter' => array(
        'handler' => 'views_handler_filter_string',
        'label' => t('Artist'),
-       ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -148,7 +148,7 @@ function station_schedule_views_data() {
     'help' => t("The schedule item's id."),
     'field' => array(
       'handler' => 'views_handler_field_numeric',
-     ),
+    ),
   );
   $data['station_schedule_item']['link_iid'] = array(
     'field' => array(
@@ -218,7 +218,7 @@ function station_schedule_views_data() {
     'field' => array(
       'handler' => 'station_schedule_handler_field_finish_time',
       'click sortable' => TRUE,
-     ),
+    ),
 //     'filter' => array(
 //       'handler' => 'station_schedule_handler_filter_time',
 //       'label' => t('Finish'),
@@ -233,11 +233,11 @@ function station_schedule_views_data() {
     'field' => array(
       'handler' => 'views_handler_field_boolean',
       'click sortable' => TRUE,
-     ),
+    ),
      'filter' => array(
        'handler' => 'views_handler_filter_boolean_operator',
        'label' => t('Active'),
-       ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),

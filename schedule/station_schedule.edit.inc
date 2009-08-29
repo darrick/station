@@ -165,7 +165,7 @@ function station_schedule_item_edit_form_validate($form, &$form_state) {
     if ($overlap->count == 1) {
       form_set_error('', t("The program overlaps another scheduled item at %time.", array('%time' => theme('station_dayhour_range', $overlap->start, $overlap->finish))));
     }
-    else if ($overlap->count > 1) {
+    elseif ($overlap->count > 1) {
       form_set_error('', t("The program overlaps %number scheduled items from %time.", array('%time' => theme('station_dayhour_range', $overlap->start, $overlap->finish), '%number' => $overlap->count)));
     }
   }

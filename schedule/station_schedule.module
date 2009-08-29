@@ -86,7 +86,7 @@ function station_schedule_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   $items["node/%node/schedule/list"] = array(
-    'title' =>'View',
+    'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
@@ -650,7 +650,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
 
 
 /**
- * implementation of hook_form_alter()
+ * Implementation of hook_form_alter().
  */
 function station_schedule_form_alter(&$form, $form_state, $form_id) {
   // We only alter station_program node edit forms
@@ -1041,7 +1041,7 @@ function expand_station_schedule_daytime($element, $edit, &$form_state) {
       $value = array(
        'day' => station_day_from_minute($element['#value']),
        'minute' => $element['#value'] % MINUTES_IN_DAY,
-     );
+    );
     }
   }
 
@@ -1110,7 +1110,7 @@ function theme_station_schedule_daytime($element) {
 
 
 /**
- * Implementation of hook_content_extra_fields.
+ * Implementation of hook_content_extra_fields().
  *
  * Let CCK know about the playlist stuff we're putting on nodes.
  */

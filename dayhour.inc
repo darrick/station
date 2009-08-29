@@ -22,7 +22,7 @@ function station_valid_hour($hour) {
     if ($hour == t('midnight')) {
       return 0;
     }
-    else if ($hour == t('noon')) {
+    elseif ($hour == t('noon')) {
       return 12;
     }
 
@@ -60,15 +60,15 @@ function station_valid_day($day) {
     if ($day < 0) {
       return ((integer) $day % 7) + 7;
     }
-    else if ($day > 6) {
+    elseif ($day > 6) {
       return ((integer) $day % 7);
     }
     return (integer) $day;
   }
   else {
     $dayname = station_day_name();
-    $ret = array_search(ucfirst($day), $dayname, false);
-    return ($ret === false) ? 0 : $ret;
+    $ret = array_search(ucfirst($day), $dayname, FALSE);
+    return ($ret === FALSE) ? 0 : $ret;
   }
 }
 

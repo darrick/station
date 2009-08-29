@@ -18,29 +18,29 @@ function station_schedule_install() {
   $dj_title = variable_get('station_schedule_dj_title', 'DJs');
 
   # var_export(content_fields('field_station_program_dj', 'station_program'));
-  $dj_field = array (
+  $dj_field = array(
     'field_name' => 'field_station_program_dj',
     'type_name' => 'station_program',
     'display_settings' =>
-    array (
+    array(
       'label' =>
-      array (
+      array(
         'format' => 'above',
       ),
       'teaser' =>
-      array (
+      array(
         'format' => 'default',
       ),
       'full' =>
-      array (
+      array(
         'format' => 'default',
       ),
       0 =>
-      array (
+      array(
         'format' => 'above',
       ),
       'token' =>
-      array (
+      array(
         'format' => 'default',
       ),
     ),
@@ -53,32 +53,32 @@ function station_schedule_install() {
     'active' => '1',
     'locked' => '1',
     'columns' =>
-    array (
+    array(
       'uid' =>
-      array (
+      array(
         'type' => 'int',
-        'unsigned' => true,
-        'not null' => false,
+        'unsigned' => TRUE,
+        'not null' => FALSE,
       ),
     ),
     'referenceable_roles' =>
-    array (
+    array(
       $dj_role => $dj_role,
     ),
     'referenceable_status' =>
-    array (
+    array(
       1 => 1,
       0 => 0,
     ),
     'advanced_view' => '',
     'advanced_view_args' => '',
     'widget' =>
-    array (
+    array(
       'reverse_link' => 0,
       'default_value' =>
-      array (
+      array(
         0 =>
-        array (
+        array(
           'uid' => NULL,
           '_error_element' => 'default_value_widget][field_station_program_dj][0][uid][uid',
         ),
@@ -283,7 +283,7 @@ function station_schedule_update_5200() {
       $node->uid = 1;
       $node->title = t('Default');
       db_query("INSERT INTO {node} (nid, vid, title, type, uid, status, created, changed, comment, promote, sticky)
-      	VALUES (%d, %d, '%s', 'station_schedule', 1, %d, %d, %d, 0, 0, 0)",
+        VALUES (%d, %d, '%s', 'station_schedule', 1, %d, %d, %d, 0, 0, 0)",
         $node->nid, $node->vid, $node->title, $node->uid, $node->created, $node->changed
       );
       db_query("INSERT INTO {node_revisions} (nid, vid, title, body, teaser, timestamp, uid, format, log)
@@ -410,29 +410,29 @@ function station_schedule_update_6001() {
   $dj_title = variable_get('station_schedule_dj_title', 'DJs');
 
   # var_export(content_fields('field_station_program_dj', 'station_program'));
-  $dj_field = array (
+  $dj_field = array(
     'field_name' => 'field_station_program_dj',
     'type_name' => 'station_program',
     'display_settings' =>
-    array (
+    array(
       'label' =>
-      array (
+      array(
         'format' => 'above',
       ),
       'teaser' =>
-      array (
+      array(
         'format' => 'default',
       ),
       'full' =>
-      array (
+      array(
         'format' => 'default',
       ),
       0 =>
-      array (
+      array(
         'format' => 'above',
       ),
       'token' =>
-      array (
+      array(
         'format' => 'default',
       ),
     ),
@@ -445,32 +445,32 @@ function station_schedule_update_6001() {
     'active' => '1',
     'locked' => '1',
     'columns' =>
-    array (
+    array(
       'uid' =>
-      array (
+      array(
         'type' => 'int',
-        'unsigned' => true,
-        'not null' => false,
+        'unsigned' => TRUE,
+        'not null' => FALSE,
       ),
     ),
     'referenceable_roles' =>
-    array (
+    array(
       $dj_role => $dj_role,
     ),
     'referenceable_status' =>
-    array (
+    array(
       1 => 1,
       0 => 0,
     ),
     'advanced_view' => '',
     'advanced_view_args' => '',
     'widget' =>
-    array (
+    array(
       'reverse_link' => 0,
       'default_value' =>
-      array (
+      array(
         0 =>
-        array (
+        array(
           'uid' => NULL,
           '_error_element' => 'default_value_widget][field_station_program_dj][0][uid][uid',
         ),

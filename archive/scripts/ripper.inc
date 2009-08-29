@@ -17,5 +17,5 @@ import_path = "/usr/local/www/drupal/sites/all/modules/station/archive/import"
 ; recording, with one minute before the hour and an extra minute at the end.
 overlap_seconds = 60
 
-; The file type of the stream; "mp3" and "ogg" are supported. 
+; The file type of the stream; "mp3" and "ogg" are supported.
 file_format = "mp3"

@@ -21,7 +21,7 @@ function station_playlist_views_data() {
     'node' => array(
       'handler' => 'views_join', // this is actually optional
       'arguments' => array('station_playlist_track', 'node', 'nid', 'nid'),
-     ),
+    ),
   );
 
   // ----------------------------------------------------------------
@@ -58,11 +58,11 @@ function station_playlist_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
      'filter' => array(
        'handler' => 'views_handler_filter_string',
        'label' => t('Artist'),
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -73,11 +73,11 @@ function station_playlist_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
      'filter' => array(
        'handler' => 'views_handler_filter_string',
        'label' => t('Album'),
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -88,11 +88,11 @@ function station_playlist_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
      'filter' => array(
        'handler' => 'views_handler_filter_string',
        'label' => t('Title'),
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),

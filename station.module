@@ -136,7 +136,7 @@ function station_get_archive_url() {
   if (module_exists('station_archive')) {
     return 'station/archives/';
   }
-  else if ($url = variable_get('station_remote_archive_url', FALSE)) {
+  elseif ($url = variable_get('station_remote_archive_url', FALSE)) {
     return $url .'station/archives/';
   }
   return FALSE;
@@ -258,9 +258,9 @@ function station_get_program_at($timestamp, $schedule_nid) {
     $minutes = $parts['minutes'];
     if ($minutes < 15)
       $minutes = 0;
-    else if ($minutes < 30)
+    elseif ($minutes < 30)
       $minutes = 15;
-    else if ($minutes < 45)
+    elseif ($minutes < 45)
       $minutes = 30;
     else
       $minutes = 45;

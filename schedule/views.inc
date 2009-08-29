@@ -89,11 +89,11 @@ function station_schedule_views_tables() {
         'sortable' => TRUE,
         'handler' => 'station_handler_field_program_schedule_title',
         'option' => array(
-           '#type' => 'select',
-           '#options' => array(
-             'link' => 'As link to schedule',
-             'nolink' => 'Without link'
-           ),
+          '#type' => 'select',
+          '#options' => array(
+            'link' => 'As link to schedule',
+            'nolink' => 'Without link'
+          ),
         ),
         'addlfields' => array('nid'),
         'help' => t('Title of the schedule.'),
@@ -245,7 +245,7 @@ function station_schedule_views_arguments() {
 function station_schedule_argument_schedule_item_day($op, &$query, $a1, $a2 = NULL) {
   $min_in_day = MINUTES_IN_DAY;
 
-  switch($op) {
+  switch ($op) {
     case 'summary':
       $query->ensure_table('station_schedule_item');
       // Need to do the modulus by week to avoid having Sunday listed twice as 0 and 7.
@@ -286,7 +286,7 @@ function station_schedule_argument_schedule_item_day($op, &$query, $a1, $a2 = NU
 }
 
 function station_schedule_argument_schedule_nid($op, &$query, $a1, $a2 = NULL) {
-  switch($op) {
+  switch ($op) {
     case 'summary':
       $query->ensure_table('station_schedule_item');
       $query->ensure_table('station_program_schedule_node');
@@ -369,7 +369,7 @@ function station_handler_field_schedule_djs($fieldinfo, $fielddata, $value, $dat
 function station_handler_field_listen_links($fieldinfo, $fielddata, $value, $data) {
   $output = '';
   if ($fielddata['options'] == 'icon') {
-    foreach(station_schedule_archive_links($data->nid, TRUE) as $link) {
+    foreach (station_schedule_archive_links($data->nid, TRUE) as $link) {
       $output .= l($link['title'], $link['href'], NULL, NULL, NULL, TRUE, TRUE) .' ';
     }
   }
@@ -398,11 +398,11 @@ function station_handler_field_program_schedule_title($fieldinfo, $fielddata, $v
 function _station_schedule_item_start_sort($fieldname) {
   $start_offset = (int) MINUTES_IN_DAY * (7 - variable_get('date_first_day', 0));
   $divisor = (int) MINUTES_IN_WEEK;
-  return "(({$fieldname} + {$start_offset}) %% {$divisor})"; 
+  return "(({$fieldname} + {$start_offset}) %% {$divisor})";
 }
 
 function station_handler_field_sort_schedule_item_start($fielddata, $fieldinfo) {
-  return _station_schedule_item_start_sort($fielddata['fullname']); 
+  return _station_schedule_item_start_sort($fielddata['fullname']);
 }
 
 function station_handler_sort_schedule_item_start($op, &$query, $sortinfo, $sortdata) {

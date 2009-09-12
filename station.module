@@ -84,12 +84,13 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
     if (user_access('view station schedule content')) {
       switch ($delta) {
         case 0:
-          $block['subject'] = t('On Air');
-          $block['content'] = station_block_current_program();
-          break;
+          return array(
+            'subject' => t('On Air'),
+            'content' => station_block_current_program(),
+          );
       }
     }
-    return $block;
+    return;
 
   case 'list':
     $blocks[0] = array(

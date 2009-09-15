@@ -222,7 +222,7 @@ function station_schedule_views_default_views() {
   ));
   $handler->override_option('access', array(
     'type' => 'perm',
-    'perm' => 'view schedule content',
+    'perm' => 'view station schedule content',
   ));
   $handler->override_option('empty', 'There are no programs scheduled for this day.');
   $handler->override_option('empty_format', '1');

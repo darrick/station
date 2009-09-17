@@ -235,6 +235,6 @@ function station_schedule_item_remove_form_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
     db_query("DELETE FROM {station_schedule_item} WHERE iid = %d", $form_state['values']['iid']);
     _station_send_notice('schedule', 'remove', array('schedule_nid' => $form_state['values']['schedule_nid'], 'program_nid' => $form_state['values']['program_nid'], 'iid' => $form_state['values']['iid']));
-    $form_state['redirect'] = 'node/'. $form_state['values'] .'/schedule';
+    $form_state['redirect'] = 'node/'. $form_state['values']['schedule_nid'] .'/schedule';
   }
 }

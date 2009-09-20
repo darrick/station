@@ -543,9 +543,11 @@ function _station_archive_add_file($file) {
  * Find/create the term ids for a day and hour based on a timestamp.
  *
  * @param $local_timestamp
- *   A timestamp that's been adjusted for the local timezone. see station_local_ts().
+ *   A timestamp that's been adjusted for the local timezone
  * @return
  *   Array with day and hour term ids.
+ *
+ * @see station_local_ts().
  */
 function _station_archive_get_taxonomy($local_timestamp) {
   $vid = _station_archive_get_vid();

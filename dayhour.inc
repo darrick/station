@@ -2,9 +2,10 @@
 
 // $Id$
 
-// there are 1440 minutes in a day (60minute * 24hours = 1day)
+// There are 1440 minutes in a day (60minute * 24hours = 1day).
 define('MINUTES_IN_DAY', 1440);
-define('MINUTES_IN_WEEK', 7 * MINUTES_IN_DAY);
+// There are 10080 minutes in a week (60minute * 24hours * 1day = 1week).
+define('MINUTES_IN_WEEK', 10080);
 
 /**
  * Turn a string into a valid hour.
@@ -122,6 +123,23 @@ function station_day_name($day = NULL) {
  */
 function station_minute_from_day_hour($day, $hour) {
   return (($day * 24) + $hour) * 60;
+}
+
+/**
+ * Convert a local timestamp into an integer specifying minutes since midnight
+ * on Sunday.
+ *
+ * @return
+ *   Integer specifying the number of minutes.
+ *
+ * @see station_local_ts()
+ */
+function station_minute_from_local_ts($local_timestamp = NULL) {
+  if (!isset($local_timestamp)) {
+    $local_timestamp = station_local_ts();
+  }
+  list($day, $hour, $minute) = explode(' ', date('w G i', $local_timestamp));
+  return (($day * 24) + $hour) * 60 + $minute;
 }
 
 /**

@@ -11,6 +11,9 @@ function station_schedule_views_handlers() {
     ),
     'handlers' => array(
       // Field handlers
+      'station_schedule_handler_field_streams' => array(
+        'parent' => 'views_handler_field',
+      ),
       'station_schedule_handler_field_start_time' => array(
         'parent' => 'views_handler_field',
       ),
@@ -38,7 +41,7 @@ function station_schedule_views_handlers() {
       ),
 
       // Filter handlers
-//      'station_schedule_handler_filter_time' => array(
+//      'station_schedule_handler_filter_current_time' => array(
 //        'parent' => 'views_handler_filter_numeric',
 //      ),
     ),
@@ -90,7 +93,7 @@ function station_schedule_views_data() {
 
   // ----------------------------------------------------------------
   // Fields
-  $data['station_schedule']['incrememnt'] = array(
+  $data['station_schedule']['increment'] = array(
     'title' => t('Scheduling increment'),
     'help' => t("The schedule's block size in minutes."),
     'field' => array(
@@ -99,10 +102,17 @@ function station_schedule_views_data() {
     ),
      'filter' => array(
        'handler' => 'views_handler_filter_numeric',
-       'label' => t('Number'),
+       'label' => t('Increment'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['station_schedule']['streams'] = array(
+    'title' => t('Webstream'),
+    'help' => t("Link to M3U files with stream URLs."),
+    'field' => array(
+      'handler' => 'station_schedule_handler_field_streams',
     ),
   );
   $data['station_schedule']['unscheduled_message'] = array(
@@ -114,7 +124,7 @@ function station_schedule_views_data() {
     ),
      'filter' => array(
        'handler' => 'views_handler_filter_string',
-       'label' => t('Artist'),
+       'label' => t('Unscheduled message'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',

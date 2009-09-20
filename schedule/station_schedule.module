@@ -974,7 +974,15 @@ function station_schedule_write_m3u($node) {
   }
 }
 
-
+/**
+ * Implementation of hook_file_download().
+ */
+function station_schedule_file_download($filepath) {
+  if (preg_match('|^station/.*\.m3u$|', $filepath)) {
+    return array('Content-type: audio/x-mpegurl');
+  }
+  return NULL;
+}
 
 
 

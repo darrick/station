@@ -218,6 +218,7 @@ function station_playlist_views_default_views() {
     'type' => 'perm',
     'perm' => 'view station playlist content',
   ));
+  $handler->override_option('items_per_page', 0);
   $handler->override_option('style_plugin', 'table');
   $views[$view->name] = $view;
 

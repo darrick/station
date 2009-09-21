@@ -1,12 +1,7 @@
 <?php
 // $Id$
 
-class station_schedule_handler_field_finish_time extends views_handler_field {
-  function construct() {
-    parent::construct();
-    $this->additional_fields['start'] = 'start';
-  }
-
+class station_schedule_handler_field_time extends views_handler_field {
   function option_definition() {
     $options = parent::option_definition();
     $options['style'] = array('default' => 'station_hour');
@@ -20,9 +15,8 @@ class station_schedule_handler_field_finish_time extends views_handler_field {
       '#type' => 'radios',
       '#title' => t('Style'),
       '#options' => array(
-        'station_hour' => t('Time'),
-        'station_dayhour' => t('Day time'),
-        'station_hour_duration' => t('Duration'),
+        'station_hour' => t('Hour'),
+        'station_dayhour' => t('Day/hour'),
       ),
       '#default_value' => $this->options['style'],
       '#description' => t('Which time style should be used.'),
@@ -30,8 +24,6 @@ class station_schedule_handler_field_finish_time extends views_handler_field {
   }
 
   function render($values) {
-    $start = $values->{$this->aliases['start']};
-    $finish = $values->{$this->field_alias};
-    return theme($this->options['style'], $start, $finish);
+    return theme($this->options['style'], $values->{$this->field_alias});
   }
 }

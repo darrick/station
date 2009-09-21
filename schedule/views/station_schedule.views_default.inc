@@ -1,7 +1,6 @@
 <?php
 
 // $Id$
-
 /**
  * Implementation of hook_views_default_views().
  */
@@ -40,6 +39,22 @@ function station_schedule_views_default_views() {
   $handler->override_option('fields', array(
     'start' => array(
       'label' => 'Time',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
       'style' => 'station_hour',
       'exclude' => 0,
       'id' => 'start',
@@ -280,7 +295,23 @@ function station_schedule_views_default_views() {
   $handler->override_option('fields', array(
     'start' => array(
       'label' => 'Time',
-      'style' => 'station_hour_range',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'style' => 'station_hour',
       'exclude' => 0,
       'id' => 'start',
       'table' => 'station_schedule_item',
@@ -685,6 +716,5 @@ function station_schedule_views_default_views() {
 
   return $views;
 }
-
 
 

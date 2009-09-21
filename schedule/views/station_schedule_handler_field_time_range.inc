@@ -1,15 +1,10 @@
 <?php
 // $Id$
 
-class station_schedule_handler_field_start_time extends views_handler_field {
-  function construct() {
-    parent::construct();
-    $this->additional_fields['finish'] = 'finish';
-  }
-
+class station_schedule_handler_field_time_range extends views_handler_field {
   function option_definition() {
     $options = parent::option_definition();
-    $options['style'] = array('default' => 'station_hour');
+    $options['style'] = array('default' => 'station_hour_range');
     return $options;
   }
 
@@ -20,18 +15,25 @@ class station_schedule_handler_field_start_time extends views_handler_field {
       '#type' => 'radios',
       '#title' => t('Style'),
       '#options' => array(
-        'station_hour' => t('Time'),
-        'station_hour_range' => t('Time range'),
-        'station_dayhour' => t('Day time'),
-        'station_dayhour_range' => t('Day time range'),
+        'station_hour_duration' => t('Duration'),
+        'station_hour_range' => t('Hour range'),
+        'station_dayhour_range' => t('Day/hour range'),
+
       ),
       '#default_value' => $this->options['style'],
       '#description' => t('Which time style should be used.'),
     );
   }
 
+  function query() {
+    // Since 'time' isn't a real field just add in our additional fields and
+    // be done with it.
+    $this->ensure_my_table();
+    $this->add_additional_fields();
+  }
+
   function render($values) {
-    $start = $values->{$this->field_alias};
+    $start = $values->{$this->aliases['start']};
     $finish = $values->{$this->aliases['finish']};
     return theme($this->options['style'], $start, $finish);
   }

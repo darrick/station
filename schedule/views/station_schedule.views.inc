@@ -14,10 +14,10 @@ function station_schedule_views_handlers() {
       'station_schedule_handler_field_streams' => array(
         'parent' => 'views_handler_field',
       ),
-      'station_schedule_handler_field_start_time' => array(
+      'station_schedule_handler_field_time' => array(
         'parent' => 'views_handler_field',
       ),
-      'station_schedule_handler_field_finish_time' => array(
+      'station_schedule_handler_field_time_range' => array(
         'parent' => 'views_handler_field',
       ),
       'station_schedule_handler_field_iid_link' => array(
@@ -41,9 +41,9 @@ function station_schedule_views_handlers() {
       ),
 
       // Filter handlers
-//      'station_schedule_handler_filter_current_time' => array(
-//        'parent' => 'views_handler_filter_numeric',
-//      ),
+      'station_schedule_handler_filter_time' => array(
+        'parent' => 'views_handler_filter_numeric',
+      ),
     ),
   );
 }
@@ -67,9 +67,7 @@ function station_schedule_views_plugins() {
  * Implementation of views_query_substitutions().
  */
 function station_schedule_views_query_substitutions($view) {
-  $timestamp = station_local_ts(time());
-  $minute = station_minute_from_day_hour(date('w', $timestamp), date('G', $timestamp));
-  return array('***CURRENT_STATION_MINUTE***' => $minute);
+  return array('***CURRENT_STATION_MINUTE***' => station_minute_from_local_ts());
 }
 
 /**
@@ -203,21 +201,33 @@ function station_schedule_views_data() {
       'label' => t('Program'),
     ),
   );
-  $data['station_schedule_item']['start'] = array(
-    'title' => t('Time'),
-    'help' => t("Schedule instance start time."),
+  $data['station_schedule_item']['time'] = array(
+    'title' => t('Time range'),
+    'help' => t("Schedule instance time range."),
     'field' => array(
-      'handler' => 'station_schedule_handler_field_start_time',
-      'click sortable' => TRUE,
+      'handler' => 'station_schedule_handler_field_time_range',
+      'additional fields' => array('start', 'finish'),
     ),
     'argument' => array(
       'handler' => 'station_schedule_handler_argument_day',
       'label' => t('Day of week'),
     ),
-//    'filter' => array(
-//      'handler' => 'station_schedule_handler_filter_time',
-//      'label' => t('Start'),
-//    ),
+    'sort' => array(
+      'handler' => 'station_schedule_handler_sort_time',
+    ),
+  );
+  $data['station_schedule_item']['start'] = array(
+    'title' => t('Start'),
+    'help' => t("Schedule instance start time."),
+    'field' => array(
+      'handler' => 'station_schedule_handler_field_time',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'station_schedule_handler_filter_time',
+      'allow empty' => FALSE,
+      'label' => t('Start'),
+    ),
     'sort' => array(
       'handler' => 'station_schedule_handler_sort_time',
     ),
@@ -226,13 +236,14 @@ function station_schedule_views_data() {
     'title' => t('Finish'),
     'help' => t("Schedule instance completion time."),
     'field' => array(
-      'handler' => 'station_schedule_handler_field_finish_time',
+      'handler' => 'station_schedule_handler_field_time',
       'click sortable' => TRUE,
     ),
-//     'filter' => array(
-//       'handler' => 'station_schedule_handler_filter_time',
-//       'label' => t('Finish'),
-//     ),
+    'filter' => array(
+      'handler' => 'station_schedule_handler_filter_time',
+      'allow empty' => FALSE,
+      'label' => t('Finish'),
+    ),
     'sort' => array(
       'handler' => 'station_schedule_handler_sort_time',
     ),

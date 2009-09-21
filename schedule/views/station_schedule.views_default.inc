@@ -166,7 +166,7 @@ function station_schedule_views_default_views() {
       ),
       'validate_argument_php' => '',
     ),
-    'start_3' => array(
+    'time' => array(
       'default_action' => 'empty',
       'style_plugin' => 'default_summary',
       'style_options' => array(
@@ -181,9 +181,9 @@ function station_schedule_views_default_views() {
       'default_argument' => '',
       'validate_type' => 'none',
       'validate_fail' => 'not found',
-      'id' => 'start_3',
+      'id' => 'start',
       'table' => 'station_schedule_item',
-      'field' => 'start',
+      'field' => 'time',
       'relationship' => 'none',
       'default_options_div_prefix' => '',
       'default_argument_user' => 0,

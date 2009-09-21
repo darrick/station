@@ -6,7 +6,7 @@
  * Implementation of hook_views_data().
  */
 function station_archive_views_data() {
-  $data['station_archive_item']['table']['group']  = t('Station archive');
+  $data['station_archive_item']['table']['group']  = t('Station Archive');
   $data['station_archive_item']['table']['join']['node'] = array(
     'left_field' => 'nid',
     'field' => 'audio_nid'

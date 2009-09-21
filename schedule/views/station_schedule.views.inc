@@ -79,7 +79,7 @@ function station_schedule_views_data() {
 
   // Define the base group of this table. Fields that don't
   // have a group defined will go into this field by default.
-  $data['station_schedule']['table']['group']  = t('Station schedule');
+  $data['station_schedule']['table']['group']  = t('Station Schedule');
 
   // For other base tables, explain how we join
   $data['station_schedule']['table']['join'] = array(
@@ -134,10 +134,10 @@ function station_schedule_views_data() {
   // ----------------------------------------------------------------
   // Basic table information.
 
-  $data['station_schedule_item']['table']['group']  = t('Station schedule item');
+  $data['station_schedule_item']['table']['group']  = t('Station Schedule Item');
   $data['station_schedule_item']['table']['base'] = array(
     'field' => 'iid',
-    'title' => t('Station Schedule Item'),
+    'title' => t('Station Schedule Item ID'),
     'help' => t("Items on the station's schedules."),
   );
 
@@ -180,8 +180,8 @@ function station_schedule_views_data() {
     ),
   );
   $data['station_schedule_item']['schedule_nid'] = array(
-    'title' => t('Schedule item schedule'),
-    'help' => t("The schedule the time is on."),
+    'title' => t('Schedule'),
+    'help' => t("The schedule this slot belongs to."),
     'relationship' => array(
       'base' => 'node',
       'base field' => 'nid',
@@ -191,8 +191,8 @@ function station_schedule_views_data() {
     ),
   );
   $data['station_schedule_item']['program_nid'] = array(
-    'title' => t('Schedule item program'),
-    'help' => t("The scheduled program."),
+    'title' => t('Program'),
+    'help' => t("The program scheduled in this slot."),
     'relationship' => array(
       'base' => 'node',
       'base field' => 'nid',

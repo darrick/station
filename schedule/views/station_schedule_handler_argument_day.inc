@@ -20,11 +20,12 @@ class station_schedule_handler_argument_day extends views_handler_argument {
   function summary_query() {
     $this->ensure_my_table();
 
+    // Convert the Group the programs by day.
     $min_in_day = MINUTES_IN_DAY;
-    $formula = "CAST($this->table_alias.$this->field / $min_in_day AS UNSIGNED INTEGER) %% 7";
+    $formula = "CAST($this->table_alias.start / $min_in_day AS UNSIGNED INTEGER) %% 7";
 
     // Add the field.
-    $suggested_alias = $this->table_alias .'_'. $this->field .'_group';
+    $suggested_alias = $this->table_alias .'_start_group';
     $this->base_alias = $this->name_alias = $this->query->add_field(NULL, $formula, $suggested_alias);
     $this->query->set_count_field(NULL, $formula, $suggested_alias);
 
@@ -34,7 +35,6 @@ class station_schedule_handler_argument_day extends views_handler_argument {
   function summary_name($data) {
     return station_day_name($data->{$this->name_alias});
   }
-
 
   /**
    * Build the query based upon the formula

@@ -9,7 +9,7 @@ function station_playlist_views_data() {
 
   // Define the base group of this table. Fields that don't
   // have a group defined will go into this field by default.
-  $data['station_playlist_track']['table']['group']  = t('Station playlist track');
+  $data['station_playlist_track']['table']['group']  = t('Station Playlist Track');
   $data['station_playlist_track']['table']['base'] = array(
     'field' => 'iid',
     'title' => t('Station Playlist Track'),

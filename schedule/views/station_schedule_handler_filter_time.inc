@@ -25,6 +25,7 @@ class station_schedule_handler_filter_time extends views_handler_filter_numeric 
       '#title' => 'Mode',
       '#options' => array(
         'now' => t('Current time'),
+        'today' => t('Current day'),
         'minutes' => t('Specific time'),
       ),
       '#default_value' => $this->value['mode'],
@@ -37,9 +38,9 @@ class station_schedule_handler_filter_time extends views_handler_filter_numeric 
       '#title' => empty($form_state['exposed']) ? t('Minute offset') : '',
       '#size' => 10,
       '#default_value' => $this->value['offset'],
-      '#description' => t('Offset in minutes, e.g. -60 for one hour ago, 1440 for one day from now.'),
+      '#description' => t('Offset in minutes, e.g. -60 for one hour previous, 1440 for one day in the future.'),
       '#process' => array('views_process_dependency'),
-      '#dependency' => array('radio:options[value][mode]' => array('now')),
+      '#dependency' => array('radio:options[value][mode]' => array('now', 'today')),
     );
     $form['value']['value'] = array(
       '#type' => 'station_schedule_daytime',
@@ -61,10 +62,22 @@ class station_schedule_handler_filter_time extends views_handler_filter_numeric 
           $output .= t('Now');
         }
         elseif ($this->value['offset'] < 0) {
-          $output .= t('Now minus @offset minutes', array('@offset' => (int) $this->value['offset']));
+          $output .= t('Now -@offset', array('@offset' => format_interval($this->value['offset'] * 60)));
         }
         else {
-          $output .= t('Now plus @offset minutes', array('@offset' => (int) $this->value['offset']));
+          $output .= t('Now +@offset', array('@offset' => format_interval($this->value['offset'] * 60)));
+        }
+        break;
+
+      case 'today':
+        if (empty($this->value['offset'])) {
+          $output .= t('Midnight today');
+        }
+        elseif ($this->value['offset'] < 0) {
+          $output .= t('Midnight today -@offset', array('@offset' => format_interval($this->value['offset'] * 60)));
+        }
+        else {
+          $output .= t('Midnight today +@offset', array('@offset' => format_interval($this->value['offset'] * 60)));
         }
         break;
 
@@ -80,26 +93,40 @@ class station_schedule_handler_filter_time extends views_handler_filter_numeric 
 
   function query() {
     $this->ensure_my_table();
-    $field = "$this->table_alias.$this->real_field";
 
-    $minutes_in_week = MINUTES_IN_WEEK;
+    $field = "$this->table_alias.$this->real_field";
+    $offset = (int) $this->value['offset'];
+    $min_in_day = MINUTES_IN_DAY;
+
     $info = $this->operators();
     if (!empty($info[$this->operator]['method'])) {
-      switch ($this->value['mode']) {
-      case 'now':
-        $offset = (int) $this->value['offset'];
+      $formula = $field . ' ' . $this->operator . ' ';
+      $params = array();
+      $tokens = array(
+        'now' => '***STATION_CURRENT_MINUTE***',
+        'today' => '***STATION_CURRENT_DAY_IN_MINUTES***',
+      );
+      if (isset($tokens[$this->value['mode']])) {
         if (empty($offset)) {
-          $this->query->add_where($this->options['group'], "$field $this->operator ***CURRENT_STATION_MINUTE***");
+          $formula .= $tokens[$this->value['mode']];
         }
         else {
-          $this->query->add_where($this->options['group'], "$field $this->operator (***CURRENT_STATION_MINUTE*** + %d + {$minutes_in_week}) %% {$minutes_in_week}", $offset);
+          // If there's an offset we need to make sure that it wraps at the
+          // ends of the week.
+          $minutes_in_week = MINUTES_IN_WEEK;
+          $formula .= "({$tokens[$this->value['mode']]} + %d + {$minutes_in_week}) %% {$minutes_in_week}";
+          $params[] = $offset;
         }
-        break;
-
-      case 'minutes':
-        $this->query->add_where($this->options['group'], "$field $this->operator %d", $this->value['value']);
-        break;
       }
+      else if ('at' == $this->value['mode']) {
+        $formula .= '%d';
+        $params[] = $this->value['value'];
+      }
+      else {
+        // Unknown.
+        return;
+      }
+      $this->query->add_where($this->options['group'], $formula, $params);
     }
     return;
   }

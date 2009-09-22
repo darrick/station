@@ -36,7 +36,7 @@ class station_schedule_handler_sort_time extends views_handler_sort {
         break;
 
       case 'now':
-        $formula = "(($this->table_alias.$this->real_field - ***CURRENT_STATION_MINUTE***) + $minutes_in_week) %% $minutes_in_week";
+        $formula = "(($this->table_alias.$this->real_field - ***STATION_CURRENT_MINUTE***) + $minutes_in_week) %% $minutes_in_week";
         break;
 
       default:

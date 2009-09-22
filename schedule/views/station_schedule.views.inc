@@ -70,7 +70,11 @@ function station_schedule_views_plugins() {
  * Implementation of views_query_substitutions().
  */
 function station_schedule_views_query_substitutions($view) {
-  return array('***CURRENT_STATION_MINUTE***' => station_minute_from_local_ts());
+  $minute = station_minute_from_local_ts();
+  return array(
+    '***STATION_CURRENT_MINUTE***' => $minute,
+    '***STATION_CURRENT_DAY_IN_MINUTES***' => $minute - ($minute % MINUTES_IN_DAY),
+  );
 }
 
 /**

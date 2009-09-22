@@ -25,20 +25,6 @@ function station_catalog_uninstall() {
  * Implementation of hook_schema().
  */
 function station_catalog_schema() {
-//      db_query("
-//        CREATE TABLE {station_catalog} (
-//          `nid` int(10) unsigned NOT NULL default '0',
-//          `number` int(10) unsigned NOT NULL default '0',
-//          `artist` varchar(255) NOT NULL default '',
-//          `album` varchar(255) NOT NULL default '',
-//          `year` int(10) unsigned NOT NULL,
-//          `label` varchar(255) NOT NULL default '',
-//          `mb_release_id` varchar(36) NOT NULL default  '',
-//          `asin` varchar(16) NOT NULL default '',
-//        ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-//      ");
-
-
   $schema['station_catalog'] = array(
     'description' => t('Information about albums in the station catalog.'),
     'fields' => array(

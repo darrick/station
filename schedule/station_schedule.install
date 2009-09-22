@@ -120,14 +120,6 @@ function station_schedule_uninstall() {
  * Implementation of hook_schema().
  */
 function station_schedule_schema() {
-//  CREATE TABLE {station_schedule} (
-//    `nid` int unsigned NOT NULL default '0',
-//    `increment` int unsigned NOT NULL default '0',
-//    `streams` longtext,
-//    `unscheduled_message` VARCHAR(255) NOT NULL default '',
-//    PRIMARY KEY(`nid`)
-//  ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-//");
   $schema['station_schedule'] = array(
     'description' => t('Information about station schedules.'),
     'fields' => array(
@@ -163,18 +155,6 @@ function station_schedule_schema() {
     'primary key' => array('nid'),
   );
 
-//  CREATE TABLE {station_schedule_item} (
-//    `iid` int unsigned NOT NULL default '0',
-//    `schedule_nid` int unsigned NOT NULL default '0',
-//    `program_nid` int unsigned NOT NULL default '0',
-//    `start` int unsigned NOT NULL default '0',
-//    `finish` int unsigned NOT NULL default '0',
-//    `may_archive` tinyint NOT NULL default '1',
-//    PRIMARY KEY  (`iid`),
-//    KEY `station_schedule_start` (`schedule_nid`, `start`),
-//    KEY `station_schedule_program` (`schedule_nid`, `program_nid`)
-//  ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-//");
   $schema['station_schedule_item'] = array(
     'description' => t('Information about station schedules.'),
     'fields' => array(

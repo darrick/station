@@ -24,6 +24,8 @@ class station_schedule_handler_field_time extends views_handler_field {
   }
 
   function render($values) {
-    return theme($this->options['style'], $values->{$this->field_alias});
+    if (isset($values->{$this->field_alias})) {
+      return theme($this->options['style'], $values->{$this->field_alias});
+    }
   }
 }

@@ -33,8 +33,8 @@ class station_schedule_handler_field_time_range extends views_handler_field {
   }
 
   function render($values) {
-    $start = $values->{$this->aliases['start']};
-    $finish = $values->{$this->aliases['finish']};
-    return theme($this->options['style'], $start, $finish);
+    if (isset($values->{$this->aliases['start']})) {
+      return theme($this->options['style'], $values->{$this->aliases['start']}, $values->{$this->aliases['finish']});
+    }
   }
 }

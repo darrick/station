@@ -21,7 +21,7 @@ function station_schedule_views_default_views() {
   $handler->override_option('relationships', array(
     'program_nid' => array(
       'label' => 'Program',
-      'required' => 0,
+      'required' => 1,
       'id' => 'program_nid',
       'table' => 'station_schedule_item',
       'field' => 'program_nid',
@@ -29,7 +29,7 @@ function station_schedule_views_default_views() {
     ),
     'schedule_nid' => array(
       'label' => 'Schedule',
-      'required' => 0,
+      'required' => 1,
       'id' => 'schedule_nid',
       'table' => 'station_schedule_item',
       'field' => 'schedule_nid',
@@ -109,6 +109,7 @@ function station_schedule_views_default_views() {
   $handler->override_option('sorts', array(
     'start' => array(
       'order' => 'ASC',
+      'start_from' => 'begin_week',
       'id' => 'start',
       'table' => 'station_schedule_item',
       'field' => 'start',
@@ -238,6 +239,9 @@ function station_schedule_views_default_views() {
   $handler->override_option('access', array(
     'type' => 'perm',
     'perm' => 'view station schedule content',
+  ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
   ));
   $handler->override_option('empty', 'There are no programs scheduled for this day.');
   $handler->override_option('empty_format', '1');
@@ -420,6 +424,9 @@ function station_schedule_views_default_views() {
   $handler->override_option('access', array(
     'type' => 'none',
   ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
+  ));
   $handler->override_option('style_plugin', 'table');
   $handler->override_option('style_options', array(
     'grouping' => '',
@@ -444,10 +451,10 @@ function station_schedule_views_default_views() {
   $views[$view->name] = $view;
 
   /*
-   * View 'station_scheduled_programs'
+   * View 'station_schedule_programs'
    */
   $view = new view;
-  $view->name = 'station_scheduled_programs';
+  $view->name = 'station_schedule_programs';
   $view->description = 'Scheduled programs';
   $view->tag = 'station_schedule';
   $view->view_php = '';
@@ -456,6 +463,226 @@ function station_schedule_views_default_views() {
   $view->api_version = 2;
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
   $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('relationships', array(
+    'station_program_iid' => array(
+      'label' => 'Program\'s scheduling',
+      'required' => 0,
+      'id' => 'station_program_iid',
+      'table' => 'node',
+      'field' => 'station_program_iid',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => 'Title',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 1,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
+    ),
+    'field_station_program_genre_value' => array(
+      'label' => '',
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'default',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'field_station_program_genre_value',
+      'table' => 'node_data_field_station_program_genre',
+      'field' => 'field_station_program_genre_value',
+      'relationship' => 'none',
+    ),
+    'field_station_program_dj_uid' => array(
+      'label' => 'DJs',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'default',
+      'multiple' => array(
+        'group' => 1,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'field_station_program_dj_uid',
+      'table' => 'node_data_field_station_program_dj',
+      'field' => 'field_station_program_dj_uid',
+      'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
+    ),
+    'time' => array(
+      'label' => 'Time range',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'style' => 'station_dayhour_range',
+      'exclude' => 0,
+      'id' => 'time',
+      'table' => 'station_schedule_item',
+      'field' => 'time',
+      'relationship' => 'station_program_iid',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'title' => array(
+      'order' => 'ASC',
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'station_program' => 'station_program',
+      ),
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+    'status_extra' => array(
+      'id' => 'status_extra',
+      'table' => 'node',
+      'field' => 'status_extra',
+    ),
+    'station_program_iid' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'station_program_iid',
+      'table' => 'node',
+      'field' => 'station_program_iid',
+      'override' => array(
+        'button' => 'Override',
+      ),
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'perm',
+    'perm' => 'view station program content',
+  ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('title', 'Programs');
+  $handler->override_option('items_per_page', 30);
+  $handler->override_option('use_pager', '1');
+  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_options', array(
+    'grouping' => '',
+    'override' => 1,
+    'sticky' => 1,
+    'order' => 'asc',
+    'columns' => array(
+      'title' => 'title',
+      'field_station_program_genre_value' => 'field_station_program_genre_value',
+      'field_station_program_dj_uid' => 'field_station_program_dj_uid',
+    ),
+    'info' => array(
+      'title' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_station_program_genre_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_station_program_dj_uid' => array(
+        'separator' => '',
+      ),
+    ),
+    'default' => '-1',
+  ));
+  $handler = $view->new_display('page', 'Scheduled Page', 'page_1');
+  $handler->override_option('path', 'station/programs/scheduled');
+  $handler->override_option('menu', array(
+    'type' => 'default tab',
+    'title' => 'Scheduled',
+    'description' => '',
+    'weight' => '0',
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'normal',
+    'title' => 'Programs',
+    'description' => '',
+    'weight' => '0',
+  ));
+  $handler = $view->new_display('page', 'Unscheduled Page', 'page_2');
   $handler->override_option('fields', array(
     'title' => array(
       'label' => 'Title',
@@ -539,15 +766,6 @@ function station_schedule_views_default_views() {
       ),
     ),
   ));
-  $handler->override_option('sorts', array(
-    'title' => array(
-      'order' => 'ASC',
-      'id' => 'title',
-      'table' => 'node',
-      'field' => 'title',
-      'relationship' => 'none',
-    ),
-  ));
   $handler->override_option('filters', array(
     'type' => array(
       'operator' => 'in',
@@ -570,53 +788,37 @@ function station_schedule_views_default_views() {
       'table' => 'node',
       'field' => 'status_extra',
     ),
-  ));
-  $handler->override_option('access', array(
-    'type' => 'perm',
-    'perm' => 'view station program content',
-  ));
-  $handler->override_option('title', 'Programs');
-  $handler->override_option('use_pager', '1');
-  $handler->override_option('style_plugin', 'table');
-  $handler->override_option('style_options', array(
-    'grouping' => '',
-    'override' => 1,
-    'sticky' => 1,
-    'order' => 'asc',
-    'columns' => array(
-      'title' => 'title',
-      'field_station_program_genre_value' => 'field_station_program_genre_value',
-      'field_station_program_dj_uid' => 'field_station_program_dj_uid',
+    'station_program_iid' => array(
+      'operator' => '=',
+      'value' => '0',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'station_program_iid',
+      'table' => 'node',
+      'field' => 'station_program_iid',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
     ),
-    'info' => array(
-      'title' => array(
-        'sortable' => 0,
-        'separator' => '',
-      ),
-      'field_station_program_genre_value' => array(
-        'sortable' => 0,
-        'separator' => '',
-      ),
-      'field_station_program_dj_uid' => array(
-        'separator' => '',
-      ),
-    ),
-    'default' => '-1',
   ));
-  $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->override_option('path', 'station/programs/schedule');
+  $handler->override_option('path', 'station/programs/unscheduled');
   $handler->override_option('menu', array(
-    'type' => 'normal',
-    'title' => 'Programs',
+    'type' => 'tab',
+    'title' => 'Unscheduled',
     'description' => '',
     'weight' => '0',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
-    'type' => 'normal',
-    'title' => 'Programs',
+    'type' => 'none',
+    'title' => '',
     'description' => '',
-    'weight' => '0',
+    'weight' => 0,
   ));
   $views[$view->name] = $view;
 
@@ -691,6 +893,9 @@ function station_schedule_views_default_views() {
   $handler->override_option('access', array(
     'type' => 'perm',
     'perm' => 'view station schedule content',
+  ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
   ));
   $handler->override_option('title', 'Schedule listing');
   $handler->override_option('style_plugin', 'list');

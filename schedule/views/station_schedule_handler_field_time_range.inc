@@ -18,7 +18,6 @@ class station_schedule_handler_field_time_range extends views_handler_field {
         'station_hour_duration' => t('Duration'),
         'station_hour_range' => t('Hour range'),
         'station_dayhour_range' => t('Day/hour range'),
-
       ),
       '#default_value' => $this->options['style'],
       '#description' => t('Which time style should be used.'),

@@ -44,6 +44,9 @@ function station_schedule_views_handlers() {
       'station_schedule_handler_filter_time' => array(
         'parent' => 'views_handler_filter_numeric',
       ),
+      'station_schedule_handler_filter_schedule_item' => array(
+        'parent' => 'views_handler_filter_boolean_operator',
+      ),
     ),
   );
 }
@@ -139,14 +142,6 @@ function station_schedule_views_data() {
     'field' => 'iid',
     'title' => t('Station Schedule Item ID'),
     'help' => t("Items on the station's schedules."),
-  );
-
-  // For other base tables, explain how we join
-  $data['station_schedule_item']['table']['join'] = array(
-    'node' => array(
-      'left_field' => 'nid',
-      'field' => 'program_nid',
-    ),
   );
 
   // ----------------------------------------------------------------
@@ -265,4 +260,62 @@ function station_schedule_views_data() {
   );
 
   return $data;
+}
+
+/**
+ * Use views_data_alter to add relations from {node} to {schedule_items}.
+ */
+function station_schedule_views_data_alter(&$data) {
+  $data['node']['station_schedule_iid'] = array(
+    'group' => t('Station Schedule'),
+    'title' => t('Scheduled Programs'),
+    'help' => t('All programs on this schedule.'),
+    'real field' => 'nid',
+//    'field' => array(
+//      'handler' => 'views_handler_field_upload_fid',
+//    ),
+    'filter' => array(
+      'handler' => 'station_schedule_handler_filter_schedule_item',
+      'title' => t('Has scheduled programs'),
+      'type' => 'yes-no',
+      'label' => t('Has scheduled programs'),
+      'help' => t('Only display schedules with programs. This can cause duplicates if there are multiple programs scheduled.'),
+    ),
+    'relationship' => array(
+      'title' => t('Scheduled Programs'),
+      'help' => t('Add a relationship to gain access to data about the programs on a schedule. Note that this relationship will cause duplicate schedule nodes if there are multiple programs on the schedule.'),
+      'relationship table' => 'node',
+      'relationship field' => 'nid',
+      'base' => 'station_schedule_item',
+      'base field' => 'schedule_nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Scheduled Programs'),
+    ),
+  );
+  $data['node']['station_program_iid'] = array(
+    'group' => t('Station Program'),
+    'title' => t('Program Schedule Times'),
+    'help' => t('All the times this program is scheduled.'),
+    'real field' => 'nid',
+//    'field' => array(
+//      'handler' => 'views_handler_field_upload_fid',
+//    ),
+    'filter' => array(
+      'handler' => 'station_schedule_handler_filter_schedule_item',
+      'title' => t('Is scheduled'),
+      'type' => 'yes-no',
+      'label' => t('Program is scheduled'),
+      'help' => t('Only display programs that are on a schedule. This can cause duplicates if the schedule is on multiple schedules.'),
+    ),
+    'relationship' => array(
+      'title' => t('Program Scheduling'),
+      'help' => t('Add a relationship to gain access to data about the times a program is scheduled. Note that this relationship will cause duplicate schedule nodes if the program is multiple slots or on multiple schedules.'),
+      'relationship table' => 'node',
+      'relationship field' => 'nid',
+      'base' => 'station_schedule_item',
+      'base field' => 'program_nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t("Program's scheduling"),
+    ),
+  );
 }

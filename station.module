@@ -104,7 +104,11 @@ function station_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 function station_page() {
-  return '';
+  $output = '';
+  if ($content = system_admin_menu_block(menu_get_item())) {
+    $output = theme('admin_block_content', $content);
+  }
+  return $output;
 }
 
 

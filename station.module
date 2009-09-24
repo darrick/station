@@ -467,6 +467,9 @@ function _station_send_notice($type, $op, $data) {
  * @param $data associative array with details like: nid, sid, uid.
  */
 function station_station_notice($type, $op, $data) {
+  // This is just debug code. Don't bother with it.
+  return;
+
   if ($type == 'dj') {
     $pid = $data['program_nid'];
     $uid = $data['uid'];

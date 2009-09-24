@@ -470,38 +470,23 @@ function station_schedule_update_6001() {
 
 
   // Now the tricky part is to migrate the data.
-  // The procedure I'm using here is a bit overkill for migrating two fields
-  // but I'm planning on re-using it so it makes sense to go ahead and just be
-  // robust.
+
+  // NOTE: This differes from the copy/pasted version of this update because
+  // we need to ensure the delta is unique
+
+  // Might be needlessly escaping the names here but it shouldn't hurt
+  // anything.
+  $db_info    = content_database_info($dj_field);
+  $to_table   = db_escape_table($db_info['table']);
+  $to_col     = db_escape_table($db_info['columns']['uid']['column']);
+
   // We've got to assume that CCK's table might only have records for half of
   // the nodes we're migrating so the strategy is to INSERT then UPDATE.
-  $migrations = array(
-    array(
-      'cck_field' => $dj_field,
-      'from_table' => 'station_dj',
-      'from_join' => 'program_nid',
-      'from_col' => 'uid',
-      'to_join' => 'nid',
-      'to_col' => 'uid',
-    ),
-  );
-  foreach ($migrations as $migration) {
-    // Might be needlessly escaping the names here but it shouldn't hurt
-    // anything.
-    $from_table = db_escape_table($migration['from_table']);
-    $from_col   = db_escape_table($migration['from_col']);
-    $from_join  = db_escape_table($migration['from_join']);
-
-    $db_info    = content_database_info($migration['cck_field']);
-    $to_table   = db_escape_table($db_info['table']);
-    $to_col     = db_escape_table($db_info['columns'][$migration['to_col']]['column']);
-    $to_join    = db_escape_table($migration['to_join']);
-
-    // Make sure there's a record in CCK's table for every one in the source
-    // table, then do an update of all the records.
-    $ret[] = update_sql("INSERT INTO {{$to_table}} (nid, vid) SELECT n.nid, n.vid FROM {{$from_table}} f INNER JOIN {node} n ON f.$from_join = n.nid WHERE NOT EXISTS ( SELECT * FROM {{$to_table}} t WHERE f.$from_join = t.$to_join)");
-    $ret[] = update_sql("UPDATE {{$to_table}} t INNER JOIN {{$from_table}} f ON t.$to_join = f.$from_join SET t.$to_col = f.$from_col");
-  }
+  $ret[] = update_sql("INSERT INTO {{$to_table}} (nid, vid, delta)
+    SELECT n.nid, n.vid, f.uid FROM {station_dj} f INNER JOIN {node} n ON f.program_nid = n.nid
+    WHERE NOT EXISTS ( SELECT * FROM {{$to_table}} t WHERE t.nid = f.program_nid AND t.delta = f.uid)");
+  $ret[] = update_sql("UPDATE {{$to_table}} t INNER JOIN {station_dj} f ON t.nid = f.program_nid AND t.delta = f.uid
+    SET t.$to_col = f.uid");
 
   // Since these are now on the field we don't really need them any more..
   variable_del('station_schedule_dj_role');

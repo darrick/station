@@ -313,7 +313,7 @@ function station_playlist_load($node) {
   // Tracks
   $extras = new stdClass();
   $extras->tracks = array();
-  $result = db_query('SELECT weight, album, artist, title, label, link FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
+  $result = db_query('SELECT * FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
   while ($track = db_fetch_array($result)) {
     $extras->tracks[] = $track;
   }

@@ -534,7 +534,7 @@ function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
  */
 function station_playlist_autocomplete($field = '', $string = '') {
   $matches = array();
-  if (in_array($field, array('artist', 'title', 'album', 'label'))) {
+  if (in_array($field, array('artist', 'album', 'label'))) {
     $result = db_query_range('SELECT DISTINCT %s AS val FROM {station_playlist_track} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY val', $field, $field, $string, 0, 10);
     while ($item = db_fetch_object($result)) {
       $matches[$item->val] = check_plain($item->val);

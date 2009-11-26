@@ -241,6 +241,7 @@ function station_playlist_uninstall() {
 
   drupal_uninstall_schema('station_playlist');
 
+  variable_del('station_playlist_track_autocomplete_source');
   variable_del('station_playlist_title_dateformat');
   variable_del('station_playlist_program_dateformat');
 }

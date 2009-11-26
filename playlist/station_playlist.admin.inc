@@ -21,5 +21,30 @@ function station_playlist_admin_settings() {
     '#default_value' => variable_get('station_playlist_program_dateformat', 'F j, Y'),
     '#description' => t("The playlist's date is also displayed on the the program node. This setting lets you control how it is formatted."),
   );
+  $form['tracks'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Tracks'),
+    '#tree' => FALSE,
+  );
+  if (module_exists('station_catalog')) {
+    $form['tracks']['station_playlist_track_autocomplete_source'] = array(
+      '#type' => 'radios',
+      '#title' => t('Auto-complete source'),
+      '#default_value' => variable_get('station_playlist_track_autocomplete_source', 'playlists'),
+      '#options' => array(
+        'playlists' => t('Existing playlists'),
+        'catalog'   => t('Albums in the catalog'),
+        'both'      => t('Both'),
+      ),
+      '#description' => t("When adding playlists the track listings use auto-completing to save typing and provide suggestions. What data source should be used to provide these suggestions?"),
+    );
+  }
+  else {
+    $form['tracks']['station_playlist_track_autocomplete_source'] = array(
+      '#type' => 'value',
+      '#value' => 'playlists',
+    );
+  }
+
   return system_settings_form($form);
 }

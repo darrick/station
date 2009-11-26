@@ -411,17 +411,43 @@ function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
 }
 
 /**
- * Retrieve a pipe delimited string of autocomplete suggestions for playlist
- * items.
+ * Retrieve a list of autocomplete suggestions for playlist items.
+ *
+ * @param $field
+ *   The name of the field to match: 'artist', 'album', 'label'
+ * @param $string
+ *   The value to search for.
  */
 function station_playlist_autocomplete($field = '', $string = '') {
   $matches = array();
-  if (in_array($field, array('artist', 'title', 'album', 'label'))) {
-    $result = db_query_range('SELECT DISTINCT %s AS val FROM {station_playlist_track} WHERE LOWER(%s) LIKE LOWER("%s%%") ORDER BY val', $field, $field, $string, 0, 10);
-    while ($item = db_fetch_object($result)) {
-      $matches[$item->val] = check_plain($item->val);
+  if (in_array($field, array('artist', 'album', 'label'))) {
+    $sql = NULL;
+    $catalog_sql  = 'SELECT DISTINCT %s AS val FROM {station_catalog}        WHERE LOWER(%s) LIKE LOWER("%s%%")';
+    $playlist_sql = 'SELECT DISTINCT %s AS val FROM {station_playlist_track} WHERE LOWER(%s) LIKE LOWER("%s%%")';
+    $args = array($field, $field, $string);
+    switch (variable_get('station_playlist_track_autocomplete_source', 'playlists')) {
+      case 'playlists':
+        $sql = $playlist_sql;
+        break;
+
+      case 'catalog':
+        $sql = $catalog_sql;
+        break;
+
+      case 'both':
+        $sql = $catalog_sql . ' UNION ' . $playlist_sql;
+        $args = array_merge($args, $args);
+        break;
+    }
+
+    if ($sql) {
+      $result = db_query_range($sql . ' ORDER BY val', $args, 0, 10);
+      while ($item = db_fetch_object($result)) {
+        $matches[$item->val] = check_plain($item->val);
+      }
     }
   }
+
   print drupal_to_js($matches);
   exit();
 }

@@ -523,6 +523,7 @@ function station_schedule_user($op, &$edit, &$account, $category = NULL) {
       $field = content_fields('field_station_program_dj', 'station_program');
       $db_info = content_database_info($field);
       $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n INNER JOIN {". $db_info['table'] ."} f ON n.vid = f.vid WHERE f.". $db_info['columns']['uid']['column'] ."=". $account->uid ." AND n.status = 1"));
+      $account->programs = array();
       while ($program = db_fetch_object($result)) {
         $account->programs[$program->nid] = $program->title;
       }

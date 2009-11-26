@@ -1,5 +1,4 @@
 <?php
-
 // $Id$
 
 /**
@@ -134,8 +133,6 @@ function station_archive_views_default_views() {
   );
   $view->requires = array(node);
   $views[$view->name] = $view;
-
-
 
   return $views;
 }

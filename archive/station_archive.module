@@ -146,10 +146,12 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
       case 'view':
         // If it's in the archives, set the menu appropriately
         if ($page && !$teaser && isset($node->station_archive)) {
-          $breadcrumb[] = array('path' => 'station', 'title' => t('Station'));
-          $breadcrumb[] = array('path' => 'station/archives', 'title' => t('Archives'));
-          $breadcrumb[] = array('path' => 'station/archives/'. $node->station_archive['program_nid'], 'title' => $node->station_archive['program_title']);
-          $breadcrumb[] = array('path' => 'node/'. $node->nid);
+          $breadcrumb = array(
+             l(t('Home'), NULL),
+             l(t('Station'), 'station'),
+             l(t('Archives'), 'station/archives'),
+             l($node->station_archive['program_title'], 'station/archives/'. $node->station_archive['program_nid']),
+          );
           drupal_set_breadcrumb($breadcrumb);
 
           // Provide information to admins on the import and deletion dates.
@@ -247,7 +249,7 @@ function station_archive_form_alter(&$form, $form_state, $form_id) {
   }
 }
 
-function station_archive_node_form_validate($form, &$form_state) {
+function station_archive_node_form_validate(&$form, &$form_state) {
   // If they clicked the button, reload the program information
   if (isset($form_state['clicked_button']['#value']) && t('Reload Program') == $form_state['clicked_button']['#value']) {
     $gmt_timestamp = isset($form_state['values']['station_archive']['aired']) ? $form_state['values']['station_archive']['aired'] : time();
@@ -271,10 +273,17 @@ function station_archive_node_form_validate($form, &$form_state) {
     }
     else {
       // we've got program information
+      $djs = array();
+      if (!empty($program->field_station_program_dj)) {
+        foreach ($program->field_station_program_dj as $entry) {
+          $user = user_load($entry);
+          $djs[] = $user->name;
+        }
+      }
       $program_nid = $program->nid;
       $audio_tags['title'] = $program->title;
-      $audio_tags['artist'] = station_anded_list($program->djs);
-      $audio_tags['genre'] = $program->genre;
+      $audio_tags['artist'] = station_anded_list($djs);
+      $audio_tags['genre'] = isset($program->field_station_program_genre[0]['value']) ? $program->field_station_program_genre[0]['value'] : '';
       $audio_tags['url_source'] = $program->node_url;
     }
     $audio_tags['year'] = date('Y', $local_timestamp);
@@ -439,11 +448,12 @@ function _station_archive_update_program_list() {
 
   // Insert a program for unschedule times.
   $programs[0] = array(
-    'program_nid' => 0,
+    'nid' => 0,
     'title' => variable_get('station_archive_unscheduled_title', t('DJ Auto mix')),
   );
 
   foreach ($programs as $program) {
+    $program['program_nid'] = $program['nid'];
     db_query("DELETE FROM {station_archive_program} WHERE program_nid = %d", $program['program_nid']);
     drupal_write_record('station_archive_program', $program);
   }
@@ -691,10 +701,11 @@ function _station_archive_get_hour_term($dayterm, $hour) {
 }
 
 /**
- * Implementation of hook_view_api().
+ * Implementation of hook_views_api().
  */
 function station_archive_views_api() {
   return array(
     'api' => 2.0,
+    'path' => drupal_get_path('module', 'station_archive'),
   );
 }

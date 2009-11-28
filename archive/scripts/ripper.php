@@ -42,18 +42,18 @@ if (!file_exists($streamripper) || !is_executable($streamripper)) {
 
 // Determine when we're starting, when we should end and convert that to a
 // length of time in seconds.
-$startTime = roundToNearestHour(time());
-$endTime = $startTime + 3600;
-$length = ($endTime - time()) + (int) $settings['overlap_seconds'];
+$start_time = round_to_nearest_hour(time());
+$end_time = $start_time + 3600;
+$length = ($end_time - time()) + (int) $settings['overlap_seconds'];
 
 // Download the stream
 $stream_url = $settings['stream_url'];
 $file_format = strtolower($settings['file_format']);
-exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$startTime}.{$file_format} --quiet");
+exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$start_time}.{$file_format} --quiet");
 
 // stream ripper creates the .cue file. we'll use its absence as a signal
 // to the module that it's safe to import a file.
-$cuefile = "{$import_dir}/{$startTime}.cue";
+$cuefile = "{$import_dir}/{$start_time}.cue";
 if (file_exists($cuefile)) {
   unlink($cuefile);
 }
@@ -67,17 +67,15 @@ exit(0);
  * @param $time
  *   A UNIX timestamp
  */
-function roundToNearestHour($time) {
+function round_to_nearest_hour($time) {
   $parts = getdate($time);
   if ($parts['minutes'] > 50) {
     // advance it to the next hour
-    $roundedTime = mktime($parts['hours'] + 1, 0, 0, $parts['mon'], $parts['mday'], $parts['year']);
+    return mktime($parts['hours'] + 1, 0, 0, $parts['mon'], $parts['mday'], $parts['year']);
   }
   else {
     // we're late for this hour
-    $roundedTime = mktime($parts['hours'], 0, 0, $parts['mon'], $parts['mday'], $parts['year']);
+    return mktime($parts['hours'], 0, 0, $parts['mon'], $parts['mday'], $parts['year']);
   }
-  return $roundedTime;
 }
 
-?>

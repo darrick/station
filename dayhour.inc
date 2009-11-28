@@ -17,7 +17,7 @@ define('MINUTES_IN_WEEK', 10080);
  */
 function station_valid_hour($hour) {
   if (!is_numeric($hour)) {
-    $hour = strtolower(trim($hour));
+    $hour = drupal_strtolower(trim($hour));
 
     // take care of a couple of handy strings
     if ($hour == t('midnight')) {
@@ -68,7 +68,7 @@ function station_valid_day($day) {
   }
   else {
     $dayname = station_day_name();
-    $ret = array_search(ucfirst($day), $dayname, FALSE);
+    $ret = array_search(drupal_ucfirst($day), $dayname, FALSE);
     return ($ret === FALSE) ? 0 : $ret;
   }
 }

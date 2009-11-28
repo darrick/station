@@ -30,6 +30,13 @@ function station_playlist_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+
+  $items['station/ahah/playlist'] = array(
+    'page callback' => 'station_playlist_ahah',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+    'type ' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -151,32 +158,85 @@ function station_playlist_access($op, $node, $account) {
 }
 
 /**
+ * Does this track have all the required fields be saved?
+ *
+ * Tracks need to have an artist or title to be saved to the database.
+ *
+ * @param $track
+ *   Array with track information.
+ * @return
+ *   The track has some values filled in but is missing an artist or title.
+ * @see station_playlist_track_is_incomplete()
+ */
+function station_playlist_track_is_saveable($track) {
+  return ($track['artist'] || $track['title']);
+}
+
+/**
+ * Does an unsavable track have other values set?
+ *
+ * @param $track
+ *   Array with track information.
+ * @return
+ *   The track has some values filled in but is missing an artist or title.
+ * @see station_playlist_track_is_empty()
+ */
+function station_playlist_track_is_incomplete($track) {
+  return ($track['album'] || $track['label'] || $track['link']) && !($track['artist'] || $track['title']);
+}
+
+/**
+ * Helper function to build an empty track row.
+ */
+function station_playlist_get_empty_track() {
+  static $track;
+
+  if (!isset($track)) {
+    $track = array(
+      'artist' => '',
+      'album' => '',
+      'title' => '',
+      'label' => '',
+      'link' => '',
+      'weight' => 9999,
+    );
+    drupal_alter('station_playlist_empty_track', $track);
+  }
+  return $track;
+}
+
+/**
  * Implementation of hook_form().
  *
  * Build a form for playlist nodes.
  */
-function station_playlist_form(&$node) {
-  // TODO Port this:
+function station_playlist_form(&$node, $form_state) {
   // if this is a new node (with no nid) and we've got a numeric argument,
   // assume that's the program we should attach to.
-  if (empty($node->nid)) {
-    if (is_numeric(arg(3))) {
-      $node->field_station_program[0]['nid'] = (int) arg(3);
-    }
-  }
-  if (!isset($node->tracks)) {
-    $node->tracks = array();
+  if (empty($node->nid) && is_numeric(arg(3))) {
+    $node->field_station_program[0]['nid'] = (int) arg(3);
   }
 
-  $form['tracks'] = array(
-    '#type' => 'fieldset', '#title' => t('Tracks'),
-    '#tree' => TRUE,
-    '#collapsible' => FALSE,
-    '#weight' => 1,
-    '#theme' => 'station_playlist_track_form',
-    '#description' => t('Enter the tracks played on the show, the artist and title are required. If you provide a link, it needs to begin with <code>http://</code> or you will get a link to a page on this site.') .'<br />'
-      . t('The weight is used to set the order: lower weights rise, heavier sink. If you want to remove a track just clear the artist and title text boxes. If you need more tracks, just save, more will be added. '),
-  );
+  // Figure out how many empty rows we have and decide if we need to add some
+  // more.
+  if (isset($node->tracks)) {
+    $num_empty_tracks = 5;
+    foreach ($node->tracks as $track) {
+      if (!station_playlist_track_is_saveable($track)) {
+        $num_empty_tracks--;
+      }
+    }
+  }
+  else {
+    // New playlists get 10 blank tracks.
+    $num_empty_tracks = 10;
+    $node->tracks = array();
+  }
+  $empty_track = station_playlist_get_empty_track();
+  for ($i = 0; $i < $num_empty_tracks; $i++) {
+    $node->tracks[] = $empty_track;
+  }
+
   $form['body_filter']['body'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
@@ -185,98 +245,172 @@ function station_playlist_form(&$node) {
   );
   $form['body_filter']['format'] = filter_form($node->format);
 
+  // Wrapper to hold all the tracks elements.
+  $form['tracks_wrapper'] = array(
+    '#value' => '<label>'. t('Tracks') .':</label>',
+    '#prefix' => '<div class="clear-block form-item" id="station-playlist-tracks-wrapper">',
+    '#suffix' => '</div>',
+    '#theme' => 'station_playlist_track_form',
+    '#description' => t('Enter the tracks played on the show, the artist and title are required. If you provide a link, it needs to begin with <code>http://</code> or you will get a link to a page on this site.'),
+    '#tree' => FALSE,
+  );
+  // Container to display existing tracks.
+  $form['tracks_wrapper']['tracks'] = array(
+    '#prefix' => '<div id="station-playlist-tracks">',
+    '#suffix' => '</div>',
+    '#tree' => TRUE,
+  );
 
-  $blanks = 10;
-  $max = max(20, $blanks + count($node->tracks) + 1);
-
-  // load current tracks
-  $weight = 0;
-  foreach ($node->tracks as $key => $track) {
-    $form['tracks'][$weight]['artist'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+  foreach ($node->tracks as $weight => $track) {
+    $form['tracks_wrapper']['tracks'][$weight]['artist'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#maxlength' => 255,
       '#default_value' => isset($track['artist']) ? $track['artist'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/artist',
     );
-    $form['tracks'][$weight]['album'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+    $form['tracks_wrapper']['tracks'][$weight]['album'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#maxlength' => 255,
       '#default_value' => isset($track['album']) ? $track['album'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/album',
     );
-    $form['tracks'][$weight]['title'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+    $form['tracks_wrapper']['tracks'][$weight]['title'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#maxlength' => 255,
       '#default_value' => isset($track['title']) ? $track['title'] : '',
     );
-    $form['tracks'][$weight]['label'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+    $form['tracks_wrapper']['tracks'][$weight]['label'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#maxlength' => 255,
       '#default_value' => isset($track['label']) ? $track['label'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/label',
     );
-    $form['tracks'][$weight]['link'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
+    $form['tracks_wrapper']['tracks'][$weight]['link'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#maxlength' => 255,
       '#default_value' => isset($track['link']) ? $track['link'] : '',
     );
-    $form['tracks'][$weight]['weight'] = array(
-      '#type' => 'weight', '#delta' => $max, '#default_value' => $weight,
+    $form['tracks_wrapper']['tracks'][$weight]['weight'] = array(
+      '#type' => 'weight',
+      '#default_value' => $weight,
+      '#delta' => 100,
     );
-    $weight++;
-  }
-  // add some empty tracks
-  for ($i = 0; $i < $blanks; $i++) {
-    $form['tracks'][$weight]['artist'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
-      '#autocomplete_path' => 'station/autocomplete/playlist/artist',
+    // Remove button.
+    $form['tracks_wrapper']['tracks'][$weight]['remove'] = array(
+      '#type' => 'submit',
+      '#name' => 'remove_' . $weight,
+      '#value' => t('Remove'),
+      '#submit' => array('station_playlist_form_ahah_track_submit'),
+      '#ahah' => array(
+        'path' => 'station/ahah/playlist',
+        'wrapper' => 'station-playlist-tracks-wrapper',
+        'method' => 'replace',
+        'effect' => 'fade',
+      ),
     );
-    $form['tracks'][$weight]['album'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
-      '#autocomplete_path' => 'station/autocomplete/playlist/album',
-    );
-    $form['tracks'][$weight]['title'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
-    );
-    $form['tracks'][$weight]['label'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
-      '#autocomplete_path' => 'station/autocomplete/playlist/label',
-    );
-    $form['tracks'][$weight]['link'] = array(
-      '#type' => 'textfield', '#size' => 20, '#maxlength' => 255,
-    );
-    $form['tracks'][$weight]['weight'] = array(
-      '#type' => 'weight', '#delta' => $max, '#default_value' => $weight,
-    );
-    $weight++;
   }
 
+  // We name our button 'add_more' to avoid conflicts with other modules using
+  // AHAH-enabled buttons with the id 'more'.
+  $form['tracks_wrapper']['add_more'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add more'),
+    '#weight' => 1,
+    '#submit' => array('station_playlist_form_ahah_track_submit'),
+    '#ahah' => array(
+      'path' => 'station/ahah/playlist',
+      'wrapper' => 'station-playlist-tracks-wrapper',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+  $form['#validate'][] = 'station_playlist_node_form_validate';
   $form['#submit'][] = 'station_playlist_node_form_submit';
   return $form;
+}
+
+/**
+ * A do nothing submit function to prevent the form from saving.
+ */
+function station_playlist_form_ahah_track_submit($form, &$form_state) {
+  // Set the form to rebuild and run submit handlers.
+  node_form_submit_build_node($form, $form_state);
 }
 
 function theme_station_playlist_track_form($form) {
   // To have the drag and drop not totally wack out the formatting we need
   // the first column in the table with no form element.
-  $header = array('', t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'));
+  $header = array('', t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'), '');
 
   $rows = array();
-  foreach (element_children($form) as $key) {
-    $row = array();
-    $row[] = '';
-    $row[] = drupal_render($form[$key]['artist']);
-    $row[] = drupal_render($form[$key]['title']);
-    $row[] = drupal_render($form[$key]['album']);
-    $row[] = drupal_render($form[$key]['label']);
-    $row[] = drupal_render($form[$key]['link']);
-    $form[$key]['weight']['#attributes']['class'] = 'track-weight';
-    $row[] = drupal_render($form[$key]['weight']);
+  foreach (element_children($form['tracks']) as $key) {
+    $form['tracks'][$key]['weight']['#attributes']['class'] = 'track-weight';
+    $row = array(
+      '',
+      drupal_render($form['tracks'][$key]['artist']),
+      drupal_render($form['tracks'][$key]['title']),
+      drupal_render($form['tracks'][$key]['album']),
+      drupal_render($form['tracks'][$key]['label']),
+      drupal_render($form['tracks'][$key]['link']),
+      drupal_render($form['tracks'][$key]['weight']),
+      drupal_render($form['tracks'][$key]['remove']),
+    );
     $rows[] = array('data' => $row, 'class' => 'draggable');
   }
 
   $output = '';
   if (count($rows)) {
-    drupal_add_tabledrag('station-playlist-tracks', 'order', 'sibling', 'track-weight');
-    $output .= theme('table', $header, $rows, array('id' => 'station-playlist-tracks'));
+    drupal_add_tabledrag('station-playlist-tracks-table', 'order', 'sibling', 'track-weight');
+    $output .= theme('table', $header, $rows, array('id' => 'station-playlist-tracks-table'));
   }
 
   return $output . drupal_render($form);
+}
 
+function station_playlist_node_form_validate($form, &$form_state) {
+  $tracks = $form_state['values']['tracks'];
+
+  // Check if a track should be removed.
+  if (isset($form_state['clicked_button']['#parents'][2]) && $form_state['clicked_button']['#parents'][2] == 'remove') {
+    $delta = $form_state['clicked_button']['#parents'][1];
+    unset($tracks[$delta]);
+  }
+
+  // Sort the table by weight (which might have changed with a tablesort)
+  // then reset the keys.
+  usort($tracks, '_station_playlist_sort_tracks');
+  $tracks = array_values($tracks);
+  // Now strip the previous weights which may not be adjacent and update the
+  // track's weights.
+  foreach ($tracks as $key => $track) {
+    $track['weight'] = $key;
+  }
+
+  // Check if they've requested a new track.
+  if (isset($form_state['clicked_button']['#parents'][0]) && $form_state['clicked_button']['#parents'][0] == 'add_more') {
+    // Add the new row to the tracks list.
+    $track = station_playlist_get_empty_track();
+    for ($i = 0; $i < 5; $i++) {
+      $tracks[] = $track;
+    }
+  }
+
+  form_set_value($form['tracks_wrapper']['tracks'], $tracks, $form_state);
+}
+
+/**
+ * Helper function to sort tracks by weight.
+ */
+function _station_playlist_sort_tracks($a, $b) {
+  if ((int) $a['weight'] == (int) $b['weight']) {
+    return 0;
+  }
+  return ((int) $a['weight'] < (int) $b['weight']) ? -1 : 1;
 }
 
 /**
@@ -285,13 +419,38 @@ function theme_station_playlist_track_form($form) {
  * Use this hook to convert form elements to node values.
  */
 function station_playlist_validate(&$node, &$form) {
-  // check for track errors
+  // Check for missing track information.
   foreach ($node->tracks as $track) {
-    if (($track['album'] || $track['label']) && !($track['artist'] || $track['title'])) {
+    if (station_playlist_track_is_incomplete($track)) {
       form_set_error('tracks]['. $track['weight'] .'][artist', t("You must provide either an artist or a title."));
-      form_set_error('tracks]['. $track['weight'] .'][title');
+      form_set_error('tracks]['. $track['weight'] .'][title', ' ');
     }
   }
+}
+
+function station_playlist_ahah() {
+  // The form is generated in an include file which we need to include manually.
+  include_once 'modules/node/node.pages.inc';
+
+  $form = station_ajax_form_handler();
+
+  // Render the new output.
+  $sub_form = $form['tracks_wrapper'];
+  // Prevent duplicate wrappers.
+  unset($sub_form['#prefix'], $sub_form['#suffix']);
+
+  $output = theme('status_messages') . drupal_render($sub_form);
+
+  // AHAH is not being nice to us and doesn't know about the "Remove" button.
+  // This causes it not to attach AHAH behaviours to it after modifying the form.
+  // So we need to tell it first.
+  $javascript = drupal_add_js(NULL, NULL);
+  if (isset($javascript['setting'])) {
+    $output .= '<script type="text/javascript">jQuery.extend(Drupal.settings, '. drupal_to_js(call_user_func_array('array_merge_recursive', $javascript['setting'])) .');</script>';
+  }
+
+  // Final rendering callback.
+  drupal_json(array('status' => TRUE, 'data' => $output));
 }
 
 /**
@@ -326,7 +485,7 @@ function station_playlist_load($node) {
  */
 function station_playlist_insert($node) {
   foreach ($node->tracks as $track) {
-    if ($track['artist'] || $track['title']) {
+    if (station_playlist_track_is_saveable($track)) {
       $record = array_merge($track, array('nid' => $node->nid, 'vid' => $node->vid));
       drupal_write_record('station_playlist_track', $record);
     }
@@ -347,7 +506,7 @@ function station_playlist_update($node) {
   // delete and re-add tracks
   db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
   foreach ($node->tracks as $track) {
-    if ($track['artist'] || $track['title']) {
+    if (station_playlist_track_is_saveable($track)) {
       $record = array_merge($track, array('nid' => $node->nid, 'vid' => $node->vid));
       drupal_write_record('station_playlist_track', $record);
     }
@@ -369,7 +528,7 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
     drupal_set_breadcrumb($breadcrumb);
   }
 
-  if (!$teaser) {
+  if (!$teaser && isset($node->nid)) {
     if ($view = views_get_view('station_playlist_tracks')) {
       $display_id = 'default';
       if ($view->access($display_id)) {
@@ -389,6 +548,8 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
 
 /**
  * Implementation of hook_nodeapi().
+ *
+ * We inject our past and future playlists onto program nodes here.
  */
 function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
   if ($node->type == 'station_program' && $op == 'view') {

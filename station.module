@@ -32,12 +32,12 @@ function station_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => '-10',
   );
+
   $items['station'] = array(
     'title' => 'Station',
     'page callback' => 'station_page',
     'access arguments' => array('access content'),
   );
-
   return $items;
 }
 
@@ -111,6 +111,36 @@ function station_page() {
   return $output;
 }
 
+
+/**
+ * AJAX form handler.
+ */
+function station_ajax_form_handler() {
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_build_id = $_POST['form_build_id'];
+
+  // Get the form from the cache.
+  $form = form_get_cache($form_build_id, $form_state);
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+
+  // We need to process the form, prepare for that by setting a few internals.
+  $form_state['post'] = $form['#post'] = $_POST;
+  $form['#programmed'] = $form['#redirect'] = FALSE;
+
+  // Build, validate and if possible, submit the form.
+  drupal_process_form($form_id, $form, $form_state);
+  // If validation fails, force form submission.
+  if (form_get_errors()) {
+    form_execute_handlers('submit', $form, $form_state);
+  }
+
+  // This call recreates the form relying solely on the form_state that the
+  // drupal_process_form set up.
+  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+
+  return $form;
+}
 
 /**
  * Determine if we have a station archive module running locally or access to a

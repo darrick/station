@@ -7,48 +7,67 @@
  */
 function station_archive_views_data() {
   $data['station_archive_item']['table']['group']  = t('Station Archive');
-  $data['station_archive_item']['table']['join']['node'] = array(
-    'left_field' => 'nid',
-    'field' => 'audio_nid'
+  $data['station_archive_item']['table']['join'] = array(
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'audio_nid'
+    ),
   );
 
   $data['station_archive_item']['aired'] = array(
-    'title' => t('Station Archive: Air date'),
+    'title' => t('Air date'),
     'help' => t('Date the audio was aired.'),
     'field' => array(
       'click sortable' => TRUE,
       'handler' => 'views_handler_field_date',
     ),
   );
-
   $data['station_archive_item']['imported'] = array(
-    'title' => t('Station Archive: Import date'),
+    'title' => t('Import date'),
     'help' => t('Date the audio was imported into the station archive.'),
-    'field' => array('sortable' => TRUE,
-    'handler' => 'views_handler_field_date',
+    'field' => array(
+      'sortable' => TRUE,
+      'handler' => 'views_handler_field_date',
       'option' => 'string',
     ),
   );
-
   $data['station_archive_item']['permanent'] = array(
-    'title' => t('Station Archive: Is in permanent archive'),
-    'help' => t('Filter whether the node is part of the permanent archive.'),
-    'filters' => array(),
+    'title' => t('Is in permanent archive'),
+    'help' => t('Is this audio node part of the permanent archive?'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Is permanent'),
+      'type' => 'yes-no',
+    ),
   );
   $data['station_archive_item']['program_nid'] = array(
-    'title' => t('Station Archive: Audio by Program'),
-    'help' => t('The Program NID argument allows visitors to filter archived audio to those of the specified program.'),
+    'title' => t('Program Nid'),
+    'help' => t("The program node id that the audio is a recording of."),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'sortable' => TRUE,
+    ),
     'argument' => array(
       'handler' => 'views_handler_argument_numeric',
-    )
-  );
-  $data['station_archive_program']['table']['join']['station_archive_item'] = array(
-     'left_field' => 'program_nid',
-     'field' => 'program_nid',
+    ),
+    'relationship' => array(
+      'title' => t('Program'),
+      'help' => t('Add a relationship to gain access to data about the program the audio is a recording of. Note: this relationship only works if the archive and schedule are on the same site.'),
+      'base' => 'node',
+      'base field' => 'nid',
+      'relationship table' => 'station_archive_item',
+      'relationship field' => 'program_nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t("Archived audio's program"),
+    ),
   );
 
   $data['station_archive_program']['title'] = array(
-    'title' => t('Station Archive: Program title'),
+    'title' => t('Program title'),
     'help' => t('The program that this audio is a recording of.'),
     'field' => array(
       'sortable' => TRUE,
@@ -111,10 +130,6 @@ function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = 
       $node = db_fetch_object(db_query("SELECT sap.title FROM {station_archive_program} sap WHERE sap.program_nid=%d", $query));
       return check_plain($node->title);
   }
-}
-
-function station_archive_handler_timestamp_field($fieldinfo, $fielddata, $value, $data) {
-  return l(format_date($value, 'custom', 'j-n-y'), "node/$data->nid");
 }
 
 function station_archive_handler_audio_program_title_field($fieldinfo, $fielddata, $value, $data) {

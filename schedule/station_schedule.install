@@ -86,7 +86,7 @@ function station_schedule_install() {
       'default_value_php' => NULL,
       'label' => $dj_title,
       'weight' => '1',
-      'description' => t('Enter the names of users you\'d like to add as @dj-title. The users must be members of the %role-name role.', array('@dj-title' => $dj_title, '%role-name' => $roles[$dj_role])),
+      'description' => st('Enter the names of users you\'d like to add as @dj-title. The users must be members of the %role-name role.', array('@dj-title' => $dj_title, '%role-name' => $roles[$dj_role])),
       'type' => 'userreference_autocomplete',
       'module' => 'userreference',
     ),

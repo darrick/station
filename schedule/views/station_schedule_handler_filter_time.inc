@@ -118,7 +118,7 @@ class station_schedule_handler_filter_time extends views_handler_filter_numeric 
           $params[] = $offset;
         }
       }
-      else if ('at' == $this->value['mode']) {
+      elseif ('at' == $this->value['mode']) {
         $formula .= '%d';
         $params[] = $this->value['value'];
       }

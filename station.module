@@ -375,7 +375,7 @@ function theme_station_streams($streams) {
     $items[] = l($stream['name'], $stream['m3u_url'], array('title' => $stream['description']));
   }
   if (count($items)) {
-    return t('Tune in: ') . station_ored_list($items);
+    return t('Tune in:') .' '. station_ored_list($items);
   }
 }
 
@@ -394,7 +394,7 @@ function station_anded_list($array) {
       return array_pop($array);
     default:
       $last = array_pop($array);
-      return implode(', ', $array) . t(' and ') . $last;
+      return t('!list-items and !last-item', array('!list-items' => implode(', ', $array), '!last-item' => $last));
   }
 }
 
@@ -412,7 +412,7 @@ function station_ored_list($array) {
       return array_pop($array);
     default:
       $last = array_pop($array);
-      return implode(', ', $array) . t(' or ') . $last;
+      return t('!list-items or !last-item', array('!list-items' => implode(', ', $array), '!last-item' => $last));
   }
 }
 

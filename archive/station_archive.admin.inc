@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * Archive settings form.
@@ -57,7 +58,7 @@ function station_archive_admin_settings() {
     '#type' => 'fieldset',
     '#title' => t('Uncheduled'),
     '#collapsible' => FALSE,
-    '#description' => t("These settings apply to audio recorded during a time when no program is scheduled. "),
+    '#description' => t("These settings apply to audio recorded during a time when no program is scheduled."),
   );
   $form['import']['unscheduled']['station_archive_delete_unscheduled'] = array(
     '#type' => 'checkbox',

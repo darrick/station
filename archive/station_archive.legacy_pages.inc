@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 function station_archive_view_html($dayname = NULL, $hourname = NULL) {
   if (!is_null($dayname)) {

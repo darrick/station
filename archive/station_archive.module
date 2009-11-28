@@ -7,7 +7,7 @@
 function station_archive_help($section = '') {
   switch ($section) {
     case 'admin/settings/station/archive':
-      return t("These settings let you configure the way the station's webstream is archived into audio nodes. Audio is imported into the archive as part of Drupal's cron task. You'll need to ensure that that is properly configured. ");
+      return t("These settings let you configure the way the station's webstream is archived into audio nodes. Audio is imported into the archive as part of Drupal's cron task. You'll need to ensure that that is properly configured.");
   }
 }
 
@@ -17,7 +17,7 @@ function station_archive_help($section = '') {
 function station_archive_menu() {
   // Legacy menu items. This functionality is handled by Views now.
   $items['last'] = array(
-    'title' => t('Show archive'),
+    'title' => 'Show archive',
     'page callback' => 'station_archive_view_html',
     'access arguments' => array('access content'),
     'file' => 'station_archive.legacy_pages.inc',
@@ -30,7 +30,7 @@ function station_archive_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['rss'] = array(
-    'title' => t('RSS show archive'),
+    'title' => 'RSS show archive',
     'page callback' => 'station_archive_view_rss',
     'access arguments' => array('access content'),
     'file' => 'station_archive.legacy_pages.inc',
@@ -45,7 +45,7 @@ function station_archive_menu() {
   // end legacy menu items
 
   $items['admin/settings/station/archive'] = array(
-    'title' => t('Archive'),
+    'title' => 'Archive',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('station_archive_admin_settings'),
     'access arguments' => array('administer site configuration'),
@@ -390,7 +390,7 @@ function _station_archive_delete_old_nodes() {
   $cutoff = time() - variable_get('station_archive_max_age', 604800);
   $result = db_query('SELECT n.nid, n.title FROM {node} n INNER JOIN {station_archive_item} sa ON n.nid = sa.audio_nid WHERE sa.permanent = 0 AND sa.imported < %d', $cutoff);
   while ($node = db_fetch_object($result)) {
-    watchdog('stationarchive', t('Removing %title from the archive.', array('%title' => $node->title)), WATCHDOG_NOTICE);
+    watchdog('stationarchive', 'Removing %title from the archive.', array('%title' => $node->title), WATCHDOG_NOTICE);
     node_delete($node->nid);
   }
 }
@@ -411,7 +411,7 @@ function _station_archive_import_files() {
       // if there's a .cue file, it's still being downloaded, we'll get it on
       // the next cron call.
       if (!file_exists($cuefile)) {
-        watchdog('stationarchive', t('Attempting to import %filename into the archive.', array('%filename' => $file->filename)), WATCHDOG_NOTICE);
+        watchdog('stationarchive', 'Attempting to import %filename into the archive.', array('%filename' => $file->filename), WATCHDOG_NOTICE);
         $status = _station_archive_add_file($file);
         // if there was a problem stop the import
         if (!$status) {
@@ -484,7 +484,7 @@ function _station_archive_add_file($file) {
   $program = station_get_program_at($gmt_timestamp, $schedule['nid']);
   if ($program === FALSE) {
     // couldn't get the program info, configuation error?
-    watchdog('stationarchive', t("Couldn't load the program metadata. We'll retry the import on the next cron run."), WATCHDOG_WARNING);
+    watchdog('stationarchive', "Couldn't load the program metadata. We'll retry the import on the next cron run.", array(), WATCHDOG_WARNING);
     return FALSE;
   }
   elseif ($program == NULL) {
@@ -492,7 +492,7 @@ function _station_archive_add_file($file) {
     // ...check if they've elected to delete unscheduled programs, do so.
     if (variable_get('station_archive_delete_unscheduled', 0)) {
       file_delete($file->filename);
-      watchdog('stationarchive', t('Deleted audio that was recorded during unscheduled time. Filename %filename', array('%filename' => $file->filename)), WATCHDOG_NOTICE);
+      watchdog('stationarchive', 'Deleted audio that was recorded during unscheduled time. Filename %filename', array('%filename' => $file->filename), WATCHDOG_NOTICE);
       return TRUE;
     }
     // if we've got no program use the default metadata
@@ -503,15 +503,23 @@ function _station_archive_add_file($file) {
     // The program scheduled at this time is marked as non-archivable. We'll
     // delete the file and log it.
     file_delete($file->filename);
-    watchdog('stationarchive', t('Deleted %program-title, it was marked as non-archivable.', array('%program-title' => $program->title)), WATCHDOG_NOTICE);
+    watchdog('stationarchive', 'Deleted %program-title, it was marked as non-archivable.', array('%program-title' => $program->title), WATCHDOG_NOTICE);
     return TRUE;
   }
   else {
     // we've got program information
     $program_nid = (int) $program->nid;
     $program_title = $program->title;
-    $audio_tags['artist'] = station_anded_list($program->djs);
-    $audio_tags['genre'] = $program->genre;
+    $djs = array();
+    if (!empty($program->field_station_program_dj)) {
+      foreach ($program->field_station_program_dj as $entry) {
+        $user = user_load($entry);
+        $djs[] = $user->name;
+      }
+    }
+    $audio_tags['title'] = $program->title;
+    $audio_tags['artist'] = station_anded_list($djs);
+    $audio_tags['genre'] = isset($program->field_station_program_genre[0]['value']) ? $program->field_station_program_genre[0]['value'] : '';
     $audio_tags['url_source'] = $program->node_url;
   }
   $audio_tags['title'] = $program_title;
@@ -544,7 +552,7 @@ function _station_archive_add_file($file) {
   $node = node_submit($node);
   node_save($node);
 
-  watchdog('stationarchive', t('Added %title to the archive.', array('%title' => $program_title)), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
+  watchdog('stationarchive', 'Added %title to the archive.', array('%title' => $program_title), WATCHDOG_NOTICE, l(t('view'), 'node/'. $node->nid));
 
   return TRUE;
 }

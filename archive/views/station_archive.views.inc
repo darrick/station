@@ -66,72 +66,44 @@ function station_archive_views_data() {
     ),
   );
 
+
+  $data['station_archive_program']['table']['group']  = t('Station Archive');
+  $data['station_archive_program']['table']['join'] = array(
+    'station_archive_item' => array(
+       'table' => 'station_archive_program',
+       'left_field' => 'program_nid',
+       'field' => 'program_nid',
+    ),
+  );
   $data['station_archive_program']['title'] = array(
     'title' => t('Program title'),
     'help' => t('The program that this audio is a recording of.'),
     'field' => array(
+      'handler' => 'views_handler_field',
       'sortable' => TRUE,
-      'handler' => 'station_archive_handler_audio_program_title_field',
-      'option' => array(
-        '#type' => 'select',
-        '#options' => array(
-          'link' => 'As link',
-          'nolink' => 'Without link'
-        ),
-      ),
     ),
   );
   return $data;
 }
 
 /**
- * Implementation of hook_views_arguments().
+ * Implementation of hook_views_handlers().
  */
-function station_archive_views_arguments() {
-  $arguments = array(
-    'station_archive_program_nid' => array(
-      'name' => t('Station Archive: Audio by Program'),
-      'handler' => 'station_archive_arg_program_nid_handler',
-      'help' => t('The Program NID argument allows visitors to filter archived audio to those of the specified program.'),
-    ),
-  );
-  return $arguments;
-}
+//function station_archive_views_handlers() {
+//  return array(
+//    'info' => array(
+//      'path' => drupal_get_path('module', 'station_archive') . '/views',
+//    ),
+//    'handlers' => array(
+//      // Field handlers
+//      'station_schedule_handler_field_streams' => array(
+//        'parent' => 'views_handler_field',
+//      ),
+//    ),
+//  );
+//}
 
-
-/**
- * Handle the program node id argument.
- */
-function station_archive_arg_program_nid_handler($op, &$query, $argtype, $arg = '') {
-  switch ($op) {
-    case 'summary':
-      // add these up front to avoid a wacky bug with rewriting
-      $query->ensure_table('node');
-      $query->add_field('nid', 'node');
-      // now onto our regularly scheduled program
-      $query->ensure_table('station_archive_item');
-      $query->ensure_table('station_archive_program');
-      $query->add_field('title', 'station_archive_program');
-      $query->add_field('program_nid', 'station_archive_program');
-      $query->add_where('station_archive_program.program_nid IS NOT NULL');
-      $fieldinfo['field'] = "station_archive_program.title";
-      return $fieldinfo;
-    case 'sort':
-      $query->ensure_table('station_archive_program');
-      $query->add_orderby('station_archive_program', 'title', $argtype);
-      break;
-    case 'filter':
-      $query->ensure_table("station_archive_item");
-      $query->add_where("station_archive_item.program_nid = %d", $arg);
-      break;
-    case 'link':
-      return l($query->title, "$arg/" . intval($query->program_nid));
-    case 'title':
-      $node = db_fetch_object(db_query("SELECT sap.title FROM {station_archive_program} sap WHERE sap.program_nid=%d", $query));
-      return check_plain($node->title);
-  }
-}
-
+// TODO port this to a views2 field handler:
 function station_archive_handler_audio_program_title_field($fieldinfo, $fielddata, $value, $data) {
   $schedule = station_default_schedule();
   if ($fielddata['options'] == 'link' && isset($schedule['base_url']) && !empty($data->station_archive_program_program_nid)) {

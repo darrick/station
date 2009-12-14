@@ -526,9 +526,11 @@ function _station_archive_add_file($file) {
   $audio_tags['year'] = date('Y', $local_timestamp);
   $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
 
+  // find/create the proper taxonomic terms based on day and hour
+  $taxonomy = _station_archive_get_taxonomy($local_timestamp);
   // then create a new audio node with it
   $title_format = variable_get('station_archive_title_format', '[audio-tag-title-raw]');
-  $node = audio_api_insert($file->filename, $title_format, $audio_tags);
+  $node = audio_api_insert($file->filename, $title_format, '', $audio_tags, $taxonomy);
 
   // make any other changes to the node...
   $node->station_archive = array(
@@ -540,8 +542,6 @@ function _station_archive_add_file($file) {
   );
   $node->audio_file['downloadable'] = 1;
   $node->created = $gmt_timestamp;
-  // find/create the proper taxonomic terms based on day and hour
-  $node->taxonomy = _station_archive_get_taxonomy($local_timestamp);
   // don't bother to check for promotion if there's no metadata
   $node->promote = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
   // keep the timestamp as the filename so we can re-import again if needed but

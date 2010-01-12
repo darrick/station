@@ -84,8 +84,8 @@ function station_program_access($op, $node, $account) {
         // If the schedule is enabled, let DJs edit the program.
         if (module_exists('station_schedule')) {
           if (!empty($node->field_station_program_dj)) {
-            foreach ($node->field_station_program_dj as $user) {
-              if ($user->uid == $account->uid) {
+            foreach ($node->field_station_program_dj as $delta => $user) {
+              if ($user['uid'] == $account->uid) {
                 return TRUE;
               }
             }

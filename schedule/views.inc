@@ -218,8 +218,7 @@ function station_schedule_views_tables() {
  * Substitute current time; this works with cached queries.
  */
 function station_schedule_views_query_substitutions($view) {
-  $timestamp = station_local_ts(time());
-  $minute = station_minute_from_day_hour(date('w', $timestamp), date('G', $timestamp));
+  $minute = station_minute_from_local_ts();
   return array('***CURRENT_STATION_MINUTE***' => $minute);
 }
 

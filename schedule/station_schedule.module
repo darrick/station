@@ -917,8 +917,7 @@ function station_schedule_get_program_list() {
  */
 function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
   // Load the schedule item based on the time.
-  $ts = station_local_ts($gmt_timestamp);
-  $minute = station_minute_from_day_hour(date('w', $ts), date('G', $ts));
+  $minute = station_minute_from_local_ts(station_local_ts($gmt_timestamp));
 
   $schedule_item = db_fetch_object(db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = %d AND s.start <= %d AND s.finish > %d', $schedule_nid, $minute, $minute));
 

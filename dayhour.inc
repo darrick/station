@@ -125,6 +125,23 @@ function station_minute_from_day_hour($day, $hour) {
 }
 
 /**
+ * Convert a local timestamp into an integer specifying minutes since midnight
+ * on Sunday.
+ *
+ * @return
+ *   Integer specifying the number of minutes.
+ *
+ * @see station_local_ts()
+ */
+function station_minute_from_local_ts($local_timestamp = NULL) {
+  if (!isset($local_timestamp)) {
+    $local_timestamp = station_local_ts();
+  }
+  list($day, $hour, $minute) = explode(' ', date('w G i', $local_timestamp));
+  return (($day * 24) + $hour) * 60 + $minute;
+}
+
+/**
  * Day of the week from minutes.
  *
  * @param $minutes

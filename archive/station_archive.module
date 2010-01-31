@@ -441,7 +441,7 @@ function _station_archive_update_program_list() {
     }
     $programs = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.list');
     if (xmlrpc_errno()) {
-      watchdog('station_archive', t('Failed to load program listing remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg())), WATCHDOG_ERROR);
+      watchdog('station_archive', 'Failed to load program listing remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
       return FALSE;
     }
   }

@@ -561,9 +561,11 @@ function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
       if ($view = views_get_view('station_program_playlists')) {
         if ($view->access($display_id)) {
           $block = $view->execute_display($display_id);
-          $node->content[$content_key]['#type'] = 'item';
-          $node->content[$content_key]['#title'] = $block['subject'];
-          $node->content[$content_key]['#value'] = $block['content'];
+          if (isset($block)) {
+            $node->content[$content_key]['#type'] = 'item';
+            $node->content[$content_key]['#title'] = $block['subject'];
+            $node->content[$content_key]['#value'] = $block['content'];
+          }
         }
         $view->destroy();
       }

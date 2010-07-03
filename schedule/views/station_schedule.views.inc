@@ -47,6 +47,9 @@ function station_schedule_views_handlers() {
       'station_schedule_handler_filter_schedule_item' => array(
         'parent' => 'views_handler_filter_boolean_operator',
       ),
+      'station_schedule_handler_filter_schedule_selected' => array(
+        'parent' => 'views_handler_filter_boolean_operator',
+      ),
     ),
   );
 }
@@ -133,6 +136,17 @@ function station_schedule_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['station_schedule']['default_schedule'] = array(
+    'title' => t('Default Schedule'),
+    'help' => t("Only display the default schedule."),
+    'filter' => array(
+      'handler' => 'station_schedule_handler_filter_schedule_selected',
+      'title' => t('Default Schedule'),
+      'type' => 'yes-no',
+      'label' => t('Default Schedule'),
+      'help' => t('Only display the default schedule.'),
     ),
   );
 

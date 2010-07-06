@@ -30,9 +30,10 @@ function theme_station_schedule_item($start, $finish, $program) {
   $class = 'station-sch-box station-sch-scheduled';
   $height = ($finish - $start);
   $link = url('node/'. $program->nid);
+  $time = theme('station_hour_range', $start, $finish);
 
-  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;'>";
-  $output .= '<span class="station-sch-time">'. theme('station_hour_range', $start, $finish) .'</span>';
+  $output = "<div class='{$class}'><a href='{$link}' style='height: {$height}px;' title='{$time}'>";
+  $output .= "<span class='station-sch-time'>{$time}</span>";
   $output .= '<span class="station-sch-title">'. check_plain($program->title) .'</span>';
   if (!empty($program->field_station_program_dj)) {
     $djs = array();

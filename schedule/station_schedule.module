@@ -614,7 +614,7 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
         $node->times = array();
         // Load the schedule items in order of start time while taking into
         // account Drupal's first day of the week setting.
-        $result = db_query('SELECT * FROM {station_schedule_item} s WHERE s.program_nid = %d ORDER BY s.schedule_nid, ((s.start + %d) %% %d)', $node->nid, MINUTES_IN_DAY * (7 - variable_get('date_first_day', 0)), MINUTES_IN_WEEK);
+        $result = db_query('SELECT * FROM {station_schedule_item} s INNER JOIN {node} n on n.nid = s.schedule_nid WHERE s.program_nid = %d AND n.status = 1 ORDER BY s.schedule_nid, ((s.start + %d) %% %d)', $node->nid, MINUTES_IN_DAY * (7 - variable_get('date_first_day', 0)), MINUTES_IN_WEEK);
         while ($item = db_fetch_array($result)) {
           $node->times[$item['schedule_nid']][] = $item;
         }
@@ -795,7 +795,7 @@ function station_schedule_get_list() {
   global $base_url;
 
   $schedules = array();
-  $result = db_query("SELECT n.nid, n.title, ss.increment, ss.streams, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule'");
+  $result = db_query("SELECT n.nid, n.title, ss.increment, ss.streams, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = 'station_schedule' AND n.status = 1");
   while ($schedule = db_fetch_array($result)) {
     $schedule['base_url'] = $base_url;
     if (isset($schedule['streams']) && $streams = unserialize($schedule['streams'])) {

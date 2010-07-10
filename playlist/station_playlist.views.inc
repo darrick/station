@@ -11,7 +11,7 @@ function station_playlist_views_data() {
   // have a group defined will go into this field by default.
   $data['station_playlist_track']['table']['group']  = t('Station Playlist Track');
   $data['station_playlist_track']['table']['base'] = array(
-    'field' => 'iid',
+    'field' => 'nid',
     'title' => t('Station Playlist Track'),
     'help' => t('Station playlist track entries.'),
   );

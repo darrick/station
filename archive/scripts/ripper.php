@@ -48,7 +48,7 @@ $length = ($end_time - time()) + (int) $settings['overlap_seconds'];
 
 // Download the stream
 $stream_url = $settings['stream_url'];
-$file_format = strtolower($settings['file_format']);
+$file_format = drupal_strtolower($settings['file_format']);
 exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$start_time}.{$file_format} --quiet");
 
 // stream ripper creates the .cue file. we'll use its absence as a signal

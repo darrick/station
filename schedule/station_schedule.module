@@ -74,7 +74,7 @@ function station_schedule_menu() {
   // may return index values that are not sorted.
   $weight = 0;
   foreach (station_day_name() as $day => $dayname) {
-    $items['node/%node/view/'. strtolower($dayname)] = array(
+    $items['node/%node/view/'. drupal_strtolower($dayname)] = array(
       'title' => substr($dayname, 0, 3),
       'page callback' => 'station_schedule_day_page',
       'page arguments' => array(1, $dayname),

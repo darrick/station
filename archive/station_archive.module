@@ -147,10 +147,10 @@ function station_archive_nodeapi(&$node, $op, $teaser, $page) {
         // If it's in the archives, set the menu appropriately
         if ($page && !$teaser && isset($node->station_archive)) {
           $breadcrumb = array(
-             l(t('Home'), NULL),
-             l(t('Station'), 'station'),
-             l(t('Archives'), 'station/archives'),
-             l($node->station_archive['program_title'], 'station/archives/'. $node->station_archive['program_nid']),
+            l(t('Home'), NULL),
+            l(t('Station'), 'station'),
+            l(t('Archives'), 'station/archives'),
+            l($node->station_archive['program_title'], 'station/archives/'. $node->station_archive['program_nid']),
           );
           drupal_set_breadcrumb($breadcrumb);
 
@@ -565,7 +565,7 @@ function _station_archive_add_file($file) {
  * @return
  *   Array with day and hour term ids.
  *
- * @see station_local_ts().
+ * @see station_local_ts()
  */
 function _station_archive_get_taxonomy($local_timestamp) {
   $vid = _station_archive_get_vid();

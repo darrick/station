@@ -5,7 +5,7 @@
  * Redirect the visitor to the schedule's current day view.
  */
 function station_schedule_goto_today($schedule) {
-  drupal_goto('node/'. $schedule->nid .'/view/'. strtolower(station_day_name(date('w'))));
+  drupal_goto('node/'. $schedule->nid .'/view/'. drupal_strtolower(station_day_name(date('w'))));
 }
 
 function theme_station_schedule_hour($hour) {

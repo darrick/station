@@ -288,7 +288,7 @@ function station_schedule_views_data_alter(&$data) {
     'group' => t('Station Schedule'),
     'title' => t('Scheduled Programs'),
     'help' => t('All programs on this schedule.'),
-    'real field' => 'nid',
+    'real field' => 'schedule_nid',
 //    'field' => array(
 //      'handler' => 'views_handler_field_upload_fid',
 //    ),
@@ -314,7 +314,7 @@ function station_schedule_views_data_alter(&$data) {
     'group' => t('Station Program'),
     'title' => t('Program Schedule Times'),
     'help' => t('All the times this program is scheduled.'),
-    'real field' => 'nid',
+    'real field' => 'program_nid',
 //    'field' => array(
 //      'handler' => 'views_handler_field_upload_fid',
 //    ),

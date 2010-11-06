@@ -35,7 +35,7 @@ function station_playlist_menu() {
     'page callback' => 'station_playlist_ahah',
     'page arguments' => array(),
     'access arguments' => array('access content'),
-    'type ' => MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }

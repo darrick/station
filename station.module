@@ -57,6 +57,10 @@ function station_theme() {
       'arguments' => array('start' => NULL, 'finish' => NULL),
       'file' => 'dayhour.inc',
     ),
+    'station_day' => array(
+      'arguments' => array('time' => NULL),
+      'file' => 'dayhour.inc',
+    ),
     'station_dayhour' => array(
       'arguments' => array('time' => NULL),
       'file' => 'dayhour.inc',

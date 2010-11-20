@@ -247,7 +247,8 @@ function station_catalog_album_delete($node) {
  */
 function station_catalog_album_update($node) {
   db_query("DELETE FROM {station_catalog} WHERE nid = %d", $node->nid);
-  db_query("INSERT INTO {station_catalog} (nid, number, artist, album, year, label, mb_release_id, asin) VALUES (%d, %d, '%s', '%s', %d, '%s', '%s', '%s')", $node->nid, $node->album['number'], $node->album['artist'], $node->album['album'], $node->album['year'], $node->album['label'], $node->album['mb_release_id'], $node->album['asin']);
+  $record = array_merge($node->album, array('nid' => $node->nid));
+  drupal_write_record('station_catalog', $record);
 }
 
 /**

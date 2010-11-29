@@ -52,7 +52,7 @@ function station_catalog_album_access($op, $node, $account) {
 
   switch ($op) {
     case 'view':
-      return user_access('view station album content', $account);
+      return $node->status && user_access('view station album content', $account);
 
     case 'create':
       return user_access('create station album content', $account);

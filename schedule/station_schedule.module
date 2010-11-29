@@ -233,7 +233,7 @@ function station_schedule_access($op, $node, $account) {
 
   switch ($op) {
     case 'view':
-      return user_access('view station schedule content', $account);
+      return $node->status && user_access('view station schedule content', $account);
 
     case 'create':
       return user_access('create station schedule content', $account);

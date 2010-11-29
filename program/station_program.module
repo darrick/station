@@ -65,7 +65,7 @@ function station_program_access($op, $node, $account) {
 
   switch ($op) {
     case 'view':
-      return user_access('view station program content', $account);
+      return $node->status && user_access('view station program content', $account);
 
     case 'create':
       return user_access('create station program content', $account);

@@ -46,6 +46,11 @@ $start_time = round_to_nearest_hour(time());
 $end_time = $start_time + 3600;
 $length = ($end_time - time()) + (int) $settings['overlap_seconds'];
 
+// Execute any pre-rip commands specified in the inc file.
+if (!empty($settings['prerip_command'])) {
+  exec($settings['prerip_command']);
+}
+
 // Download the stream
 $stream_url = $settings['stream_url'];
 $file_format = strtolower($settings['file_format']);
@@ -56,6 +61,11 @@ exec("{$streamripper} {$stream_url} -s -d {$import_dir} -A -l {$length} -a {$sta
 $cuefile = "{$import_dir}/{$start_time}.cue";
 if (file_exists($cuefile)) {
   unlink($cuefile);
+}
+
+// Execute any post-rip commands specified in the inc file.
+if (!empty($settings['postrip_command'])) {
+  exec($settings['postrip_command']);
 }
 
 exit(0);

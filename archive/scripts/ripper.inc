@@ -19,3 +19,14 @@ overlap_seconds = 60
 
 ; The file type of the stream; "mp3" and "ogg" are supported.
 file_format = "mp3"
+
+; Pre-rip command - command(s) to be executed before the ripping starts.
+; Separate multiple commands with a semicolon. This is meant for shell commands,
+; and won't parse PHP directly. 
+prerip_command = ""
+
+; Post-rip command - command(s) to be executed at the end of the ripping script.
+; Separate multiple commands with a semicolon. This is meant for shell commands,
+; and won't parse PHP directly.
+postrip_command = ""
+

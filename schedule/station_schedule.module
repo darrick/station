@@ -720,7 +720,6 @@ function station_schedule_nodeapi(&$node, $op, $teaser, $page) {
           );
         }
         else {
-          $node->content['station_schedule_times']['#weight'] = -4;
           foreach ($times_by_schedule as $schedule_nid => $times) {
             $node->content['station_schedule_times'][$schedule_nid] = array(
               '#type' => 'item',

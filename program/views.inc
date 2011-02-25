@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 function station_program_views_tables() {
   $tables['station_program'] = array(

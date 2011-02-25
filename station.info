@@ -1,4 +1,3 @@
-; $Id$
 name = Station
 description = Core of station module for running an internet radio station.
 package = Station

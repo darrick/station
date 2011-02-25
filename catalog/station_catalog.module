@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 define('STATION_CATALOG_CVS_ID', '$Id$');
 

@@ -1,4 +1,3 @@
-; $Id$
 ; These are the settings for the stream ripper script.
 
 ; Complete URL of webstream to rip

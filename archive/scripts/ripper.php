@@ -1,7 +1,6 @@
 #!/usr/local/bin/php -q
 <?php
 
-// $Id$
 
 /**
  * This script is designed to be run by a cron job or windows scheduled task.

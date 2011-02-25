@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 function station_archive_views_tables() {
   $tables['station_archive'] = array(

@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 function station_schedule_views_default_views() {
   $view = new stdClass();

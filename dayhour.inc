@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 /**
  * Turn an mixed into a valid hour.

@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 function station_schedule_program_access($op, $node) {
   global $user;

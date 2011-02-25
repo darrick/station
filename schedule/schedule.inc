@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 function station_schedule_schedule_load($sid) {
   $result = db_query('SELECT * FROM {station_schedule} s WHERE s.sid = %d', $sid);

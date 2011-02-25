@@ -1,4 +1,3 @@
-; $Id$
 name = Station Archive
 description = Provides an archive of the station's webstream.
 core = 6.x

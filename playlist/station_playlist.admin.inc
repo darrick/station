@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function station_playlist_admin_settings() {
   $form = array();

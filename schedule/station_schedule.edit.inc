@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function station_schedule_item_list($node) {
   drupal_add_css(drupal_get_path('module', 'station_schedule') .'/station_schedule.css');

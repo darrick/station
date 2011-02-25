@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 /**
  * Admin settings form.

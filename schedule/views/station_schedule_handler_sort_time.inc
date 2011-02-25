@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class station_schedule_handler_sort_time extends views_handler_sort {
   function option_definition() {

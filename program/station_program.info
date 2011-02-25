@@ -1,4 +1,3 @@
-; $Id$
 name = Station Program
 description = Provides a simple program node for schedule.
 package = Station

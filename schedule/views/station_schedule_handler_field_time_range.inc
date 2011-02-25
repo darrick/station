@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class station_schedule_handler_field_time_range extends views_handler_field {
   function option_definition() {

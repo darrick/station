@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 /**
  * Implementation of hook_views_data().

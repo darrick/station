@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class station_schedule_handler_field_streams extends views_handler_field {
   function render($values) {

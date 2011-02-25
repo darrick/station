@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 // There are 1440 minutes in a day (60minute * 24hours = 1day).
 define('MINUTES_IN_DAY', 1440);

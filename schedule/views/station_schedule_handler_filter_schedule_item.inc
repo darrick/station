@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class station_schedule_handler_filter_schedule_item extends views_handler_filter_boolean_operator {
   function query() {

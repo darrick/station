@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Redirect the visitor to the schedule's current day view.

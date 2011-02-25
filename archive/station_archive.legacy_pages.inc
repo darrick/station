@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Give a string with hours return an array of vocabulary term ids for the

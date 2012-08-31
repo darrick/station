@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ */
+
+/**
  * Implements hook_views_data().
  */
 function station_catalog_views_data() {

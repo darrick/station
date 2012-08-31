@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ */
+
+/**
  * Implements hook_views_default_views().
  */
 function station_catalog_views_default_views() {

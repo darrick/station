@@ -1067,14 +1067,21 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
   // Load the schedule item based on the time.
   $minute = station_minute_from_local_ts(station_local_ts($gmt_timestamp));
 
-  $schedule_item = db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = :s.schedule_nid AND s.start <= :s.start AND s.finish > :s.finish', array(':s.schedule_nid' => $schedule_nid, ':s.start' => $minute, ':s.finish' => $minute))->fetch();
+  //$schedule_item = db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = :s.schedule_nid AND s.start <= :s.start AND s.finish > :s.finish', array(':s.schedule_nid' => $schedule_nid, ':s.start' => $minute, ':s.finish' => $minute))->fetch();
+  $query = db_select('station_schedule_item', 's');
+  $query->fields('s');
+  $query->condition('s.schedule_nid', $schedule_nid);
+  $query->condition('s.start', $minute,  '<=');
+  $query->condition('s.finish', $minute, '>');
+  $result = $query->execute();
+  $schedule_item = $result->fetchAssoc();
 
   // If there's an associated program, load it
-  if (isset($schedule_item->program_nid)) {
-    if ($node = node_load($schedule_item->program_nid)) {
+  if (isset($schedule_item['program_nid'])) {
+    if ($node = node_load($schedule_item['program_nid'])) {
       // set this so that if the show is scheduled for multiple times the caller
       // can easily figure out which one.
-      $node->may_archive = $schedule_item->may_archive;
+      $node->may_archive = $schedule_item['may_archive'];
       // put this in so they can use a pretty url
       $node->node_url = url('node/' . $node->nid, array('absolute' => TRUE));
       return $node;

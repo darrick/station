@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * @file
+ * Helper functions for day and time handling.
+ *
+ */
 
 // There are 1440 minutes in a day (60minute * 24hours = 1day).
 define('MINUTES_IN_DAY', 1440);
@@ -53,7 +57,7 @@ function station_valid_hour($hour) {
  * @param $day
  *   An integer from 0-6, or a case in-sensitive, English day name.
  * @return
- *   An nteger between 0 and 6 (Sunday, Monday, ... , Saturday).
+ *   An integer between 0 and 6 (Sunday, Monday, ... , Saturday).
  */
 function station_valid_day($day) {
   if (is_numeric($day)) {
@@ -87,13 +91,7 @@ function station_day_name($day = NULL) {
 
   if (!isset($days)) {
     $names = array(
-      0 => t('Sunday'),
-      t('Monday'),
-      t('Tuesday'),
-      t('Wednesday'),
-      t('Thursday'),
-      t('Friday'),
-      t('Saturday')
+      0 => t('Sunday'), t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday'),
     );
     $day_offset = variable_get('date_first_day', 0);
     $days = array();
@@ -208,7 +206,8 @@ function station_time_from_minute($minutes) {
  * @return
  *   Formatted string.
  */
-function theme_station_day($time) {
+function theme_station_day($variables) {
+  $time = $variables['time'];
   $day = station_day_from_minute($time);
   $format_params = array(
     '@day' => station_day_name($day),
@@ -225,11 +224,14 @@ function theme_station_day($time) {
  * @return
  *   Formatted string.
  */
-function theme_station_dayhour($time) {
+function theme_station_dayhour($variables) {
+  $time = $variables['time'];
   $time = station_time_from_minute($time);
   $format_params = array(
-    '@day' => station_day_name($time['w']), '@hour' => $time['g'],
-    '@time' => $time['time'], '@ampm' => $time['a'],
+    '@day' => station_day_name($time['w']),
+    '@hour' => $time['g'],
+    '@time' => $time['time'],
+    '@ampm' => $time['a'],
   );
 
   return t('@day @time@ampm', $format_params);
@@ -246,14 +248,20 @@ function theme_station_dayhour($time) {
  * @return
  *   Formatted string.
  */
-function theme_station_dayhour_range($start, $finish) {
+function theme_station_dayhour_range($variables) {
+  $start = $variables['start'];
+  $finish = $variables['finish'];
   $start = station_time_from_minute($start);
   $finish = station_time_from_minute($finish);
   $format_params = array(
-    '@sday' => station_day_name($start['w']), '@shour' => $start['g'],
-    '@stime' => $start['time'], '@sampm' => $start['a'],
-    '@fday' => station_day_name($finish['w']), '@fhour' => $finish['g'],
-    '@ftime' => $finish['time'], '@fampm' => $finish['a'],
+    '@sday' => station_day_name($start['w']),
+    '@shour' => $start['g'],
+    '@stime' => $start['time'],
+    '@sampm' => $start['a'],
+    '@fday' => station_day_name($finish['w']),
+    '@fhour' => $finish['g'],
+    '@ftime' => $finish['time'],
+    '@fampm' => $finish['a'],
   );
 
   // same day
@@ -281,12 +289,16 @@ function theme_station_dayhour_range($start, $finish) {
  * @return
  *   Formatted string.
  */
-function theme_station_hour_range($start, $finish) {
+function theme_station_hour_range($variables) {
+  $start = $variables['start'];
+  $finish = $variables['finish'];
   $start = station_time_from_minute($start);
   $finish = station_time_from_minute($finish);
   $format_params = array(
-    '@stime' => $start['time'], '@sampm' => $start['a'],
-    '@ftime' => $finish['time'], '@fampm' => $finish['a'],
+    '@stime' => $start['time'],
+    '@sampm' => $start['a'],
+    '@ftime' => $finish['time'],
+    '@fampm' => $finish['a'],
   );
 
   if ($start['a'] == $finish['a']) {
@@ -307,7 +319,9 @@ function theme_station_hour_range($start, $finish) {
  * @return
  *   Formatted string.
  */
-function theme_station_hour_duration($start, $finish) {
+function theme_station_hour_duration($variables) {
+  $start = $variables['start'];
+  $finish = $variables['finish'];
   return format_interval(($finish - $start) * 60);
 }
 
@@ -319,10 +333,12 @@ function theme_station_hour_duration($start, $finish) {
  * @return
  *   Formatted string.
  */
-function theme_station_hour($time) {
+function theme_station_hour($variables) {
+  $time = $variables['time'];
   $time = station_time_from_minute($time);
   $format_params = array(
-    '@time' => $time['time'], '@ampm' => $time['a'],
+    '@time' => $time['time'],
+    '@ampm' => $time['a'],
   );
 
   return t('@time@ampm', $format_params);

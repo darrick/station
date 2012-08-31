@@ -24,7 +24,7 @@ class station_schedule_handler_argument_day extends views_handler_argument {
     $formula = "CAST($this->table_alias.start / $min_in_day AS UNSIGNED INTEGER) %% 7";
 
     // Add the field.
-    $suggested_alias = $this->table_alias .'_start_group';
+    $suggested_alias = $this->table_alias . '_start_group';
     $this->base_alias = $this->name_alias = $this->query->add_field(NULL, $formula, $suggested_alias);
     $this->query->set_count_field(NULL, $formula, $suggested_alias);
 
@@ -38,7 +38,7 @@ class station_schedule_handler_argument_day extends views_handler_argument {
   /**
    * Build the query based upon the formula
    */
-  function query() {
+  function query($group_by = FALSE) {
     $this->ensure_my_table();
 
     $day = station_valid_day($this->argument);
@@ -47,7 +47,9 @@ class station_schedule_handler_argument_day extends views_handler_argument {
 
     // The idea is that we want all the items that end after the day begins or
     // start before the day ends.
-    $formula = "$this->table_alias.finish > %d AND $this->table_alias.start < %d";
-    $this->query->add_where(0, $formula, $start, $finish);
+    //$formula = "$this->table_alias.finish > %d AND $this->table_alias.start < %d";
+    //$this->query->add_where(0, $formula, $start, $finish);
+    $this->query->add_where(0, $this->table_alias . ".finish", $start, ">");
+    $this->query->add_where(0, $this->table_alias . ".start", $finish, "<");
   }
 }

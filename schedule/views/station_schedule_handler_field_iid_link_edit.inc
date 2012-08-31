@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ */
+
+/**
  * Field handler to present a link node edit.
  */
 class station_schedule_handler_field_iid_link_edit extends station_schedule_handler_field_iid_link {

@@ -1,4 +1,7 @@
 <?php
+/**
+ * @file
+ */
 
 class station_schedule_handler_field_time_range extends views_handler_field {
   function option_definition() {
@@ -32,7 +35,8 @@ class station_schedule_handler_field_time_range extends views_handler_field {
 
   function render($values) {
     if (isset($values->{$this->aliases['start']})) {
-      return theme($this->options['style'], $values->{$this->aliases['start']}, $values->{$this->aliases['finish']});
+      // TODO Please change this theme call to use an associative array for the $variables parameter.
+      return theme($this->options['style'], array( 'start' => $values->{$this->aliases['start']}, 'finish' => $values->{$this->aliases['finish']}));
     }
   }
 }

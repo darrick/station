@@ -1,6 +1,13 @@
 <?php
+/**
+ * @file
+ */
 
-function station_playlist_admin_settings() {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function station_playlist_admin_settings($form, &$form_state) {
   $form = array();
   $form['dates'] = array(
     '#type' => 'fieldset',
@@ -32,8 +39,8 @@ function station_playlist_admin_settings() {
       '#default_value' => variable_get('station_playlist_track_autocomplete_source', 'playlists'),
       '#options' => array(
         'playlists' => t('Existing playlists'),
-        'catalog'   => t('Albums in the catalog'),
-        'both'      => t('Both'),
+        'catalog' => t('Albums in the catalog'),
+        'both' => t('Both'),
       ),
       '#description' => t("When adding playlists the track listings use auto-completing to save typing and provide suggestions. What data source should be used to provide these suggestions?"),
     );

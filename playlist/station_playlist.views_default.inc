@@ -1,8 +1,10 @@
 <?php
-
+/**
+ * @file
+ */
 
 /**
- * Implementation of hook_views_default_views().
+ * Implements hook_views_default_views().
  */
 function station_playlist_views_default_views() {
   /*
@@ -228,302 +230,269 @@ function station_playlist_views_default_views() {
   $view->name = 'station_program_playlists';
   $view->description = 'Station Program\'s associated Playlists';
   $view->tag = 'station_playlist';
-  $view->view_php = '';
   $view->base_table = 'node';
-  $view->is_cacheable = FALSE;
-  $view->api_version = 2;
+  $view->human_name = '';
+  $view->core = 0;
+  $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
-  $handler->override_option('fields', array(
-    'field_station_playlist_date_value' => array(
-      'label' => '',
-      'link_to_node' => 1,
-      'label_type' => 'none',
-      'format' => 'default',
-      'multiple' => array(
-        'group' => TRUE,
-        'multiple_number' => '',
-        'multiple_from' => '',
-        'multiple_reversed' => FALSE,
-      ),
-      'exclude' => 0,
-      'id' => 'field_station_playlist_date_value',
-      'table' => 'node_data_field_station_playlist_date',
-      'field' => 'field_station_playlist_date_value',
-      'relationship' => 'field_station_program_nid',
-    ),
-  ));
-  $handler->override_option('sorts', array(
-    'field_station_playlist_date_value' => array(
-      'order' => 'DESC',
-      'delta' => -1,
-      'id' => 'field_station_playlist_date_value',
-      'table' => 'node_data_field_station_playlist_date',
-      'field' => 'field_station_playlist_date_value',
-      'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('arguments', array(
-    'field_station_program_nid' => array(
-      'default_action' => 'default',
-      'style_plugin' => 'default_summary',
-      'style_options' => array(),
-      'wildcard' => 'all',
-      'wildcard_substitution' => 'All',
-      'title' => '%1 Playlists',
-      'default_argument_type' => 'node',
-      'default_argument' => '',
-      'validate_type' => 'node',
-      'validate_fail' => 'not found',
-      'break_phrase' => 0,
-      'not' => 0,
-      'id' => 'field_station_program_nid',
-      'table' => 'node_data_field_station_program',
-      'field' => 'field_station_program_nid',
-      'relationship' => 'none',
-      'default_options_div_prefix' => '',
-      'default_argument_user' => 0,
-      'default_argument_fixed' => '',
-      'default_argument_php' => '',
-      'validate_argument_node_type' => array(
-        'station_program' => 'station_program',
-        'blog' => 0,
-        'poll' => 0,
-        'audio' => 0,
-        'image' => 0,
-        'station_album' => 0,
-        'station_playlist' => 0,
-        'book' => 0,
-        'job' => 0,
-        'page' => 0,
-        'story' => 0,
-        'video' => 0,
-      ),
-      'validate_argument_node_access' => 1,
-      'validate_argument_nid_type' => 'nid',
-      'validate_argument_vocabulary' => array(
-        '1' => 0,
-      ),
-      'validate_argument_type' => 'tid',
-      'validate_argument_php' => '',
-      'override' => array(
-        'button' => 'Override',
-      ),
-    ),
-  ));
-  $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'station_playlist' => 'station_playlist',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
-    'status_extra' => array(
-      'id' => 'status_extra',
-      'table' => 'node',
-      'field' => 'status_extra',
-    ),
-    'date_filter' => array(
-      'operator' => '<=',
-      'value' => array(
-        'min' => NULL,
-        'max' => NULL,
-        'value' => NULL,
-        'default_date' => 'now',
-        'default_to_date' => '',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'date_fields' => array(
-        'node_data_field_station_playlist_date.field_station_playlist_date_value' => 'node_data_field_station_playlist_date.field_station_playlist_date_value',
-      ),
-      'granularity' => 'hour',
-      'form_type' => 'date_select',
-      'default_date' => 'now',
-      'default_to_date' => '',
-      'id' => 'date_filter',
-      'table' => 'node',
-      'field' => 'date_filter',
-      'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('access', array(
-    'type' => 'perm',
-    'perm' => 'view station playlist content',
-  ));
-  $handler->override_option('title', 'Playlists');
-  $handler->override_option('use_pager', '1');
-  $handler->override_option('use_more', 0);
-  $handler->override_option('style_plugin', 'list');
-  $handler->override_option('style_options', array(
-    'type' => 'ul',
-  ));
-  $handler->override_option('row_plugin', 'node');
-  $handler->override_option('row_options', array(
-    'teaser' => 1,
-    'links' => 1,
-    'comments' => 0,
-  ));
+  $handler->display->display_options['title'] = 'Playlists';
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['access']['perm'] = 'view station playlist content';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['style_plugin'] = 'list';
+  $handler->display->display_options['row_plugin'] = 'node';
+  $handler->display->display_options['row_options']['links'] = 1;
+  $handler->display->display_options['row_options']['comments'] = 0;
+  /* Sort criterion: Content: Date (field_station_playlist_date) */
+  $handler->display->display_options['sorts']['field_station_playlist_date_value']['id'] = 'field_station_playlist_date_value';
+  $handler->display->display_options['sorts']['field_station_playlist_date_value']['table'] = 'field_data_field_station_playlist_date';
+  $handler->display->display_options['sorts']['field_station_playlist_date_value']['field'] = 'field_station_playlist_date_value';
+  $handler->display->display_options['sorts']['field_station_playlist_date_value']['order'] = 'DESC';
+  /* Contextual filter: Content: Program (field_station_program) */
+  $handler->display->display_options['arguments']['field_station_program_nid']['id'] = 'field_station_program_nid';
+  $handler->display->display_options['arguments']['field_station_program_nid']['table'] = 'field_data_field_station_program';
+  $handler->display->display_options['arguments']['field_station_program_nid']['field'] = 'field_station_program_nid';
+  $handler->display->display_options['arguments']['field_station_program_nid']['default_action'] = 'default';
+  $handler->display->display_options['arguments']['field_station_program_nid']['exception']['title_enable'] = 1;
+  $handler->display->display_options['arguments']['field_station_program_nid']['title_enable'] = 1;
+  $handler->display->display_options['arguments']['field_station_program_nid']['title'] = '%1 Playlists';
+  $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_type'] = 'node';
+  $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_skip_url'] = 0;
+  $handler->display->display_options['arguments']['field_station_program_nid']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['field_station_program_nid']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['field_station_program_nid']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['field_station_program_nid']['specify_validation'] = 1;
+  $handler->display->display_options['arguments']['field_station_program_nid']['validate']['type'] = 'node';
+  $handler->display->display_options['arguments']['field_station_program_nid']['validate_options']['types'] = array(
+    'station_program' => 'station_program',
+  );
+  $handler->display->display_options['arguments']['field_station_program_nid']['validate_options']['access'] = '1';
+  $handler->display->display_options['arguments']['field_station_program_nid']['break_phrase'] = 0;
+  $handler->display->display_options['arguments']['field_station_program_nid']['not'] = 0;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'station_playlist' => 'station_playlist',
+  );
+  $handler->display->display_options['filters']['type']['group'] = '0';
+  $handler->display->display_options['filters']['type']['expose']['operator'] = FALSE;
+  /* Filter criterion: Content: Published or admin */
+  $handler->display->display_options['filters']['status_extra']['id'] = 'status_extra';
+  $handler->display->display_options['filters']['status_extra']['table'] = 'node';
+  $handler->display->display_options['filters']['status_extra']['field'] = 'status_extra';
+  /* Filter criterion: Content: Date (field_station_playlist_date) */
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['id'] = 'field_station_playlist_date_value';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['table'] = 'field_data_field_station_playlist_date';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['field'] = 'field_station_playlist_date_value';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['operator'] = '<=';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['default_date'] = 'now';
+
+  /* Display: Future */
   $handler = $view->new_display('block', 'Future', 'block_1');
-  $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'station_playlist' => 'station_playlist',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
-    'status_extra' => array(
-      'id' => 'status_extra',
-      'table' => 'node',
-      'field' => 'status_extra',
-    ),
-    'date_filter' => array(
-      'operator' => '>',
-      'value' => array(
-        'value' => NULL,
-        'min' => NULL,
-        'max' => NULL,
-        'default_date' => 'now',
-        'default_to_date' => '',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'date_fields' => array(
-        'node_data_field_station_playlist_date.field_station_playlist_date_value' => 'node_data_field_station_playlist_date.field_station_playlist_date_value',
-      ),
-      'granularity' => 'hour',
-      'form_type' => 'date_select',
-      'default_date' => 'now',
-      'default_to_date' => '',
-      'id' => 'date_filter',
-      'table' => 'node',
-      'field' => 'date_filter',
-      'override' => array(
-        'button' => 'Use default',
-      ),
-      'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('title', 'Upcoming shows');
-  $handler->override_option('items_per_page', 0);
-  $handler->override_option('use_pager', FALSE);
-  $handler->override_option('row_plugin', 'fields');
-  $handler->override_option('row_options', array());
-  $handler->override_option('block_description', 'Program\'s upcoming playlists');
-  $handler->override_option('block_caching', -1);
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Upcoming shows';
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'list';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Nid */
+  $handler->display->display_options['fields']['nid']['id'] = 'nid';
+  $handler->display->display_options['fields']['nid']['table'] = 'node';
+  $handler->display->display_options['fields']['nid']['field'] = 'nid';
+  $handler->display->display_options['fields']['nid']['label'] = '';
+  $handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['nid']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['nid']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['nid']['alter']['more_link'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['nid']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['nid']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['nid']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['nid']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['nid']['link_to_node'] = 0;
+  /* Field: Content: Date */
+  $handler->display->display_options['fields']['field_station_playlist_date']['id'] = 'field_station_playlist_date';
+  $handler->display->display_options['fields']['field_station_playlist_date']['table'] = 'field_data_field_station_playlist_date';
+  $handler->display->display_options['fields']['field_station_playlist_date']['field'] = 'field_station_playlist_date';
+  $handler->display->display_options['fields']['field_station_playlist_date']['label'] = '';
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['make_link'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['path'] = 'node/[nid] ';
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['more_link'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_station_playlist_date']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['settings'] = array(
+    'format_type' => 'long',
+    'fromto' => 'both',
+    'multiple_number' => '',
+    'multiple_from' => '',
+    'multiple_to' => '',
+  );
+  $handler->display->display_options['fields']['field_station_playlist_date']['field_api_classes'] = 0;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'station_playlist' => 'station_playlist',
+  );
+  $handler->display->display_options['filters']['type']['group'] = '0';
+  $handler->display->display_options['filters']['type']['expose']['operator'] = FALSE;
+  /* Filter criterion: Content: Published or admin */
+  $handler->display->display_options['filters']['status_extra']['id'] = 'status_extra';
+  $handler->display->display_options['filters']['status_extra']['table'] = 'node';
+  $handler->display->display_options['filters']['status_extra']['field'] = 'status_extra';
+  /* Filter criterion: Content: Date (field_station_playlist_date) */
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['id'] = 'field_station_playlist_date_value';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['table'] = 'field_data_field_station_playlist_date';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['field'] = 'field_station_playlist_date_value';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['operator'] = '>';
+  $handler->display->display_options['filters']['field_station_playlist_date_value']['default_date'] = 'now';
+  $handler->display->display_options['block_description'] = 'Program\'s upcoming playlists';
+
+  /* Display: Past */
   $handler = $view->new_display('block', 'Past', 'block_2');
-  $handler->override_option('title', 'Previous shows');
-  $handler->override_option('use_more', 1);
-  $handler->override_option('row_plugin', 'fields');
-  $handler->override_option('row_options', array());
-  $handler->override_option('block_description', 'Program\'s previous playlists');
-  $handler->override_option('block_caching', -1);
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Previous shows';
+  $handler->display->display_options['defaults']['use_more'] = FALSE;
+  $handler->display->display_options['use_more'] = TRUE;
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'list';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Nid */
+  $handler->display->display_options['fields']['nid']['id'] = 'nid';
+  $handler->display->display_options['fields']['nid']['table'] = 'node';
+  $handler->display->display_options['fields']['nid']['field'] = 'nid';
+  $handler->display->display_options['fields']['nid']['label'] = '';
+  $handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['nid']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['nid']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['nid']['alter']['more_link'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['nid']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['nid']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['nid']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['nid']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['nid']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['nid']['link_to_node'] = 0;
+  /* Field: Content: Date */
+  $handler->display->display_options['fields']['field_station_playlist_date']['id'] = 'field_station_playlist_date';
+  $handler->display->display_options['fields']['field_station_playlist_date']['table'] = 'field_data_field_station_playlist_date';
+  $handler->display->display_options['fields']['field_station_playlist_date']['field'] = 'field_station_playlist_date';
+  $handler->display->display_options['fields']['field_station_playlist_date']['label'] = '';
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['make_link'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['path'] = 'node/[nid]';
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['more_link'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_station_playlist_date']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['field_station_playlist_date']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['field_station_playlist_date']['settings'] = array(
+    'format_type' => 'long',
+    'fromto' => 'both',
+    'multiple_number' => '',
+    'multiple_from' => '',
+    'multiple_to' => '',
+  );
+  $handler->display->display_options['fields']['field_station_playlist_date']['field_api_classes'] = 0;
+  $handler->display->display_options['block_description'] = 'Program\'s previous playlists';
+
+  /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->override_option('arguments', array(
-    'field_station_program_nid' => array(
-      'default_action' => 'ignore',
-      'style_plugin' => 'default_summary',
-      'style_options' => array(),
-      'wildcard' => 'all',
-      'wildcard_substitution' => 'All',
-      'title' => '%1 Playlists',
-      'default_argument_type' => 'node',
-      'default_argument' => '',
-      'validate_type' => 'node',
-      'validate_fail' => 'not found',
-      'break_phrase' => 0,
-      'not' => 0,
-      'id' => 'field_station_program_nid',
-      'table' => 'node_data_field_station_program',
-      'field' => 'field_station_program_nid',
-      'relationship' => 'none',
-      'default_options_div_prefix' => '',
-      'default_argument_user' => 0,
-      'default_argument_fixed' => '',
-      'default_argument_php' => '',
-      'validate_argument_node_type' => array(
-        'station_program' => 'station_program',
-        'blog' => 0,
-        'poll' => 0,
-        'audio' => 0,
-        'image' => 0,
-        'station_album' => 0,
-        'station_playlist' => 0,
-        'station_schedule' => 0,
-        'book' => 0,
-        'location' => 0,
-        'page' => 0,
-        'story' => 0,
-        'video' => 0,
-      ),
-      'validate_argument_node_access' => 1,
-      'validate_argument_nid_type' => 'nid',
-      'validate_argument_vocabulary' => array(
-        '1' => 0,
-        '2' => 0,
-        '4' => 0,
-        '5' => 0,
-        '3' => 0,
-      ),
-      'validate_argument_type' => 'tid',
-      'validate_argument_php' => '',
-      'override' => array(
-        'button' => 'Use default',
-      ),
-      'image_size' => array(
-        '_original' => '_original',
-        'thumbnail' => 'thumbnail',
-        'preview' => 'preview',
-      ),
-    ),
-  ));
-  $handler->override_option('style_plugin', 'default');
-  $handler->override_option('style_options', NULL);
-  $handler->override_option('path', 'station/playlists');
-  $handler->override_option('menu', array(
-    'type' => 'normal',
-    'title' => 'Playlists',
-    'description' => '',
-    'weight' => '0',
-    'name' => 'navigation',
-  ));
-  $handler->override_option('tab_options', array(
-    'type' => 'none',
-    'title' => '',
-    'description' => '',
-    'weight' => 0,
-  ));
-  $views[$view->name] = $view;
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'default';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'node';
+  $handler->display->display_options['row_options']['links'] = 1;
+  $handler->display->display_options['row_options']['comments'] = 0;
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['arguments'] = FALSE;
+  /* Contextual filter: Content: Program (field_station_program) */
+  $handler->display->display_options['arguments']['field_station_program_nid']['id'] = 'field_station_program_nid';
+  $handler->display->display_options['arguments']['field_station_program_nid']['table'] = 'field_data_field_station_program';
+  $handler->display->display_options['arguments']['field_station_program_nid']['field'] = 'field_station_program_nid';
+  $handler->display->display_options['arguments']['field_station_program_nid']['exception']['title_enable'] = 1;
+  $handler->display->display_options['arguments']['field_station_program_nid']['title_enable'] = 1;
+  $handler->display->display_options['arguments']['field_station_program_nid']['title'] = '%1 Playlists';
+  $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_type'] = 'fixed';
+  $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_skip_url'] = 0;
+  $handler->display->display_options['arguments']['field_station_program_nid']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['field_station_program_nid']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['field_station_program_nid']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['field_station_program_nid']['specify_validation'] = 1;
+  $handler->display->display_options['arguments']['field_station_program_nid']['validate']['type'] = 'node';
+  $handler->display->display_options['arguments']['field_station_program_nid']['validate_options']['types'] = array(
+    'station_program' => 'station_program',
+  );
+  $handler->display->display_options['arguments']['field_station_program_nid']['validate_options']['access'] = '1';
+  $handler->display->display_options['arguments']['field_station_program_nid']['break_phrase'] = 0;
+  $handler->display->display_options['arguments']['field_station_program_nid']['not'] = 0;
+  $handler->display->display_options['path'] = 'station/playlists';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'Playlists';
+  $handler->display->display_options['menu']['weight'] = '0';
 
   return $views;
 }
-
-

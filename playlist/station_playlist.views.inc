@@ -1,7 +1,10 @@
 <?php
+/**
+ * @file
+ */
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function station_playlist_views_data() {
   // Basic table information.
@@ -58,9 +61,9 @@ function station_playlist_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Artist'),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Artist'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -73,9 +76,9 @@ function station_playlist_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Album'),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Album'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -88,9 +91,9 @@ function station_playlist_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Title'),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Title'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',

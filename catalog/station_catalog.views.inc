@@ -1,8 +1,6 @@
 <?php
-
-
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function station_catalog_views_data() {
   // Basic table information.
@@ -28,10 +26,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_numeric',
-       'label' => t('Number'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+      'label' => t('Number'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -43,10 +41,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Artist'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Artist'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -58,10 +56,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Album'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Album'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -73,10 +71,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_numeric',
-       'label' => t('Year'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+      'label' => t('Year'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -88,10 +86,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Label'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Label'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -103,10 +101,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Music Brainz ID'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Music Brainz ID'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -118,10 +116,10 @@ function station_catalog_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Active'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Active'),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),

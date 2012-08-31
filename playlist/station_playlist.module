@@ -1,26 +1,26 @@
 <?php
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function station_playlist_help($path, $arg) {
   switch ($path) {
-    case 'admin/settings/station/playlist':
+    case 'admin/config/station/playlist':
       return t("These settings allow you to configure the playlist node.");
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function station_playlist_menu() {
-  $items['admin/settings/station/playlist'] = array(
+  $items['admin/config/station/playlist'] = array(
     'title' => 'Playlist',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('station_playlist_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'station_playlist.admin.inc',
-    'type' => MENU_LOCAL_TASK
+    'type' => MENU_LOCAL_TASK,
   );
 
   $items['station/autocomplete/playlist'] = array(
@@ -40,50 +40,71 @@ function station_playlist_menu() {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function station_playlist_theme() {
   return array(
     'station_playlist_track_form' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
     ),
   );
 }
 
 /**
- * Implementation of hook_node_info().
+ * Implements hook_node_info().
  */
 function station_playlist_node_info() {
   return array(
     'station_playlist' => array(
       'name' => t('Program Playlist'),
-      'module' => 'station_playlist',
+      'base' => 'station_playlist',
       'description' => t("A playlist lets your listeners see a list of all the music played during a program. It also allows the music director to easily chart what's being played."),
       'has_title' => TRUE,
       'title_label' => t('Title'),
-      'has_body' => TRUE,
-      'body_label' => t('Description'),
-    )
+      //'has_body' => TRUE,
+      //'body_label' => t('Description'),
+    ),
   );
 }
 
 /**
-  * Implementation of hook_perm().
+ * Implements hook_permission().
  */
-function station_playlist_perm() {
+function station_playlist_permission() {
   return array(
-    'administer station playlists',
-    'view station playlist content',
-    'create station playlist content',
-    'edit any station playlist content',
-    'edit own station playlist content',
-    'delete any station playlist content',
-    'delete own station playlist content',
+    'administer_station_playlists' => array(
+      'title' => t('administer station playlists'),
+      'description' => t('TODO Add a description for \'administer station playlists\''),
+    ),
+    'view_station_playlist_content' => array(
+      'title' => t('view station playlist content'),
+      'description' => t('TODO Add a description for \'view station playlist content\''),
+    ),
+    'create_station_playlist_content' => array(
+      'title' => t('create station playlist content'),
+      'description' => t('TODO Add a description for \'create station playlist content\''),
+    ),
+    'edit_any_station_playlist_content' => array(
+      'title' => t('edit any station playlist content'),
+      'description' => t('TODO Add a description for \'edit any station playlist content\''),
+    ),
+    'edit_own_station_playlist_content' => array(
+      'title' => t('edit own station playlist content'),
+      'description' => t('TODO Add a description for \'edit own station playlist content\''),
+    ),
+    'delete_any_station_playlist_content' => array(
+      'title' => t('delete any station playlist content'),
+      'description' => t('TODO Add a description for \'delete any station playlist content\''),
+    ),
+    'delete_own_station_playlist_content' => array(
+      'title' => t('delete own station playlist content'),
+      'description' => t('TODO Add a description for \'delete own station playlist content\''),
+    ),
   );
 }
 
 /**
- * Implementation of hook_link().
+ * Implements hook_link().
  *
  * This is implemented so that an edit link is displayed for users who have
  * the rights to edit a node.
@@ -97,11 +118,20 @@ function station_playlist_link($type, $object, $teaser = FALSE) {
         $field = content_fields('field_station_program', 'station_playlist');
         $db_info = content_database_info($field);
         $col = $db_info['columns']['nid']['column'];
-        $result = db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {{$db_info['table']}} sp ON n.nid = sp.$col WHERE sp.$col = %d AND n.status = 1"), $object->nid);
-        if (db_result($result)) {
+        // TODO Please convert this statement to the D7 database API syntax.
+        //$result = db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {{$db_info['table']}} sp ON n.nid = sp.$col WHERE sp.$col = %d AND n.status = 1"), $object->nid);
+        $query = db_select('node', 'n');
+        $query->fields('n', array('nid'));
+        $query->innerJoin($db_info['table'], 'sp', 'n.nid = sp.' . $col);
+        $query->condition('sp.' . $col, $object->nid);
+        $query->condition('n.status', 1);
+        $query->addTag('node_access');
+        $result = $query->execute();
+        $num_of_results = $result->rowCount();
+        if ($num_of_results) {
           $links['station_station_playlist_view'] = array(
             'title' => t('View all playlists'),
-            'href' => 'station/playlists/'. $object->nid,
+            'href' => 'station/playlists/' . $object->nid,
           );
         }
 
@@ -109,7 +139,7 @@ function station_playlist_link($type, $object, $teaser = FALSE) {
           if (node_access('update', $object)) {
             $links['station_station_playlist_add'] = array(
               'title' => t('Add new playlist'),
-              'href' => 'node/add/station-playlist/'. $object->nid,
+              'href' => 'node/add/station-playlist/' . $object->nid,
             );
           }
         }
@@ -118,9 +148,9 @@ function station_playlist_link($type, $object, $teaser = FALSE) {
       case 'station_playlist':
         if (!empty($object->field_station_program[0]['nid'])) {
           return array('station_program_program_view' => array(
-            'title' => t('View program'),
-             'href' => 'node/'. $object->field_station_program[0]['nid'],
-          ));
+              'title' => t('View program'),
+              'href' => 'node/' . $object->field_station_program[0]['nid'],
+            ));
         }
     }
   }
@@ -128,31 +158,39 @@ function station_playlist_link($type, $object, $teaser = FALSE) {
 }
 
 /**
- * Implementation of hook_access().
+ * Implements hook_node_access().
  */
-function station_playlist_access($op, $node, $account) {
+function station_playlist_node_access($node, $op, $account) {
   if (user_access('administer station playlists', $account)) {
-    return TRUE;
+    return NODE_ACCESS_ALLOW;
   }
 
   switch ($op) {
     case 'view':
-      return $node->status && user_access('view station playlist content', $account);
+      if ($node->status && user_access('view_station_playlist_content', $account)) {
+        return NODE_ACCESS_ALLOW;
+      }
 
     case 'create':
-      return user_access('create station playlist content', $account);
+      if (user_access('create_station_playlist_content', $account)) {
+        return NODE_ACCESS_ALLOW;
+      }
 
     case 'update':
-      if (user_access('edit own station playlist content', $account) && ($account->uid == $node->uid)) {
-        return TRUE;
+      if (user_access('edit_own_station_playlist_content', $account) && ($account->uid == $node->uid)) {
+        return NODE_ACCESS_ALLOW;
       }
-      return user_access('edit any station playlist content', $account);
+      if (user_access('edit_any_station_playlist_content', $account)) {
+        return NODE_ACCESS_ALLOW;
+      }
 
     case 'delete':
-      if (user_access('delete own station playlist content', $account) && ($account->uid == $node->uid)) {
-        return TRUE;
+      if (user_access('delete_own_station_playlist_content', $account) && ($account->uid == $node->uid)) {
+        return NODE_ACCESS_ALLOW;
       }
-      return user_access('delete any station playlist content', $account);
+      if (user_access('delete_any_station_playlist_content', $account)) {
+        return NODE_ACCESS_ALLOW;
+      }
   }
 }
 
@@ -205,7 +243,7 @@ function station_playlist_get_empty_track() {
 }
 
 /**
- * Implementation of hook_form().
+ * Implements hook_form().
  *
  * Build a form for playlist nodes.
  */
@@ -219,39 +257,36 @@ function station_playlist_form(&$node, $form_state) {
   // Figure out how many empty rows we have and decide if we need to add some
   // more.
   if (isset($node->tracks)) {
-    $num_empty_tracks = 5;
+    //$num_empty_tracks = 5;
+    $form_state['num_empty_tracks'] = 5;
     foreach ($node->tracks as $track) {
       if (!station_playlist_track_is_saveable($track)) {
-        $num_empty_tracks--;
+        $form_state['$num_empty_tracks']--;
       }
     }
   }
   else {
     // New playlists get 10 blank tracks.
-    $num_empty_tracks = 10;
+    //$num_empty_tracks = 10;
+    $form_state['num_empty_tracks'] = 10;
     $node->tracks = array();
   }
   $empty_track = station_playlist_get_empty_track();
-  for ($i = 0; $i < $num_empty_tracks; $i++) {
-    $node->tracks[] = $empty_track;
+  if (isset($form_state['clicked_button']['#parents'][0]) && $form_state['clicked_button']['#parents'][0] == 'add_more') { 
+    for ($i = 0; $i < $form_state['num_empty_tracks']; $i++) {
+      $node->tracks[] = $empty_track;
+    }
   }
-
-  $form['body_filter']['body'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Description'),
-    '#default_value' => $node->body,
-    '#rows' => 5,
-  );
-  $form['body_filter']['format'] = filter_form($node->format);
 
   // Wrapper to hold all the tracks elements.
   $form['tracks_wrapper'] = array(
-    '#value' => '<label>'. t('Tracks') .':</label>',
+    '#value' => '<label>' . t('Tracks') . ':</label>',
     '#prefix' => '<div class="clear-block form-item" id="station-playlist-tracks-wrapper">',
     '#suffix' => '</div>',
     '#theme' => 'station_playlist_track_form',
     '#description' => t('Enter the tracks played on the show, the artist and title are required. If you provide a link, it needs to begin with <code>http://</code> or you will get a link to a page on this site.'),
     '#tree' => FALSE,
+    '#weight' => 10,
   );
   // Container to display existing tracks.
   $form['tracks_wrapper']['tracks'] = array(
@@ -304,9 +339,10 @@ function station_playlist_form(&$node, $form_state) {
       '#type' => 'submit',
       '#name' => 'remove_' . $weight,
       '#value' => t('Remove'),
-      '#submit' => array('station_playlist_form_ahah_track_submit'),
-      '#ahah' => array(
-        'path' => 'station/ahah/playlist',
+      '#submit' => array('station_playlist_form_ahah_track_submit_remove'),
+      '#ajax' => array(
+        //'path' => 'station/ahah/playlist',
+        'callback' => 'station_playlist_ajax_callback',
         'wrapper' => 'station-playlist-tracks-wrapper',
         'method' => 'replace',
         'effect' => 'fade',
@@ -320,14 +356,15 @@ function station_playlist_form(&$node, $form_state) {
     '#type' => 'submit',
     '#value' => t('Add more'),
     '#weight' => 1,
-    '#submit' => array('station_playlist_form_ahah_track_submit'),
-    '#ahah' => array(
-      'path' => 'station/ahah/playlist',
+    '#submit' => array('station_playlist_form_ahah_track_submit_add_more'),
+    '#ajax' => array(
+      //'path' => 'station/ahah/playlist',
+      'callback' => 'station_playlist_ajax_callback',
       'wrapper' => 'station-playlist-tracks-wrapper',
       'method' => 'replace',
       'effect' => 'fade',
     ),
-  );
+  ); 
   $form['#validate'][] = 'station_playlist_node_form_validate';
   $form['#submit'][] = 'station_playlist_node_form_submit';
   return $form;
@@ -336,19 +373,37 @@ function station_playlist_form(&$node, $form_state) {
 /**
  * A do nothing submit function to prevent the form from saving.
  */
-function station_playlist_form_ahah_track_submit($form, &$form_state) {
+function station_playlist_form_ahah_track_submit_remove($form, &$form_state) {
   // Set the form to rebuild and run submit handlers.
-  node_form_submit_build_node($form, $form_state);
+  //node_form_submit_build_node($form, $form_state);
+
+  // Check if a track should be removed.
+  if (isset($form_state['clicked_button']['#parents'][2]) && $form_state['clicked_button']['#parents'][2] == 'remove') {
+    $delta = $form_state['clicked_button']['#parents'][1];
+    unset($form_state['values']['tracks'][$delta]);
+  }
+  $form_state['rebuild'] = TRUE;
+  node_form_submit_build_node($form, $form_state);  
 }
 
-function theme_station_playlist_track_form($form) {
+function station_playlist_form_ahah_track_submit_add_more($form, &$form_state) {
+  $form_state['num_empty_tracks']++;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function theme_station_playlist_track_form($variables) {
+  $form = $variables['form'];
   // To have the drag and drop not totally wack out the formatting we need
   // the first column in the table with no form element.
   $header = array('', t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'), '');
 
   $rows = array();
   foreach (element_children($form['tracks']) as $key) {
-    $form['tracks'][$key]['weight']['#attributes']['class'] = 'track-weight';
+    $form['tracks'][$key]['weight']['#attributes']['class'] = array('track-weight');
     $row = array(
       '',
       drupal_render($form['tracks'][$key]['artist']),
@@ -359,27 +414,34 @@ function theme_station_playlist_track_form($form) {
       drupal_render($form['tracks'][$key]['weight']),
       drupal_render($form['tracks'][$key]['remove']),
     );
-    $rows[] = array('data' => $row, 'class' => 'draggable');
+    $rows[] = array(
+      'data' => $row,
+      'class' => array('draggable'),
+    );
   }
 
   $output = '';
   if (count($rows)) {
     drupal_add_tabledrag('station-playlist-tracks-table', 'order', 'sibling', 'track-weight');
-    $output .= theme('table', $header, $rows, array('id' => 'station-playlist-tracks-table'));
+    $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'station-playlist-tracks-table')));
   }
 
-  return $output . drupal_render($form);
+  return $output . drupal_render_children($form);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function station_playlist_node_form_validate($form, &$form_state) {
   $tracks = $form_state['values']['tracks'];
-
+/*
   // Check if a track should be removed.
   if (isset($form_state['clicked_button']['#parents'][2]) && $form_state['clicked_button']['#parents'][2] == 'remove') {
     $delta = $form_state['clicked_button']['#parents'][1];
     unset($tracks[$delta]);
   }
-
+*/
   // Sort the table by weight (which might have changed with a tablesort)
   // then reset the keys.
   usort($tracks, '_station_playlist_sort_tracks');
@@ -389,7 +451,7 @@ function station_playlist_node_form_validate($form, &$form_state) {
   foreach ($tracks as $key => $track) {
     $track['weight'] = $key;
   }
-
+/*
   // Check if they've requested a new track.
   if (isset($form_state['clicked_button']['#parents'][0]) && $form_state['clicked_button']['#parents'][0] == 'add_more') {
     // Add the new row to the tracks list.
@@ -398,7 +460,7 @@ function station_playlist_node_form_validate($form, &$form_state) {
       $tracks[] = $track;
     }
   }
-
+*/
   form_set_value($form['tracks_wrapper']['tracks'], $tracks, $form_state);
 }
 
@@ -413,7 +475,7 @@ function _station_playlist_sort_tracks($a, $b) {
 }
 
 /**
- * Implementation of hook_validate().
+ * Implements hook_validate().
  *
  * Use this hook to convert form elements to node values.
  */
@@ -421,35 +483,43 @@ function station_playlist_validate(&$node, &$form) {
   // Check for missing track information.
   foreach ($node->tracks as $track) {
     if (station_playlist_track_is_incomplete($track)) {
-      form_set_error('tracks]['. $track['weight'] .'][artist', t("You must provide either an artist or a title."));
-      form_set_error('tracks]['. $track['weight'] .'][title', ' ');
+      form_set_error('tracks][' . $track['weight'] . '][artist', t("You must provide either an artist or a title."));
+      form_set_error('tracks][' . $track['weight'] . '][title', ' ');
     }
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function station_playlist_ajax_callback($form, &$form_state) {
+  return $form['tracks_wrapper'];
+}
+
 function station_playlist_ahah() {
   // The form is generated in an include file which we need to include manually.
-  include_once 'modules/node/node.pages.inc';
+  include_once DRUPAL_ROOT . '/' . 'modules/node/node.pages.inc';
 
   $form = station_ajax_form_handler();
-
   // Render the new output.
   $sub_form = $form['tracks_wrapper'];
   // Prevent duplicate wrappers.
   unset($sub_form['#prefix'], $sub_form['#suffix']);
 
-  $output = theme('status_messages') . drupal_render($sub_form);
+  // TODO Please change this theme call to use an associative array for the $variables parameter.
+  $output = theme('status_messages', array('display' => 'NULL')) . drupal_render($sub_form);
 
   // AHAH is not being nice to us and doesn't know about the "Remove" button.
   // This causes it not to attach AHAH behaviours to it after modifying the form.
   // So we need to tell it first.
-  $javascript = drupal_add_js(NULL, NULL);
+  $javascript = drupal_add_js(NULL, array('type' => NULL, 'scope' => JS_DEFAULT));
   if (isset($javascript['setting'])) {
-    $output .= '<script type="text/javascript">jQuery.extend(Drupal.settings, '. drupal_to_js(call_user_func_array('array_merge_recursive', $javascript['setting'])) .');</script>';
+    $output .= '<script type="text/javascript">jQuery.extend(Drupal.settings, ' . drupal_json_encode(call_user_func_array('array_merge_recursive', $javascript['setting'])) . ');</script>';
   }
 
-  // Final rendering callback.
-  drupal_json(array('status' => TRUE, 'data' => $output));
+  // Final rendering callback.*/
+  drupal_json_output(array('status' => TRUE, 'data' => $output));
 }
 
 /**
@@ -458,25 +528,30 @@ function station_playlist_ahah() {
 function station_playlist_node_form_submit($form, &$form_state) {
   // Compute the title.
   $form_state['values']['title'] = t('!program-title playlist for !date', array(
-    '!program-title' => _nodereference_titles($form_state['values']['field_station_program'][0]['nid']),
-    '!date' => format_date($form_state['values']['field_station_playlist_date'][0]['value'], 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')),
+    '!program-title' => _nodereference_titles($form_state['values']['field_station_program'][$form_state['values']['language']][0]['nid']),
+    '!date' => format_date($form_state['values']['field_station_playlist_date'][$form_state['values']['language']][0]['value'], 'custom', variable_get('station_playlist_title_dateformat', 'm/d/Y')),
   ));
 }
 
 
 /**
- * Implementation of hook_load().
+ * Implements hook_load().
  */
-function station_playlist_load($node) {
-  // Tracks
-  $extras = new stdClass();
-  $extras->tracks = array();
-  $result = db_query('SELECT * FROM {station_playlist_track} WHERE nid = %d ORDER BY weight', $node->nid);
-  while ($track = db_fetch_array($result)) {
-    $extras->tracks[] = $track;
+function station_playlist_load($nodes) {
+  foreach ($nodes as $nid => &$node) {
+    // Tracks
+    //$extras = new stdClass();
+    //$extras->tracks = array();
+    //$result = db_query('SELECT * FROM {station_playlist_track} WHERE nid = :nid ORDER BY weight', array(':nid' => $node->nid));
+    $query = db_select('station_playlist_track', 'st');
+    $query->fields('st');
+    $query->condition('nid', $node->nid);
+    $query->orderBy('weight');
+    $result = $query->execute();
+    while ($track = $result->fetchAssoc()) {
+      $node->tracks[] = $track;
+    }
   }
-
-  return $extras;
 }
 
 /**
@@ -495,7 +570,11 @@ function station_playlist_insert($node) {
  * Delete a playlist.
  */
 function station_playlist_delete($node) {
-  db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid) */
+  db_delete('station_playlist_track')
+    ->condition('nid', $node->nid)
+    ->execute();
 }
 
 /**
@@ -503,7 +582,11 @@ function station_playlist_delete($node) {
  */
 function station_playlist_update($node) {
   // delete and re-add tracks
-  db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query('DELETE FROM {station_playlist_track} WHERE nid = %d', $node->nid) */
+  db_delete('station_playlist_track')
+    ->condition('nid', $node->nid)
+    ->execute();
   foreach ($node->tracks as $track) {
     if (station_playlist_track_is_saveable($track)) {
       $record = array_merge($track, array('nid' => $node->nid, 'vid' => $node->vid));
@@ -515,25 +598,23 @@ function station_playlist_update($node) {
 /**
  * Get a playlist ready for viewing.
  */
-function station_playlist_view(&$node, $teaser = false, $page = false) {
-  $node = node_prepare($node, $teaser);
-
-  if ($page) {
-    $program_nid = $node->field_station_program[0]['nid'];
+function station_playlist_view($node, $view_mode) {
+  if ($view_mode == 'full') {
+    $program_nid = $node->field_station_program[$node->language][0]['nid'];
     $breadcrumb = drupal_get_breadcrumb();
     $breadcrumb[] = l(t('Station'), 'station');
     $breadcrumb[] = l(t('Programs'), 'station/programs');
-    $breadcrumb[] = l(_nodereference_titles($program_nid), 'node/'. $program_nid);
+    $breadcrumb[] = l(_nodereference_titles($program_nid), 'node/' . $program_nid);
     drupal_set_breadcrumb($breadcrumb);
   }
 
-  if (!$teaser && isset($node->nid)) {
+  if (($view_mode != 'teaser') && isset($node->nid)) {
     if ($view = views_get_view('station_playlist_tracks')) {
       $display_id = 'default';
       if ($view->access($display_id)) {
         if ($output = $view->preview($display_id, array($node->nid))) {
           $node->content['tracks'] = array(
-            '#value' => $output,
+            '#markup' => $output,
             '#title' => 'Tracks',
             '#weight' => 0,
           );
@@ -546,12 +627,10 @@ function station_playlist_view(&$node, $teaser = false, $page = false) {
 }
 
 /**
- * Implementation of hook_nodeapi().
- *
- * We inject our past and future playlists onto program nodes here.
+ * Implements hook_node_view().
  */
-function station_playlist_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == 'station_program' && $op == 'view') {
+function station_playlist_node_view($node, $view_mode = 'full') {
+  if ($node->type == 'station_program') {
     $block_content_mapping = array(
       'block_1' => 'playlists_future',
       'block_2' => 'playlists_past',
@@ -584,9 +663,14 @@ function station_playlist_autocomplete($field = '', $string = '') {
   $matches = array();
   if (in_array($field, array('artist', 'album', 'label'))) {
     $sql = NULL;
-    $catalog_sql  = 'SELECT DISTINCT %s AS val FROM {station_catalog}        WHERE LOWER(%s) LIKE LOWER("%s%%")';
-    $playlist_sql = 'SELECT DISTINCT %s AS val FROM {station_playlist_track} WHERE LOWER(%s) LIKE LOWER("%s%%")';
-    $args = array($field, $field, $string);
+//    $catalog_query = db_select('station_catalog', 'sc');
+//    $catalog_query->distinct();
+//    $playlist_query = db_select('station_playlist_track', 'st');
+//    $playlist_query->distinct();
+    // We have already checked the $field value to prevent any SQL injection attacks.
+    $catalog_sql  = "SELECT DISTINCT $field AS val FROM {station_catalog}        WHERE LOWER($field) LIKE LOWER(:str)";
+    $playlist_sql = "SELECT DISTINCT $field AS val FROM {station_playlist_track} WHERE LOWER($field) LIKE LOWER(:str)";
+    $args = array(':str' => '%' . $string . '%');
     switch (variable_get('station_playlist_track_autocomplete_source', 'playlists')) {
       case 'playlists':
         $sql = $playlist_sql;
@@ -598,60 +682,77 @@ function station_playlist_autocomplete($field = '', $string = '') {
 
       case 'both':
         $sql = $catalog_sql . ' UNION ' . $playlist_sql;
-        $args = array_merge($args, $args);
+        //$args = array_merge($args, $args);
         break;
     }
 
     if ($sql) {
-      $result = db_query_range($sql . ' ORDER BY val', $args, 0, 10);
-      while ($item = db_fetch_object($result)) {
+      // TODO Please convert this statement to the D7 database API syntax.
+      //$result = db_query_range($sql . ' ORDER BY val', $args);
+      $result = db_query_range($sql . ' ORDER BY val', 0, 10, $args);
+      //while ($item = db_fetch_object($result)) {
+      foreach ($result as $key => $item) {
         $matches[$item->val] = check_plain($item->val);
       }
     }
   }
 
-  print drupal_to_js($matches);
+  print drupal_json_encode($matches);
   exit();
 }
 
 /**
- * Implementation of hook_content_extra_fields.
+ * Implements hook_field_extra_fields().
  *
  * Let CCK know about the playlist stuff we're putting on nodes.
  */
-function station_playlist_content_extra_fields($type_name) {
-  switch ($type_name) {
-    case 'station_playlist':
-      return array(
-        'tracks' => array(
-          'label' => t('Tracks'),
-          'description' => t('Station Playlist module form.'),
-          'weight' => 0,
-        ),
-      );
-
-    case 'station_program':
-      return array(
-        'playlists_future' => array(
-          'label' => t('Upcoming shows'),
-          'description' => t('Station Playlist module form.'),
-          'weight' => 1,
-        ),
-        'playlists_past' => array(
-          'label' => t('Previous shows'),
-          'description' => t('Station Playlist module form.'),
-          'weight' => 2,
-        ),
-      );
-  }
+function station_playlist_field_extra_fields() {
+  $extra['node']['station_playlist'] = array(
+    'tracks' => array(
+      'label' => t('Tracks'),
+      'description' => t('Station Playlist module form.'),
+      'weight' => 0,
+    ),
+  );
+  $extra['node']['station_program'] = array(
+    'playlists_future' => array(
+      'label' => t('Upcoming shows'),
+      'description' => t('Station Playlist module form.'),
+      'weight' => 1,
+    ),
+    'playlists_past' => array(
+      'label' => t('Previous shows'),
+      'description' => t('Station Playlist module form.'),
+      'weight' => 2,
+    ),
+  );
 }
 
 /**
- * Implementation of hook_view_api().
+ * Implements hook_view_api().
  */
 function station_playlist_views_api() {
   return array(
-    'api' => 2.0,
+    'api' => 3.0,
     'path' => drupal_get_path('module', 'station_playlist'),
   );
 }
+
+/**
+ * Store node titles collected in the curent request.
+ */
+function _nodereference_titles($nid, $known_title = NULL) {
+  static $titles = array();
+  $query = db_select('node', 'n');
+  $query->fields('n', array('title'));
+  $query->condition('nid', $nid);
+  $query->addTag('node_access');
+  if (!isset($titles[$nid])) {
+    $result = $query->execute();
+    $result = $result->fetchAssoc();
+    $title = $known_title ? $known_title : $result['title'];
+    $titles[$nid] = $title ? $title : '';
+  }
+  return $titles[$nid];
+}
+

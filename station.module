@@ -1,21 +1,28 @@
 <?php
 
-require_once(drupal_get_path('module', 'station') .'/dayhour.inc');
+require_once dirname(__FILE__) . '/dayhour.inc';
 
+/**
+ * Implements hook_help().
+ */
 function station_help($path, $arg) {
   switch ($path) {
-    case 'admin/settings/station':
+    case 'admin/config/station':
       return t('Configure the core station settings. These settings are used by all of the station modules.');
+      break;
+    case 'admin/help#station';
+      return t('A module to manage radiostations');
+      break;
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function station_menu() {
   $items = array();
 
-  $items['admin/settings/station'] = array(
+  $items['admin/config/station'] = array(
     'title' => 'Station',
     'description' => 'Change settings for the Station module.',
     'page callback' => 'drupal_get_form',
@@ -23,7 +30,7 @@ function station_menu() {
     'file' => 'station.admin.inc',
     'access arguments' => array('administer site configuration'),
   );
-  $items['admin/settings/station/main'] = array(
+  $items['admin/config/station/main'] = array(
     'title' => 'Core',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('station_admin_settings'),
@@ -35,81 +42,86 @@ function station_menu() {
   $items['station'] = array(
     'title' => 'Station',
     'page callback' => 'station_page',
-    'access arguments' => array('access content'),
+    'access arguments' => array('view published content'),
   );
   return $items;
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function station_theme() {
   return array(
     'station_block_current_program' => array(
-      'arguments' => array('schedule' => NULL, 'program' => NULL),
+      'variables' => array('schedule' => NULL, 'program' => NULL),
     ),
     'station_hour' => array(
-      'arguments' => array('time' => NULL),
+      'variables' => array('time' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_hour_duration' => array(
-      'arguments' => array('start' => NULL, 'finish' => NULL),
+      'variables' => array('start' => NULL, 'finish' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_day' => array(
-      'arguments' => array('time' => NULL),
+      'variables' => array('time' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_dayhour' => array(
-      'arguments' => array('time' => NULL),
+      'variables' => array('time' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_dayhour_range' => array(
-      'arguments' => array('start' => NULL, 'finish' => NULL),
+      'variables' => array('start' => NULL, 'finish' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_hour_range' => array(
-      'arguments' => array('start' => NULL, 'finish' => NULL),
+      'variables' => array('start' => NULL, 'finish' => NULL),
       'file' => 'dayhour.inc',
     ),
     'station_streams' => array(
-      'arguments' => array('streams' => NULL),
+      'variables' => array('streams' => NULL),
     ),
   );
 }
 
 /**
- * Implementation of hook_block().
+ * Implements hook_block_info().
  */
-function station_block($op = 'list', $delta = 0, $edit = array()) {
-  switch ($op) {
-  case 'view':
-    if (user_access('view station schedule content')) {
-      switch ($delta) {
-        case 0:
-          return array(
-            'subject' => t('On Air'),
-            'content' => station_block_current_program(),
-          );
-      }
-    }
-    return;
-
-  case 'list':
-    $blocks[0] = array(
-      'info'   => t('Station: Current Program'),
-      'status' => TRUE,
-      'region' => 'left',
-      'cache'  => BLOCK_NO_CACHE,
-    );
-    return $blocks;
-  }
+function station_block_info() {
+  $blocks['current_program'] = array(
+    'info' => t('Station: Current Program'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
 }
 
+/**
+ * Implements hook_block_view().
+ */
+function station_block_view($delta = '') {
+  if (user_access('view_station_schedule_content')) {
+    switch ($delta) {
+      case 'current_program':
+        return array(
+          'subject' => t('On Air'),
+          'content' => station_block_current_program(),
+        );
+    }
+  }
+  return;
+}
+
+/**
+ * Callback of /station menu item.
+ * menu_get_item() without an arguments returns the current's page menu_router item (an associative array).
+ * system_admin_menu_block() creates the content for an admin page by quering the database for pages that have the given page as parent.
+ * theme_admin_block_content() themes content that has been created by the previous function.
+ */
 function station_page() {
   $output = '';
   if ($content = system_admin_menu_block(menu_get_item())) {
-    $output = theme('admin_block_content', $content);
+    $output = theme('admin_block_content', array('content' => $content));
   }
   return $output;
 }
@@ -117,9 +129,15 @@ function station_page() {
 
 /**
  * AJAX form handler.
+ * TODO: rewrite, it is used by the playlist module and gets called on /station/ahah/playlist page.
  */
 function station_ajax_form_handler() {
-  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_state = array(
+    'storage' => NULL,
+    'submitted' => FALSE,
+  );
+print('asdf');
+  // $form_build_id is randomly generated when a form is initializing
   $form_build_id = $_POST['form_build_id'];
 
   // Get the form from the cache.
@@ -129,7 +147,7 @@ function station_ajax_form_handler() {
 
   // We need to process the form, prepare for that by setting a few internals.
   $form_state['post'] = $form['#post'] = $_POST;
-  $form['#programmed'] = $form['#redirect'] = FALSE;
+  $form['#programmed'] = $form_state['#redirect'] = FALSE;
 
   // Build, validate and if possible, submit the form.
   drupal_process_form($form_id, $form, $form_state);
@@ -146,16 +164,6 @@ function station_ajax_form_handler() {
 }
 
 /**
- * Determine if we have a station archive module running locally or access to a
- * remote one.
- *
- * @return boolean
- */
-function station_has_archive() {
-  return (module_exists('station_archive') || variable_get('station_remote_archive_url', FALSE));
-}
-
-/**
  * Determine if we have a station schedule module running locally or access to a
  * remote one.
  *
@@ -163,21 +171,6 @@ function station_has_archive() {
  */
 function station_has_schedule() {
   return (module_exists('station_schedule') || variable_get('station_remote_schedule_url', FALSE));
-}
-
-/**
- * If there's an archive, return the URL.
- *
- * @return FALSE or string URL.
- */
-function station_get_archive_url() {
-  if (module_exists('station_archive')) {
-    return 'station/archives/';
-  }
-  elseif ($url = variable_get('station_remote_archive_url', FALSE)) {
-    return $url .'station/archives/';
-  }
-  return FALSE;
 }
 
 /**
@@ -202,12 +195,14 @@ function station_get_schedules() {
       }
 
       // Try to load the schedules from the cache.
-      $cacheid = 'station_remote:schedules_'. $url;
+      $cacheid = 'station_remote:schedules_' . $url;
       if ($cache = cache_get($cacheid, 'cache')) {
         $schedules = $cache->data;
       }
       else {
-        $schedules = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.schedule.get.list');
+        // TO_CHECK
+        //$schedules = xmlrpc(check_url($url . '/xmlrpc.php'), 'station.schedule.get.list');
+        $schedules = xmlrpc(check_url($url . '/xmlrpc.php'), array('station.schedule.get.list' => array()));
         if (xmlrpc_errno()) {
           watchdog('station', 'Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
           return FALSE;
@@ -294,24 +289,32 @@ function station_get_program_at($timestamp, $schedule_nid) {
     // caching
     $parts = getdate($timestamp);
     $minutes = $parts['minutes'];
-    if ($minutes < 15)
+    if ($minutes < 15) {
       $minutes = 0;
-    elseif ($minutes < 30)
+    }
+    elseif ($minutes < 30) {
       $minutes = 15;
-    elseif ($minutes < 45)
+    }
+    elseif ($minutes < 45) {
       $minutes = 30;
-    else
+    }
+    else {
       $minutes = 45;
+    }
     $timestamp = mktime($parts['hours'], $minutes, 0, $parts['mon'], $parts['mday'], $parts['year']);
 
     // try to grab it from the cache
-    $cacheid = 'station_remote:program_at_'. $timestamp;
+    $cacheid = 'station_remote:program_at_' . $timestamp;
     if ($cache = cache_get($cacheid, 'cache')) {
       $program = $cache->data;
     }
     else {
       // if it isn't cached get the program info from the server
-      $program = xmlrpc(check_url($url .'/xmlrpc.php'), 'station.program.get.at', $timestamp, $schedule_nid);
+      // TO_CHECK
+      //$program = xmlrpc(check_url($url . '/xmlrpc.php'), 'station.program.get.at', $timestamp, $schedule_nid);
+      //$program = xmlrpc(check_url($url . '/xmlrpc.php'), array('station.program.get.at' => array()), array('timestamp' => $timestamp, 'schedule_nid' => $schedule_nid));
+      $program = xmlrpc(check_url($url . '/xmlrpc.php'), array('station.program.get.at' => array($timestamp, $schedule_nid)));
+
       if (xmlrpc_errno()) {
         watchdog('station', 'Failed to load program info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
         return FALSE;
@@ -336,8 +339,8 @@ function station_get_program_at($timestamp, $schedule_nid) {
  */
 function station_block_current_program() {
   $schedule = station_default_schedule();
-  $program = station_get_program_at(time(), $schedule['nid']);
-  return theme('station_block_current_program', $schedule, $program);
+  $program = station_get_program_at(REQUEST_TIME, $schedule['nid']);
+  return theme('station_block_current_program', array('schedule' => $schedule, 'program' => $program));
 }
 
 /**
@@ -349,17 +352,19 @@ function station_block_current_program() {
  *   Program node object.
  * @return string
  */
-function theme_station_block_current_program($schedule, $program) {
+function theme_station_block_current_program($variables) {
+  $schedule = $variables['schedule'];
+  $program = $variables['program'];
   // Program or unscheduled...
   if ($program) {
-    $output = l($program->title, $program->node_url) .'<br />';
+    $output = l($program->title, $program->node_url) . '<br />';
   }
   else {
-    $output = check_plain($schedule['unscheduled_message']) .'<br />';
+    $output = check_plain($schedule['unscheduled_message']) . '<br />';
   }
 
   // Streams
-  $output .= theme('station_streams', $schedule['streams']);
+  $output .= theme('station_streams', array('streams' => $schedule['streams']));
 
   return $output;
 }
@@ -372,19 +377,20 @@ function theme_station_block_current_program($schedule, $program) {
  * @param $streams
  *   Schedule's streams.
  */
-function theme_station_streams($streams) {
+function theme_station_streams($variables) {
+  $streams = $variables['streams'];
   $items = array();
   foreach ((array) $streams as $key => $stream) {
     $items[] = l($stream['name'], $stream['m3u_url'], array('title' => $stream['description']));
   }
   if (count($items)) {
-    return t('Tune in:') .' '. station_ored_list($items);
+    return t('Tune in:') . ' ' . station_ored_list($items);
   }
 }
 
 
 /**
- * Convert an array to a comma separates list with an 'add' between the last
+ * Convert an array to a comma separated list with an 'add' between the last
  * terms.
  *
  * @param $array array of items
@@ -395,8 +401,10 @@ function station_anded_list($array) {
       return '';
     case 1:
       return array_pop($array);
+    // Why no break?
     default:
       $last = array_pop($array);
+      // Shouldn't it be @list-items so as to pass text through check_plain()?
       return t('!list-items and !last-item', array('!list-items' => implode(', ', $array), '!last-item' => $last));
   }
 }
@@ -423,7 +431,7 @@ function station_ored_list($array) {
  * Return a timezone corrected timestamp.
  */
 function station_local_ts($ts = FALSE) {
-  $ts = ($ts === FALSE) ? time() : $ts;
+  $ts = ($ts === FALSE) ? REQUEST_TIME : $ts;
   return ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
 }
 
@@ -435,14 +443,14 @@ function station_today() {
 }
 
 /**
- * Function to send notices of station changes via hook_station_notices.
+ * Function to send notices of station changes via hook_station_notice.
  */
 function _station_send_notice($type, $op, $data) {
   module_invoke_all('station_notice', $type, $op, $data);
 }
 
 /**
- * Implementation of hook_station_notices to display simple notices about
+ * Implements hook_station_notices to display simple notices about
  * station changes.
  *
  * @param $type 'dj' or 'schedule'
@@ -457,10 +465,10 @@ function _station_station_notice($type, $op, $data) {
     $uid = $data['uid'];
     switch ($op) {
       case 'add':
-        drupal_set_message("$sid adding $uid to $nid");
+        drupal_set_message(check_plain("$sid adding $uid to $nid"));
         break;
       case 'remove':
-        drupal_set_message("$sid removing $uid from $nid");
+        drupal_set_message(check_plain("$sid removing $uid from $nid"));
         break;
     }
   }
@@ -470,13 +478,13 @@ function _station_station_notice($type, $op, $data) {
     $pid = $data['program_nid'];
     switch ($op) {
       case 'add':
-        drupal_set_message("$sid adding $iid to $pid");
+        drupal_set_message(check_plain("$sid adding $iid to $pid"));
         break;
       case 'change':
-        drupal_set_message("$sid changing $iid on $pid");
+        drupal_set_message(check_plain("$sid changing $iid on $pid"));
         break;
       case 'remove':
-        drupal_set_message("$sid removing $iid from $pid");
+        drupal_set_message(check_plain("$sid removing $iid from $pid"));
         break;
     }
   }

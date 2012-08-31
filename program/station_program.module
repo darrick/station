@@ -1,21 +1,21 @@
 <?php
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function station_program_help($path, $arg) {
   switch ($path) {
-    case 'admin/settings/station/program':
+    case 'admin/config/station/program':
       return t("These settings allow you to configure the station's program node.");
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function station_program_menu() {
   $items['station/autocomplete/program'] = array(
-    'title' => 'program autocomplete',
+    'title' => 'Program autocomplete',
     'page callback' => 'station_program_autocomplete',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
@@ -24,135 +24,170 @@ function station_program_menu() {
 }
 
 /**
- * Implementation of hook_node_info().
- */
+ * Implements hook_node_info().
+ 
 function station_program_node_info() {
   return array(
     'station_program' => array(
       'name' => t('Program'),
-      'module' => 'station_program',
+      'base' => 'station_program',
       'description' => t('A radio program that you can schedule.'),
       'has_title' => TRUE,
       'title_label' => t('Title'),
-      'has_body' => TRUE,
-      'body_label' => t('Description'),
-    )
+      //'has_body' => TRUE,
+      //'body_label' => t('Description'),
+    ),
   );
 }
+*/
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_permission().
  */
-function station_program_perm() {
+function station_program_permission() {
   return array(
-    'administer station programs',
-    'view station program content',
-    'create station program content',
-    'edit any station program content',
-    'edit own station program content',
-    'delete any station program content',
+    'administer_station_programs' => array(
+      'title' => t('administer station programs'),
+      'description' => t('TODO Add a description for \'administer station programs\''),
+    ),
+    'view_station_program_content' => array(
+      'title' => t('view station program content'),
+      'description' => t('TODO Add a description for \'view station program content\''),
+    ),
+/*
+    'create station program content' => array(
+      'title' => t('create station program content'),
+      'description' => t('TODO Add a description for \'create station program content\''),
+    ),
+*/
+    'create_station_program_content' => array(
+      'title' => t('create station program content'),
+      'description' => t('TODO Add a description for \'create station program content\''),
+    ),
+    'edit_any_station_program_content' => array(
+      'title' => t('edit any station_program content'),
+      'description' => t('TODO Add a description for \'edit any station program content\''),
+    ),
+    'edit_own_station_program_content' => array(
+      'title' => t('edit own station program content'),
+      'description' => t('TODO Add a description for \'edit own station program content\''),
+    ),
+    'delete_any_station_program_content' => array(
+      'title' => t('delete any station program content'),
+      'description' => t('TODO Add a description for \'delete any station program content\''),
+    ),
+    'delete_own_station_program_content' => array(
+      'title' => t('delete own station program content'),
+      'description' => t('TODO Add a description for \'delete own station program content\''),
+    ),
   );
 }
 
 /**
- * Implementation of hook_access().
+ * Implements hook_node_access().
  */
-function station_program_access($op, $node, $account) {
-  if (user_access('administer station programs', $account)) {
-    return TRUE;
-  }
+function station_program_node_access($node, $op, $account) {
+  $type = is_string($node) ? $node : $node->type;
 
-  switch ($op) {
-    case 'view':
-      return $node->status && user_access('view station program content', $account);
+  if ($type == 'station_program') {
+    if (user_access('administer_station_programs', $account)) {
+      return NODE_ACCESS_ALLOW;
+    }
 
-    case 'create':
-      return user_access('create station program content', $account);
-
-    case 'update':
-      if (user_access('edit any station program content', $account)) {
-        return TRUE;
-      }
-
-      // The node owner can edit the program.
-      if (user_access('edit own station program content', $account)) {
-        if ($node->uid == $account->uid) {
-          return TRUE;
+    switch ($op) {
+      case 'view':
+        if ($node->status && user_access('view_station_program_content', $account)) {
+          return NODE_ACCESS_ALLOW;
         }
 
-        // If the schedule is enabled, let DJs edit the program.
-        if (module_exists('station_schedule')) {
-          if (!empty($node->field_station_program_dj)) {
-            foreach ($node->field_station_program_dj as $delta => $user) {
-              if ($user['uid'] == $account->uid) {
-                return TRUE;
+      case 'update':
+        if (user_access('edit_any_station_program_content', $account)) {
+          return NODE_ACCESS_ALLOW;
+        }
+
+        // The node owner can edit the program.
+        if (user_access('edit_own_station_program_content', $account)) {
+          // If the schedule is enabled, let DJs edit the program.
+          if (module_exists('station_schedule')) {
+            if (!empty($node->field_station_program_dj)) {
+              foreach ($node->field_station_program_dj as $delta => $user) {
+                if ($user['uid'] == $account->uid) {
+                  return NODE_ACCESS_ALLOW;
+                }
               }
             }
           }
         }
-      }
-      return FALSE;
-
-    case 'delete':
-      return user_access('delete any station program content', $account);
+        return NODE_ACCESS_DENY;
+    }
   }
+  return NODE_ACCESS_IGNORE;
 }
 
 /**
- * Implementation of hook_form().
- */
-function station_program_form(&$node) {
-  $type = node_get_types('type', $node);
+ * Implements hook_form().
+ 
+function station_program_form($node, &$form_state) {
+return node_content_form($node, $form_state);
+
+  $type = node_type_get_type($node);
 
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => check_plain($type->title_label),
-    '#default_value' => $node->title,
-    '#required' =>  TRUE,
-    '#maxlength' =>  128,
+    '#default_value' => !empty($node->title) ? $node->title : '',
+    '#required' => TRUE,
+    '#maxlength' => 128,
     '#description' => t('The name of the program. You should avoid making major changes to this without telling the programming director.'),
   );
-//  $form['genre'] = array(
-//    '#type' => 'textfield',
-//    '#title' => t('Text genre'),
-//    '#description' => t('A free-form description of the musical genres played on the program.'),
-//    '#default_value' => $node->genre,
-//    '#required' =>  true,
-//    '#maxlength' => 200,
-//    '#weight' => -2,
-//  );
-//  $form['url'] = array(
-//    '#type' => 'textfield',
-//    '#title' => t('Homepage URL'),
-//    '#description' => t("Link to the program's website."),
-//    '#default_value' => $node->url,
-//    '#maxlength' =>  255,
-//    '#weight' => -1,
-//  );
-  if ($type->has_body) {
-    $form['body_filter']['body'] = array(
-      '#type' => 'textarea',
-      '#title' => check_plain($type->body_label),
-      '#default_value' => $node->body,
-      '#rows' => 10,
-      '#required' => ($type->min_word_count > 0),
-      '#description' => t("Free form description of the show."),
-    );
-    $form['body_filter']['format'] = filter_form($node->format);
-  }
+
+  $form['genre'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Genre'),
+    '#description' => t('A free-form description of the musical genres played on the program.'),
+    '#default_value' => !empty($node->genre) ? $node->genre : '',
+    '#required' =>  true,
+    '#maxlength' => 200,
+    '#weight' => -2,
+  );
+  $form['url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Homepage URL'),
+    '#description' => t("Link to the program's website."),
+    '#default_value' => !empty($node->url) ? $node->url : '',
+    '#maxlength' =>  255,
+    '#weight' => -1,
+  );
+
+// * TODO: Check if needed
+//  if ($type->has_body) {
+//    $form['body_filter']['body'] = array(
+//      '#type' => 'textarea',
+//      '#title' => check_plain($type->body_label),
+//      '#default_value' => !empty($node->body) ? $node->body : '',
+//      '#rows' => 10,
+//      '#required' => ($type->min_word_count > 0),
+//      '#description' => t("Free form description of the show."),
+//    );
+//    $form['body_filter']['format'] = filter_form($node->format);  
+//  }
 
   return $form;
+
 }
+*/
 
 /**
  * Retrieve a pipe delimited string of autocomplete suggestions for existing programs
  */
 function station_program_autocomplete($string = '') {
   $matches = array();
-  $result = db_query_range("SELECT DISTINCT title FROM {node} WHERE type = 'station_program' AND LOWER(title) LIKE LOWER('%s%%') AND status = 1 ORDER BY title", $string, 0, 10);
-  while ($program = db_fetch_object($result)) {
+  $result = db_query_range("SELECT DISTINCT title, nid FROM {node} WHERE type = :type AND LOWER(title) LIKE LOWER(:str) AND status = :status ORDER BY title", 0, 10, array(':type' => 'station_program', ':status' => 1, ':str' => '%' . $string . '%'));
+  //while ($program = db_fetch_object($result)) {
+  //TODO: Check
+  foreach ($result as $program) {
     $matches[$program->title] = check_plain($program->title);
   }
-  print drupal_to_js($matches);
+  print drupal_json_encode($matches);
   exit();
 }

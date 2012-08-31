@@ -1,4 +1,4 @@
 name = Station
 description = Core of station module for running an internet radio station.
 package = Station
-core = 6.x
+core = 7.x

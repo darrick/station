@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ */
+
+/**
  * Field handler to present a link to remove a schedule item.
  */
 class station_schedule_handler_field_iid_link_remove extends station_schedule_handler_field_iid_link {

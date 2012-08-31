@@ -1,169 +1,234 @@
 <?php
+/**
+ * @file
+ * Install, update and uninstall functions for the station_catalog module.
+ *
+ */
 
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_install().
  */
 function station_catalog_install() {
-  drupal_install_schema('station_catalog');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_install_schema('station_catalog')
+
+  // Create a vocabulary for the albums.
+  _station_catalog_get_vid();
+
+  field_create_field(array(
+    'translatable' => '0',
+    'entity_types' => array(),
+    'settings' => array(
+      'allowed_values' => array(
+        array(
+          'vocabulary' => 'station_album_genres',
+          'parent' => '0',
+        ),
+      ),
+    ),
+    'storage' => array(
+      'type' => 'field_sql_storage',
+      'settings' => array(),
+      'module' => 'field_sql_storage',
+      'active' => '1',
+      'details' => array(
+        'sql' => array(
+          'FIELD_LOAD_CURRENT' => array(
+            'field_data_field_album_genre' => array(
+              'tid' => 'field_album_genre_tid',
+            ),
+          ),
+          'FIELD_LOAD_REVISION' => array(
+            'field_revision_field_album_genre' => array(
+              'tid' => 'field_album_genre_tid',
+            ),
+          ),
+        ),
+      ),
+    ),
+    'foreign keys' => array(
+      'tid' => array(
+        'table' => 'taxonomy_term_data',
+        'columns' => array(
+          'tid' => 'tid',
+        ),
+      ),
+    ),
+    'indexes' => array(
+      'tid' => array(
+        'tid',
+      ),
+    ),
+    'field_name' => 'field_album_genre',
+    'type' => 'taxonomy_term_reference',
+    'module' => 'taxonomy',
+    'active' => '1',
+    'locked' => '0',
+    'cardinality' => '3',
+    'deleted' => '0',
+    'columns' => array(
+      'tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'bundles' => array(
+      'node' => array(
+        'station_album',
+      ),
+    ),
+  ));
+
+  field_create_instance(array(
+    'label' => 'Genre',
+    'widget' => array(
+      'weight' => '1',
+      'type' => 'taxonomy_autocomplete',
+      'module' => 'taxonomy',
+      'active' => 1,
+      'settings' => array(
+        'size' => 60,
+        'autocomplete_path' => 'taxonomy/autocomplete',
+      ),
+    ),
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'type' => 'taxonomy_term_reference_link',
+        'settings' => array(),
+        'module' => 'taxonomy',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'type' => 'hidden',
+        'label' => 'above',
+        'settings' => array(),
+        'weight' => 0,
+      ),
+      'example_node_list' => array(
+        'type' => 'hidden',
+        'label' => 'above',
+        'settings' => array(),
+        'weight' => 0,
+      ),
+    ),
+    'required' => 0,
+    'description' => '',
+    'default_value' => NULL,
+    'field_name' => 'field_album_genre',
+    'entity_type' => 'node',
+    'bundle' => 'station_album',
+    'deleted' => '0',
+  ));
+
+  node_types_rebuild();
+  $types = node_type_get_types();
+  node_add_body_field($types['station_album'], st('A description of the album.'));
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function station_catalog_uninstall() {
-  drupal_uninstall_schema('station_catalog');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_uninstall_schema('station_catalog')
+
+  field_delete_field('field_album_genre');
 
   if ($vid = variable_get('station_catalog_vocabulary', FALSE)) {
-    taxonomy_del_vocabulary($vid);
+    taxonomy_vocabulary_delete($vid);
   }
   variable_del('station_catalog_vocabulary');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function station_catalog_schema() {
   $schema['station_catalog'] = array(
-    'description' => t('Information about albums in the station catalog.'),
+    'description' => 'Information about albums in the station catalog.',
     'fields' => array(
       'nid' => array(
-        'description' => t("The album's {node}.nid."),
+        'description' => "The album's {node}.nid.",
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'number' => array(
-        'description' => t('The catalog number.'),
+        'description' => 'The catalog number.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
       'artist' => array(
-        'description' => t('Name of the artist.'),
+        'description' => 'Name of the artist.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'album' => array(
-        'description' => t('Name of the album.'),
+        'description' => 'Name of the album.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'year' => array(
-        'description' => t('Year the album was released.'),
+        'description' => 'Year the album was released.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'label' => array(
-        'description' => t('Name of the label that released the album.'),
+        'description' => 'Name of the label that released the album.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'mb_release_id' => array(
-        'description' => t('MusicBrainz release id for the album.'),
+        'description' => 'MusicBrainz release id for the album.',
         'type' => 'varchar',
         'length' => 36,
         'not null' => TRUE,
         'default' => '',
       ),
       'asin' => array(
-        'description' => t('Amazon product id..'),
+        'description' => 'Amazon product id..',
         'type' => 'varchar',
         'length' => 16,
         'not null' => TRUE,
         'default' => '',
       ),
+   /*'description' => array(
+        'description' => 'A description of the album',
+        'type' => 'text',
+        'settings' => array(
+          'size' => 'normal',
+        ),
+        'not null' => TRUE,
+      ),*/
     ),
     'indexes' => array(
-      'station_catalog_artist'  => array('artist'),
-      'station_catalog_album'   => array('album'),
-      'station_catalog_year'    => array('year'),
-      'station_catalog_label'   => array('label'),
-      'mb_release'              => array('mb_release_id'),
+      'station_catalog_artist' => array('artist'),
+      'station_catalog_album' => array('album'),
+      'station_catalog_year' => array('year'),
+      'station_catalog_label' => array('label'),
+      'mb_release' => array('mb_release_id'),
     ),
     'unique keys' => array(
-      'station_catalog_number' => array('number')
+      'station_catalog_number' => array('number'),
     ),
     'primary key' => array('nid'),
   );
 
   return $schema;
 }
-
-/**
- * Remove the autonumber from the nid column and add a year column.
- */
-function station_catalog_update_5200() {
-  $ret = array();
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {station_catalog}
-        MODIFY COLUMN `nid` INTEGER UNSIGNED NOT NULL DEFAULT 0;
-      ");
-      $ret[] = update_sql("ALTER TABLE {station_catalog}
-        ADD COLUMN `year` INTEGER UNSIGNED NOT NULL AFTER `album`,
-        ADD INDEX station_catalog_year(`year`);
-      ");
-    break;
-  }
-  return $ret;
-}
-
-/**
- * Add MusicBrainz release id field and Amazon ASIN field.
- */
-function station_catalog_update_5201() {
-  $ret = array();
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {station_catalog}
-        ADD COLUMN `mb_release_id` VARCHAR(36) NOT NULL DEFAULT '' AFTER `label`,
-        ADD INDEX mb_release(`mb_release_id`);
-      ");
-      $ret[] = update_sql("ALTER TABLE {station_catalog}
-        ADD COLUMN `asin` varchar(16) NOT NULL default '' AFTER `mb_release_id`;
-      ");
-
-    break;
-  }
-  return $ret;
-}
-
-/**
- * Rename some incorrectly named variables.
- */
-function station_catalog_update_5202() {
-  if ($val = variable_get('station_category_vocabulary', FALSE)) {
-    variable_set('station_catalog_vocabulary', $val);
-  }
-
-  if ($val = variable_get('station_category_redirect_on_add', FALSE)) {
-    variable_set('station_catalog_redirect_on_add', $val);
-  }
-
-  variable_del('station_category_vocabulary');
-  variable_del('station_category_redirect_on_add');
-
-  return array();
-}
-
-/**
- * Implementation of hook_update_last_removed().
- */
-function station_catalog_update_last_removed() {
-  // We've removed the 5.x-1.x version of the module, including database
-  // updates. The next update function is 5200.
-  return 101;
-}
-

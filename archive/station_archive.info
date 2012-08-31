@@ -1,8 +1,0 @@
-name = Station Archive
-description = Provides an archive of the station's webstream.
-core = 6.x
-package = Station
-dependencies[] = station
-dependencies[] = audio
-dependencies[] = taxonomy
-dependencies[] = views

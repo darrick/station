@@ -1,9 +1,8 @@
 name = Station Program
 description = Provides a simple program node for schedule.
 package = Station
-core=6.x
+core=7.x
 dependencies[] = station
 dependencies[] = views
-dependencies[] = content
 dependencies[] = link
 dependencies[] = text

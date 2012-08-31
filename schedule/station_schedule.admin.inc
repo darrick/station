@@ -1,9 +1,12 @@
 <?php
+/**
+ * @file
+ */
 
 /**
  * Admin settings form.
  */
-function station_schedule_admin_settings() {
+function station_schedule_admin_settings($form, &$form_state) {
   $form['bc'] = array(
     '#type' => 'fieldset',
     '#title' => t('Backwards compatibility'),
@@ -23,7 +26,7 @@ function station_schedule_admin_settings() {
     '#title' => t('Default schedule'),
     '#default_value' => variable_get('station_schedule_default', 0),
     '#options' => $schedules,
-    '#description' => t("This you select the schedule that will be used as the default for backwards compatibility."),
+    '#description' => t("Select the schedule that will be used as default for backwards compatibility."),
   );
 
   return system_settings_form($form);

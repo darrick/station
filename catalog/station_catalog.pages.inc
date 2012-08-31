@@ -1,4 +1,5 @@
 <?php
+// $Id: station_catalog.pages.inc,v 1.2 2009/11/28 22:06:44 drewish Exp $
 
 /**
  * @file
@@ -9,31 +10,50 @@
 
 /* // Menu info
 
-  $items['station/catalog/search'] = array(
-    'title' => 'Catalog',
-    'page callback' => 'station_catalog_search_page',
-    'page arguments' => array('', ''),
-    'access arguments' => array('view catalog'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  $items['station/catalog/search/%/%'] = array(
-    'title' => 'Catalog',
-    'page callback' => 'station_catalog_search_page',
-    'page arguments' => array(3, 4),
-    'access arguments' => array('view catalog'),
-    'type' => MENU_NORMAL_ITEM,
-  );
+ $items['station/catalog/search'] = array(
+ 'title' => 'Catalog',
+ 'page callback' => 'station_catalog_search_page',
+ 'page arguments' => array('', ''),
+ 'access arguments' => array('view catalog'),
+ 'type' => MENU_NORMAL_ITEM,
+ );
+ $items['station/catalog/search/%/%'] = array(
+ 'title' => 'Catalog',
+ 'page callback' => 'station_catalog_search_page',
+ 'page arguments' => array(3, 4),
+ 'access arguments' => array('view catalog'),
+ 'type' => MENU_NORMAL_ITEM,
+ );
  */
 
-function station_catalog_search_page($field = '', $value ='') {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function station_catalog_search_page($field = '', $value = '') {
   $perpage = 30;
 
   $header = array(
-    'number' => array('data' => t('Number'), 'field' => 'sc.number'),
-    'artist' => array('data' => t('Artist'), 'field' => 'sc.artist'),
-    'album' => array('data' => t('Album'), 'field' => 'sc.album'),
-    'year' => array('data' => t('Year'), 'field' => 'sc.year'),
-    'label' => array('data' => t('Label'), 'field' => 'sc.label'),
+    'number' => array(
+      'data' => t('Number'),
+      'field' => 'sc.number',
+    ),
+    'artist' => array(
+      'data' => t('Artist'),
+      'field' => 'sc.artist',
+    ),
+    'album' => array(
+      'data' => t('Album'),
+      'field' => 'sc.album',
+    ),
+    'year' => array(
+      'data' => t('Year'),
+      'field' => 'sc.year',
+    ),
+    'label' => array(
+      'data' => t('Label'),
+      'field' => 'sc.label',
+    ),
   );
 
   // Only search when there's a value and the field is valid.
@@ -48,31 +68,38 @@ function station_catalog_search_page($field = '', $value ='') {
 
   $rows = array();
   while ($item = db_fetch_object($result)) {
-    $link = 'node/'. $item->nid;
+    $link = 'node/' . $item->nid;
     $rows[] = array(
       array('data' => l($item->number, $link)),
       array('data' => l($item->artist, $link)),
       array('data' => l($item->album, $link)),
       array('data' => $item->year ? $item->year : ''),
-      array('data' => $item->label)
+      array('data' => $item->label),
     );
   }
 
   if (!$rows) {
-    $rows[] = array(array('colspan' => 4, 'data' => t('No matches were found.')));
+    $rows[] = array(array(
+        'colspan' => 4,
+        'data' => t('No matches were found.'),
+      ));
   }
 
   $output = '<div id="station-catalog-search">';
   $output .= drupal_get_form('station_catalog_search_form', $field, $value);
   $output .= '<div id="station-catalog-search-results">';
-  $output .= theme('pager', array(), $perpage);
-  $output .= theme('table', $header, $rows);
-  $output .= theme('pager', array(), $perpage);
+  $output .= theme('pager', array('tags' => array()));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= theme('pager', array('tags' => array()));
   $output .= '</div></div>';
   return $output;
 }
 
-function station_catalog_search_form($form_state, $field = '', $value ='') {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function station_catalog_search_form($form, $form_state, $field = '', $value = '') {
   $form['search'] = array(
     '#type' => 'fieldset',
     '#title' => t('Search options'),
@@ -110,6 +137,10 @@ function station_catalog_search_form($form_state, $field = '', $value ='') {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function station_catalog_search_form_submit($form, &$form_state) {
   switch ($form_state['values']['op']) {
     case t('Reset'):
@@ -118,7 +149,7 @@ function station_catalog_search_form_submit($form, &$form_state) {
     case t('Filter'):
       // Make sure it's an allowed search field.
       if (in_array($form_state['values']['field'], array('number', 'artist', 'album', 'year', 'label'))) {
-        $form_state['redirect'] = 'station/catalog/search/'. $form_state['values']['field'] .'/'. $form_state['values']['value'];
+        $form_state['redirect'] = 'station/catalog/search/' . $form_state['values']['field'] . '/' . $form_state['values']['value'];
       }
   }
 }

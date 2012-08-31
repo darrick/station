@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file
+ */
+
+/**
  * Field handler to present a link to the user.
  */
 class station_schedule_handler_field_iid_link extends views_handler_field {
@@ -11,7 +15,10 @@ class station_schedule_handler_field_iid_link extends views_handler_field {
 
   function option_definition() {
     $options = parent::option_definition();
-    $options['text'] = array('default' => '', 'translatable' => TRUE);
+    $options['text'] = array(
+      'default' => '',
+      'translatable' => TRUE,
+    );
     return $options;
   }
 
@@ -25,7 +32,7 @@ class station_schedule_handler_field_iid_link extends views_handler_field {
   }
 
   function access() {
-// @TODO figure out a more granular way to handle permissions here.
+    // @TODO figure out a more granular way to handle permissions here.
     return user_access('administer station schedule');
   }
 

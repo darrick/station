@@ -1,7 +1,10 @@
 <?php
+/**
+ * @file
+ */
 
 /**
- * Implementation of hook_views_handlers().
+ * Implements hook_views_handlers().
  */
 function station_schedule_views_handlers() {
   return array(
@@ -28,17 +31,14 @@ function station_schedule_views_handlers() {
       'station_schedule_handler_field_iid_link_remove' => array(
         'parent' => 'station_schedule_handler_field_iid_link',
       ),
-
       // Sort handlers
       'station_schedule_handler_sort_time' => array(
         'parent' => 'views_handler_sort',
       ),
-
       // Argument handlers
       'station_schedule_handler_argument_day' => array(
         'parent' => 'views_handler_argument',
       ),
-
       // Filter handlers
       'station_schedule_handler_filter_time' => array(
         'parent' => 'views_handler_filter_numeric',
@@ -54,17 +54,11 @@ function station_schedule_views_handlers() {
 }
 
 /**
- * Implementation of hook_views_plugins().
+ * Implements hook_views_plugins().
  */
 function station_schedule_views_plugins() {
   return array(
-    'module' => 'station_schedule', // This just tells our themes are elsewhere.
-//    'argument validator' => array(
-//      'station_schedule_day' => array(
-//        'title' => t('Validate day'),
-//        'handler' => 'station_schedule_plugin_argument_validate_day',
-//      ),
-//    ),
+    'module' => 'station_schedule', // This just tells our themes are elsewhere. //    'argument validator' => array( //      'station_schedule_day' => array( //        'title' => t('Validate day'), //        'handler' => 'station_schedule_plugin_argument_validate_day', //      ), //    ),
   );
 }
 
@@ -80,7 +74,7 @@ function station_schedule_views_query_substitutions($view) {
 }
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function station_schedule_views_data() {
   // ----------------------------------------------------------------
@@ -107,9 +101,9 @@ function station_schedule_views_data() {
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_numeric',
-       'label' => t('Increment'),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+      'label' => t('Increment'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -129,9 +123,9 @@ function station_schedule_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_string',
-       'label' => t('Unscheduled message'),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'label' => t('Unscheduled message'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -208,7 +202,7 @@ function station_schedule_views_data() {
     'relationship' => array(
       'base' => 'node',
       'base field' => 'nid',
-      'field' => 'schedule_nid',
+      'field' => 'program_nid',
       'handler' => 'views_handler_relationship',
       'label' => t('Program'),
     ),
@@ -267,9 +261,9 @@ function station_schedule_views_data() {
       'handler' => 'views_handler_field_boolean',
       'click sortable' => TRUE,
     ),
-     'filter' => array(
-       'handler' => 'views_handler_filter_boolean_operator',
-       'label' => t('Active'),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Active'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -288,9 +282,7 @@ function station_schedule_views_data_alter(&$data) {
     'title' => t('Scheduled Programs'),
     'help' => t('All programs on this schedule.'),
     'real field' => 'schedule_nid',
-//    'field' => array(
-//      'handler' => 'views_handler_field_upload_fid',
-//    ),
+    //    'field' => array( //      'handler' => 'views_handler_field_upload_fid', //    ),
     'filter' => array(
       'handler' => 'station_schedule_handler_filter_schedule_item',
       'title' => t('Has scheduled programs'),
@@ -314,9 +306,7 @@ function station_schedule_views_data_alter(&$data) {
     'title' => t('Program Schedule Times'),
     'help' => t('All the times this program is scheduled.'),
     'real field' => 'program_nid',
-//    'field' => array(
-//      'handler' => 'views_handler_field_upload_fid',
-//    ),
+    //    'field' => array( //      'handler' => 'views_handler_field_upload_fid', //    ),
     'filter' => array(
       'handler' => 'station_schedule_handler_filter_schedule_item',
       'title' => t('Is scheduled'),

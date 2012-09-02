@@ -197,26 +197,18 @@ function station_schedule_item_edit_remove_submit($form, &$form_state) {
 function station_schedule_item_edit_form_validate($form, &$form_state) {
   $start = $form_state['values']['range']['start'];
   $finish = $form_state['values']['range']['finish'];
-
   //$result = db_query('SELECT count(*) AS count, min(s.start) AS start, max(s.finish) AS finish FROM {station_schedule_item} s WHERE s.schedule_nid = :s.schedule_nid AND s.iid <> :s.iid AND s.finish > :s.finish AND s.start < :s.start', array(':s.schedule_nid' => $form_state['values']['schedule_nid'], ':s.iid' => $form_state['values']['iid'], ':s.finish' => $start, ':s.start' => $finish));
   $query = db_select('station_schedule_item', 's');
-  $query->addExpression('count(*)', 'count');
-  $query->addExpression('min(s.start)', 'start');
-  $query->addExpression('max(s.finish)', 'finish');
+  $query->fields('s', array('finish', 'start'));
   $query->condition('s.schedule_nid', $form_state['values']['schedule_nid']);
-  $query->condition('s.iid', $form_state['values']['iid']);
-  $query->condition('s.iid', $form_state['values']['iid'], '<>');
+  if ($form_state['values']['iid']) {
+    $query->condition('s.iid', $form_state['values']['iid'], '<>');
+  }
   $query->condition('s.finish', $start, '>');
   $query->condition('s.start', $finish, '<');
   $result = $query->execute();
-  //if ($overlap = db_fetch_object($result)) {
   foreach ($result as $overlap) {
-    if ($overlap->count == 1) {
-      form_set_error('', t("The program overlaps another scheduled item at %time.", array('%time' => theme('station_dayhour_range', array('start' => $overlap->start, 'finish' => $overlap->finish)))));
-    }
-    elseif ($overlap->count > 1) {
-      form_set_error('', t("The program overlaps %number scheduled items from %time.", array('%time' => theme('station_dayhour_range', array('start' => $overlap->start, 'finish' => $overlap->finish)), '%number' => $overlap->count)));
-    }
+    form_set_error('', t("The program overlaps another scheduled item at %time.", array('%time' => theme('station_dayhour_range', array('start' => $overlap->start, 'finish' => $overlap->finish)))));
   }
 
   // check for a valid program title

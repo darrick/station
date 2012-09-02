@@ -89,10 +89,13 @@ function station_theme() {
  * Implements hook_block_info().
  */
 function station_block_info() {
-  $blocks['current_program'] = array(
-    'info' => t('Station: Current Program'),
-    'cache' => DRUPAL_NO_CACHE,
-  );
+  $schedules = station_get_schedules();
+  foreach ($schedules as $schedule) {
+    $blocks[$schedule['nid']] = array(
+      'info' => t('Station: Current Program of Schedule ' . $schedule['title']),
+      'cache' => DRUPAL_NO_CACHE,
+    );
+  }
   return $blocks;
 }
 
@@ -101,12 +104,12 @@ function station_block_info() {
  */
 function station_block_view($delta = '') {
   if (user_access('view_station_schedule_content')) {
-    switch ($delta) {
-      case 'current_program':
-        return array(
-          'subject' => t('On Air'),
-          'content' => station_block_current_program(),
-        );
+    $schedules = station_get_schedules();
+    if (array_key_exists($delta, $schedules)) {
+      return array(
+        'subject' => t('On Air on ' . $schedules[$delta]['title']),
+        'content' => station_block_current_program($schedules[$delta]),
+      );
     }
   }
   return;
@@ -136,7 +139,6 @@ function station_ajax_form_handler() {
     'storage' => NULL,
     'submitted' => FALSE,
   );
-print('asdf');
   // $form_build_id is randomly generated when a form is initializing
   $form_build_id = $_POST['form_build_id'];
 
@@ -337,8 +339,7 @@ function station_get_program_at($timestamp, $schedule_nid) {
  *
  * @return string
  */
-function station_block_current_program() {
-  $schedule = station_default_schedule();
+function station_block_current_program($schedule) {
   $program = station_get_program_at(REQUEST_TIME, $schedule['nid']);
   return theme('station_block_current_program', array('schedule' => $schedule, 'program' => $program));
 }

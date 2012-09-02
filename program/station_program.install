@@ -194,7 +194,7 @@ function _station_program_installed_instances() {
   return array(
     'station_program_genre' => array(
       'field_name' => 'station_program_genre',
-      'label' => $t('Text genre'),
+      'label' => $t('Genre'),
       'description' => $t('A free-form description of the musical genres played on the program.'),
       'required' => TRUE,
       'widget' => array(

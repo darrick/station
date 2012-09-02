@@ -90,12 +90,15 @@ function station_theme() {
  */
 function station_block_info() {
   $schedules = station_get_schedules();
-  foreach ($schedules as $schedule) {
-    $blocks[$schedule['nid']] = array(
-      'info' => t('Station: Current Program of Schedule ' . $schedule['title']),
-      'cache' => DRUPAL_NO_CACHE,
-    );
-  }
+  $blocks = array();
+  if (!empty($schedule)) {
+    foreach ($schedules as $schedule) {
+      $blocks[$schedule['nid']] = array(
+        'info' => t('Station: Current Program of Schedule ' . $schedule['title']),
+        'cache' => DRUPAL_NO_CACHE,
+      );
+    }
+  } 
   return $blocks;
 }
 
@@ -105,7 +108,7 @@ function station_block_info() {
 function station_block_view($delta = '') {
   if (user_access('view_station_schedule_content')) {
     $schedules = station_get_schedules();
-    if (array_key_exists($delta, $schedules)) {
+    if (is_array($schedules) && array_key_exists($delta, $schedules)) {
       return array(
         'subject' => t('On Air on ' . $schedules[$delta]['title']),
         'content' => station_block_current_program($schedules[$delta]),

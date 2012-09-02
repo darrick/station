@@ -19,7 +19,7 @@ function station_program_install() {
   // to store the name of the translation function.
   $t = get_t();
 
-  // We define the station_progrma node type as an associative array.
+  // We define the station_program node type as an associative array.
   $station_program = array(
     'type' => 'station_program',
     'name' => $t('Program'),
@@ -173,6 +173,72 @@ function _station_program_installed_fields() {
         //'maxlength' =>  255,
       //)
     ),
+    'field_station_program_css_class' => array(
+      'translatable' => '0',
+      'entity_types' => array(),
+      'settings' => array(
+        'max_length' => '255',
+      ),
+      'storage' => array(
+        'type' => 'field_sql_storage',
+        'settings' => array(),
+        'module' => 'field_sql_storage',
+        'active' => '1',
+        'details' => array(
+          'sql' => array(
+            'FIELD_LOAD_CURRENT' => array(
+              'field_data_field_station_program_css_class' => array(
+                'value' => 'field_station_program_css_class_value',
+                'format' => 'field_station_program_css_class_format',
+              ),
+            ),
+            'FIELD_LOAD_REVISION' => array(
+              'field_revision_field_station_program_css_class' => array(
+                'value' => 'field_station_program_css_class_value',
+                'format' => 'field_station_program_css_class_format',
+              ),
+            ),
+          ),
+        ),
+      ),
+      'foreign keys' => array(
+        'format' => array(
+          'table' => 'filter_format',
+          'columns' => array(
+            'format' => 'format',
+          ),
+        ),
+      ),
+      'indexes' => array(
+        'format' => array(
+          'format',
+        ),
+      ),
+      'field_name' => 'field_station_program_css_class',
+      'type' => 'text',
+      'module' => 'text',
+      'active' => '1',
+      'locked' => '0',
+      'cardinality' => '1',
+      'deleted' => '0',
+      'columns' => array(
+        'value' => array(
+          'type' => 'varchar',
+          'length' => '255',
+          'not null' => FALSE,
+        ),
+        'format' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+      'bundles' => array(
+        'node' => array(
+          'station_program',
+        ),
+      ),
+    ),
   );
 }
 
@@ -206,6 +272,51 @@ function _station_program_installed_instances() {
       'field_name' => 'station_program_url',
       'label' => $t('Homepage URL'),
       'description' => $t('Link to the program\'s website.'),
+    ),
+    'field_station_program_css_class' => array(
+      'label' => 'Css class for schedule',
+      'widget' => array(
+        'weight' => '3',
+        'type' => 'text_textfield',
+        'module' => 'text',
+        'active' => 1,
+        'settings' => array(
+          'size' => '60',
+        ),
+      ),
+      'settings' => array(
+        'text_processing' => '0',
+        'user_register_form' => FALSE,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+          'type' => 'text_default',
+          'settings' => array(),
+          'module' => 'text',
+          'weight' => 4,
+        ),
+        'teaser' => array(
+          'type' => 'hidden',
+          'label' => 'hidden',
+          'settings' => array(),
+          'weight' => 0,
+        ),
+        'example_node_list' => array(
+          'type' => 'hidden',
+          'label' => 'above',
+          'settings' => array(),
+          'weight' => 0,
+        ),
+      ),
+      'required' => 0,
+      'description' => 'Add a ccs class that will be outputted on the schedule view. Useful for adding setting colors or fonts per program on the schedule view. Only numbers, letters, underscores and dashes allowed.',
+      'default_value' => NULL,
+      'field_name' => 'field_station_program_css_class',
+      'entity_type' => 'node',
+      'bundle' => 'station_program',
+      'deleted' => '0',
     ),
   );
 }

@@ -23,25 +23,26 @@ function station_schedule_item_list($node) {
     foreach ($items as $item) {
       // Display blocks for unscheduled time periods
       if ($last_finish != $item->start) {
-        $row[$day] .= theme('station_schedule_admin_nonitem', array('node' => $node, 'start' => $last_finish, 'finish' => $item->start));
+        $row[$day] .= theme('station_schedule_admin_nonitem', array('node' => $node, 'start' => $last_finish, 'finish' => $item->start, 'css_class' => 'unscheduled'));
       }
       $last_finish = $item->finish;
 
       // Display the schedule item
       $item->program = node_load($item->program_nid);
-      $row[$day] .= theme('station_schedule_admin_item', array('node' => $node, 'item' => $item));
+      $css_class = field_get_items('node', $item->program, 'field_station_program_css_class');
+      $row[$day] .= theme('station_schedule_admin_item', array('node' => $node, 'item' => $item, 'css_class' => $css_class[0]['value']));
     }
     // Display a block for any remaining time during the day.
     if ($last_finish < $day_finish) {
-      $row[$day] .= theme('station_schedule_admin_nonitem', array('node' => $node, 'start' => $last_finish, 'finish' => $day_finish));
+      $row[$day] .= theme('station_schedule_admin_nonitem', array('node' => $node, 'start' => $last_finish, 'finish' => $day_finish, 'css_class' => 'unscheduled'));
     }
   }
 
   // Render the table
   return theme('table', array('header' => $header, 'rows' => array($row), 'attributes' => array(
-      'id' => 'station-sch',
-      'class' => array('station-sch-admin'),
-    )));
+    'id' => 'station-sch',
+    'class' => array('station-sch-admin'),
+  )));
 }
 
 /**
@@ -52,7 +53,8 @@ function theme_station_schedule_admin_nonitem($variables) {
   $node = $variables['node'];
   $start = $variables['start'];
   $finish = $variables['finish'];
-  $class = 'station-sch-box station-sch-unscheduled';
+  $css_class = $variables['css_class'];
+  $class = 'station-sch-box station-sch-unscheduled ' . $css_class;
   $height = ($finish - $start);
   $link = url("node/{$node->nid}/schedule/add/0/{$start}/{$finish}");
 
@@ -71,7 +73,8 @@ function theme_station_schedule_admin_nonitem($variables) {
 function theme_station_schedule_admin_item($variables) {
   $node = $variables['node'];
   $item = $variables['item'];
-  $class = 'station-sch-box station-sch-scheduled';
+  $css_class = $variables['css_class'];
+  $class = 'station-sch-box station-sch-scheduled ' . $css_class;
   $height = ($item->finish - $item->start);
   $link = url("node/{$node->nid}/schedule/{$item->iid}/edit");
 

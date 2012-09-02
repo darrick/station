@@ -125,6 +125,19 @@ function station_program_node_access($node, $op, $account) {
 }
 
 /**
+ * Implements hook_validate().
+ */
+function station_program_node_validate($node, $form, &$form_state) {
+  if ($node->type == 'station_program') {
+    $css_class = field_get_items('node', $node, 'field_station_program_css_class');
+    //if (!preg_match('/^-?[_a-zA-Z]+[_a-zA-Z0-9-]*$/', $css_class[0]['value'])) {
+    if (!preg_match('/^[_a-zA-Z0-9-]*$/', $css_class[0]['value'])) {
+      form_set_error('field_station_program_css_class', 'Not a valid css class name.');
+    }
+  }
+}
+
+/**
  * Implements hook_form().
  
 function station_program_form($node, &$form_state) {

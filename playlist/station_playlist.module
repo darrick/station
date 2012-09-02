@@ -479,7 +479,7 @@ function _station_playlist_sort_tracks($a, $b) {
  *
  * Use this hook to convert form elements to node values.
  */
-function station_playlist_validate(&$node, &$form) {
+function station_playlist_validate($node, $form) {
   // Check for missing track information.
   foreach ($node->tracks as $track) {
     if (station_playlist_track_is_incomplete($track)) {

@@ -1,8 +1,8 @@
 <?php
+
 /**
  * @file
  * Install, update and uninstall functions for the station_schedule module.
- *
  */
 
 /**
@@ -143,12 +143,6 @@ function station_schedule_install() {
  * Implements hook_uninstall().
  */
 function station_schedule_uninstall() {
-  //if (module_exists('content')) {
-  //  module_load_include('inc', 'content', 'includes/content.crud');
-  //  content_field_instance_delete('field_station_program_genre', 'station_program');
-  //  content_field_instance_delete('field_station_program_link', 'station_program');
-  // }
-
   variable_del('station_schedule_redirect_old_urls');
   variable_del('station_schedule_default');
 
@@ -244,14 +238,6 @@ function station_schedule_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0,
-      ),
-      'may_archive' => array(
-        'description' => "Can this item be scaved in the archive?",
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'size' => 'tiny',
         'default' => 0,
       ),
     ),

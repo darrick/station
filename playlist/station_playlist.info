@@ -13,3 +13,4 @@ files[] = station_playlist.views.inc
 files[] = station_playlist.views_default.inc
 files[] = station_playlist.admin.inc
 
+configure = admin/config/station/playlist

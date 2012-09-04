@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  */
@@ -85,4 +86,3 @@ function station_schedule_day_page($node, $day) {
   }
   return drupal_not_found();
 }
-

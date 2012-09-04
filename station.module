@@ -24,18 +24,23 @@ function station_menu() {
 
   $items['admin/config/station'] = array(
     'title' => 'Station',
+    'description' => 'Configure the station module and it\'s submodules.',
+    'position' => 'left',
+    'weight' => -20,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/config/station/core'] = array(
+    'title' => 'Core',
     'description' => 'Change settings for the Station module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('station_admin_settings'),
     'file' => 'station.admin.inc',
+    // Uncomment to render as a tab, but won't display at admin/config page.
+    //'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer site configuration'),
-  );
-  $items['admin/config/station/main'] = array(
-    'title' => 'Core',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('station_admin_settings'),
-    'file' => 'station.admin.inc',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => '-10',
   );
 
@@ -205,8 +210,6 @@ function station_get_schedules() {
         $schedules = $cache->data;
       }
       else {
-        // TO_CHECK
-        //$schedules = xmlrpc(check_url($url . '/xmlrpc.php'), 'station.schedule.get.list');
         $schedules = xmlrpc(check_url($url . '/xmlrpc.php'), array('station.schedule.get.list' => array()));
         if (xmlrpc_errno()) {
           watchdog('station', 'Failed to load schedule info remotely. Error %code : %message', array('%code' => xmlrpc_errno(), '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
@@ -234,8 +237,8 @@ function station_default_schedule() {
     $id = variable_get('station_remote_schedule_nid', 0);
   }
   $schedules = station_get_schedules();
-  // Return the default schedule if one has been selected, if not just use the
-  // first one.
+  // Return the default schedule if one has been selected, if not just use
+  // the first one.
   if (isset($schedules[$id])) {
     return $schedules[$id];
   }
@@ -290,8 +293,8 @@ function station_get_program_at($timestamp, $schedule_nid) {
     // add in our magic offset
     $timestamp += 60 * variable_get('station_remote_schedule_offset', 0);
 
-    // round the time to the nearest 15 minute increment so we can do some
-    // caching
+    // round the time to the nearest 15 minute increment so we can do 
+    // some caching
     $parts = getdate($timestamp);
     $minutes = $parts['minutes'];
     if ($minutes < 15) {
@@ -315,9 +318,6 @@ function station_get_program_at($timestamp, $schedule_nid) {
     }
     else {
       // if it isn't cached get the program info from the server
-      // TO_CHECK
-      //$program = xmlrpc(check_url($url . '/xmlrpc.php'), 'station.program.get.at', $timestamp, $schedule_nid);
-      //$program = xmlrpc(check_url($url . '/xmlrpc.php'), array('station.program.get.at' => array()), array('timestamp' => $timestamp, 'schedule_nid' => $schedule_nid));
       $program = xmlrpc(check_url($url . '/xmlrpc.php'), array('station.program.get.at' => array($timestamp, $schedule_nid)));
 
       if (xmlrpc_errno()) {

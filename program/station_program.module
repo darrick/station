@@ -24,24 +24,6 @@ function station_program_menu() {
 }
 
 /**
- * Implements hook_node_info().
- 
-function station_program_node_info() {
-  return array(
-    'station_program' => array(
-      'name' => t('Program'),
-      'base' => 'station_program',
-      'description' => t('A radio program that you can schedule.'),
-      'has_title' => TRUE,
-      'title_label' => t('Title'),
-      //'has_body' => TRUE,
-      //'body_label' => t('Description'),
-    ),
-  );
-}
-*/
-
-/**
  * Implements hook_permission().
  */
 function station_program_permission() {
@@ -54,12 +36,6 @@ function station_program_permission() {
       'title' => t('view station program content'),
       'description' => t('TODO Add a description for \'view station program content\''),
     ),
-/*
-    'create station program content' => array(
-      'title' => t('create station program content'),
-      'description' => t('TODO Add a description for \'create station program content\''),
-    ),
-*/
     'create_station_program_content' => array(
       'title' => t('create station program content'),
       'description' => t('TODO Add a description for \'create station program content\''),
@@ -138,66 +114,11 @@ function station_program_node_validate($node, $form, &$form_state) {
 }
 
 /**
- * Implements hook_form().
- 
-function station_program_form($node, &$form_state) {
-return node_content_form($node, $form_state);
-
-  $type = node_type_get_type($node);
-
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title' => check_plain($type->title_label),
-    '#default_value' => !empty($node->title) ? $node->title : '',
-    '#required' => TRUE,
-    '#maxlength' => 128,
-    '#description' => t('The name of the program. You should avoid making major changes to this without telling the programming director.'),
-  );
-
-  $form['genre'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Genre'),
-    '#description' => t('A free-form description of the musical genres played on the program.'),
-    '#default_value' => !empty($node->genre) ? $node->genre : '',
-    '#required' =>  true,
-    '#maxlength' => 200,
-    '#weight' => -2,
-  );
-  $form['url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Homepage URL'),
-    '#description' => t("Link to the program's website."),
-    '#default_value' => !empty($node->url) ? $node->url : '',
-    '#maxlength' =>  255,
-    '#weight' => -1,
-  );
-
-// * TODO: Check if needed
-//  if ($type->has_body) {
-//    $form['body_filter']['body'] = array(
-//      '#type' => 'textarea',
-//      '#title' => check_plain($type->body_label),
-//      '#default_value' => !empty($node->body) ? $node->body : '',
-//      '#rows' => 10,
-//      '#required' => ($type->min_word_count > 0),
-//      '#description' => t("Free form description of the show."),
-//    );
-//    $form['body_filter']['format'] = filter_form($node->format);  
-//  }
-
-  return $form;
-
-}
-*/
-
-/**
  * Retrieve a pipe delimited string of autocomplete suggestions for existing programs
  */
 function station_program_autocomplete($string = '') {
   $matches = array();
   $result = db_query_range("SELECT DISTINCT title, nid FROM {node} WHERE type = :type AND LOWER(title) LIKE LOWER(:str) AND status = :status ORDER BY title", 0, 10, array(':type' => 'station_program', ':status' => 1, ':str' => '%' . $string . '%'));
-  //while ($program = db_fetch_object($result)) {
-  //TODO: Check
   foreach ($result as $program) {
     $matches[$program->title] = check_plain($program->title);
   }

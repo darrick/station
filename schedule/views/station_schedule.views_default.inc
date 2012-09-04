@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  */
@@ -1073,5 +1074,3 @@ function station_schedule_views_default_views() {
 
   return $views;
 }
-
-

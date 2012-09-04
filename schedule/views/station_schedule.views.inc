@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  */
@@ -252,21 +253,6 @@ function station_schedule_views_data() {
     ),
     'sort' => array(
       'handler' => 'station_schedule_handler_sort_time',
-    ),
-  );
-  $data['station_schedule_item']['may_archive'] = array(
-    'title' => t('May be archived'),
-    'help' => t("Is this program allowed to be stored in the Station Archive."),
-    'field' => array(
-      'handler' => 'views_handler_field_boolean',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_boolean_operator',
-      'label' => t('Active'),
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
     ),
   );
 

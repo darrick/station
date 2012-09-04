@@ -10,18 +10,6 @@ function station_schedule_help($path, $arg) {
 
     case 'admin/config/station/schedule':
       return t("These settings allow you to configure the station's schedule.");
-
-    case 'node/%/view/%':
-      $output = '';
-      if (station_has_archive()) {
-        $output .= t('The !listen_img listen link will take you to the list of archived copies of a show. The !rss_img link will take you to an RSS feed of the archived copies suitable for podcasting.',
-          array(
-            '!listen_img' => theme('image', array('path' => drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif', 'width' => 'listen')),
-            '!rss_img' => theme('image', array('path' => drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif', 'width' => 'podcast')),
-          )
-        );
-      }
-      return $output;
   }
 }
 
@@ -31,11 +19,13 @@ function station_schedule_help($path, $arg) {
 function station_schedule_menu() {
   $items['admin/config/station/schedule'] = array(
     'title' => 'Schedule',
+    'description' => 'Configure default schedule.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('station_schedule_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'station_schedule.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+    //'type' => MENU_LOCAL_TASK,
   );
 
   if (variable_get('station_schedule_redirect_old_urls', 0)) {
@@ -375,19 +365,7 @@ function station_schedule_form($node, &$form_state) {
       '#default_value' => empty($stream['urls']) ? '' : implode("\n", $stream['urls']),
     );
   }
-/*
-  if ($type->has_body) {
-    $form['body_filter']['body'] = array(
-      '#type' => 'textarea',
-      '#title' => check_plain($type->body_label),
-      '#default_value' => $node->body,
-      '#rows' => 10,
-      '#required' => ($type->min_word_count > 0),
-      '#description' => t("Description of the schedule."),
-    );
-    $form['body_filter']['format'] = filter_form($node->format);
-  }
-*/
+
   // Stick in out submit handler to put the stream URLs back into an array.
   $form['#submit'] = array('station_schedule_form_submit');
 
@@ -532,7 +510,6 @@ function station_schedule_load($nodes) {
       $start = $day * MINUTES_IN_DAY + $start_hour;
       $end_hour = $settings['end_hour'] * 60;
       $finish = $day * MINUTES_IN_DAY + $end_hour;
-      //$result = db_query('SELECT * FROM {station_schedule_item} i WHERE i.schedule_nid = :i.schedule_nid AND i.finish > :i.finish AND i.start < :i.start ORDER BY i.start', array(':i.schedule_nid' => $node->nid, ':i.finish' => $start, ':i.start' => $finish));
       $query = db_select('station_schedule_item', 'i');
       $query->fields('i');
       $query->condition('i.schedule_nid', $node->nid);
@@ -540,7 +517,6 @@ function station_schedule_load($nodes) {
       $query->condition('i.start', $finish, '<');
       $query->orderBy('i.start');
       $result = $query->execute();
-      //while ($s = db_fetch_object($result)) {
       foreach ($result as $s) {
         // If a show spans a day, limit its start and finish times to be with-in
         // the day.
@@ -593,13 +569,9 @@ function station_schedule_delete($node) {
   // Remove any old streams files for this node.
   file_scan_directory('public://station', '/' . $node->nid . '-.*\.m3u$/', array('callback' => 'file_unmanaged_delete', 'recurse' => FALSE));
 
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query("DELETE FROM {station_schedule_item} WHERE schedule_nid = %d", $node->nid) */
   db_delete('station_schedule_item')
     ->condition('schedule_nid', $node->nid)
     ->execute();
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid) */
   db_delete('station_schedule')
     ->condition('nid', $node->nid)
     ->execute();
@@ -609,8 +581,6 @@ function station_schedule_delete($node) {
  * Implements hook_update().
  */
 function station_schedule_update($node) {
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query("DELETE FROM {station_schedule} WHERE nid = %d", $node->nid) */
   db_delete('station_schedule')
     ->condition('nid', $node->nid)
     ->execute();
@@ -621,94 +591,12 @@ function station_schedule_update($node) {
 }
 
 /**
- * Implements hook_link().
- *
- * This is implemented so that an edit link is displayed for users who have
- * the rights to edit a node.
- *
- * Deprecated in d7. Use instead hook_node_view.
-function station_schedule_link($type, $node = NULL, $teaser = FALSE) {
-  if ($type == 'node') {
-    switch ($node->type) {
-      case 'station_program':
-        return station_schedule_archive_links($node->nid);
-      case 'station_playlist':
-        if (!$teaser && !empty($node->field_station_program[0]['nid'])) {
-          return station_schedule_archive_links(!empty($node->field_station_program[0]['nid']));
-        }
-    }
-  }
-  return array();
-}
-*/
-
-/**
- * Implements hook_node_view().
- *
- * This is implemented so that an edit link is displayed for users who have
- * the rights to edit a node.
- *  
- 
-function station_schedule_view($node, $view_mode) {
-  switch (node->type) {
-    case 'station_program':
-      $links = station_schedule_archive_links($node->nid);
-      $node->content['links']['station_schedule_archive'] = array(
-        '#links' => $links;
-      )
-    case 'station_playlist':
-      if (!$teaser && !empty($node->field_station_program[0]['nid'])) {
-        $links = station_schedule_archive_links(!empty($node->field_station_program[0]['nid']));
-        $node->content['links']['station_schedule_archive'] = array(
-          '#links' => $links;
-        )
-      }
-  }
-}
-
-/**
- * Load listen links for a program.
- * @param $program_nid Node id of the program.
- * @param $short bool true for short version of links
- */
-function station_schedule_archive_links($program_nid, $short = FALSE) {
-  $archive_url = station_get_archive_url();
-  $may_archive = db_query('SELECT COUNT(*) FROM {station_schedule_item} s WHERE s.program_nid = :s.program_nid AND s.may_archive = :s.may_archive', array(':s.program_nid' => $program_nid, ':s.may_archive' => 1))->fetchField();
-
-  if ($archive_url && $may_archive ) {
-    $listen_url = $archive_url . $program_nid;
-    $rss_url = $archive_url . $program_nid . '/feed';
-
-    $listen_img = drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif';
-    $rss_img = drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif';
-
-    return array(
-      'station_archive_listen' => array(
-        'href' => $listen_url,
-        'title' => theme('image', array('path' => $listen_img, 'width' => t('Listen'))) . (($short) ? '' : ' ' . t('Listen to previous')),
-        'attributes' => array('title' => t('Listen to previous broadcasts of this show')),
-        'html' => TRUE,
-      ),
-      'station_archive_rss' => array(
-        'href' => $rss_url,
-        'title' => theme('image', array('path' => $rss_img, 'width' => t('Podcast'))) . (($short) ? '' : ' ' . t('Subscribe to podcast')),
-        'attributes' => array('title' => t('Grab this show with your podcast software')),
-        'html' => TRUE,
-      ),
-    );
-  }
-  return array();
-}
-
-/**
  * Implements hook_user_load().
  */
 function station_schedule_user_load($users) {
   foreach ($users as &$this_user) {
     $field = field_info_field('field_station_program_dj');
     $db_info = $field['storage'];
-    // TODO Please convert this statement to the D7 database API syntax.
-    //$result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n INNER JOIN {" . $db_info['table'] . "} f ON n.vid = f.vid WHERE f." . $db_info['columns']['uid']['column'] . "=" . $account->uid . " AND n.status = 1"));
     $query = db_select('node', 'n');
     $query->fields('n', array('nid', 'title'));
     $query->innerJoin('field_data_' . $field['field_name'], 'f', 'n.vid = f.revision_id');
@@ -756,8 +644,6 @@ function station_schedule_user_cancel($edit, $account, $method) {
   if ($method == 'user_cancel_reassign') {
     $field = field_info_field('field_station_program_dj');
     $db_info = $field['storage'];
-    // TODO Please convert this statement to the D7 database API syntax.
-    // db_query("DELETE FROM {" . $db_info['table'] . "} WHERE " . $db_info['columns']['uid']['column'] . "=" . $account->uid);
     $query = db_delete($db_info['table'])
       ->condition($db_info['columns']['uid']['column'],  $account->uid)
       ->execute();
@@ -773,8 +659,6 @@ function station_schedule_user_cancel($edit, $account, $method) {
 function station_schedule_user_delete($account) {
   $field = field_info_field('field_station_program_dj');
   $db_info = $field['storage'];
-  // TODO Please convert this statement to the D7 database API syntax.
-  // db_query("DELETE FROM {" . $db_info['table'] . "} WHERE " . $db_info['columns']['uid']['column'] . "=" . $account->uid);
   $query = db_delete($db_info['table'])
     ->condition($db_info['columns']['uid']['column'],  $account->uid)
     ->execute();
@@ -792,10 +676,7 @@ function station_schedule_node_load($nodes) {
       $node->times = array();
       // Load the schedule items in order of start time while taking into
       // account Drupal's first day of the week setting.
-      //TODO: check
-      //$result = db_query('SELECT * FROM {station_schedule_item} s INNER JOIN {node} n on n.nid = s.schedule_nid WHERE s.program_nid = :s.program_nid AND n.status = :n.status ORDER BY s.schedule_nid, ((s.start + %d) %% %d)', array(':s.program_nid' => $node->nid, ':n.status' => 1, '' => MINUTES_IN_DAY * (7 - variable_get('date_first_day', 0)), '' => MINUTES_IN_WEEK));
-      // TODO: adjust for the first day of the week
-      //$minutes_remainder = MINUTES_IN_DAY * (7 - variable_get('date_first_day', 0));
+      $minutes_remainder = MINUTES_IN_DAY * (6);// - variable_get('date_first_day', 0));
       $query = db_select('station_schedule_item', 's');
       $query->innerJoin('node', 'n', 'n.nid = s.schedule_nid');
       $query->fields('s');
@@ -803,7 +684,7 @@ function station_schedule_node_load($nodes) {
       $query->condition('s.program_nid', $node->nid);
       $query->condition('n.status', 1);
       $query->orderBy('s.schedule_nid');
-      $query->orderBy('s.start');
+      $query->orderBy('(s.start + ' . $minutes_remainder . ') % ' . MINUTES_IN_WEEK);
       $result = $query->execute();
       while ($item = $result->fetchAssoc()) {
         $node->times[$item['schedule_nid']][] = $item;
@@ -817,14 +698,6 @@ function station_schedule_node_load($nodes) {
  */
 function station_schedule_node_view($node, $view_mode, $langcode) {
   if ($node->type == 'station_program') {
-    // TODO: move it into the theme function(?)
-    //if ($page) {
-    //  $breadcrumb = drupal_get_breadcrumb();
-    //  $breadcrumb[] = l(t('Station'), 'station');
-    //  $breadcrumb[] = l(t('Programs'), 'station/programs');
-    //  drupal_set_breadcrumb($breadcrumb);
-    //}
-
     $djs = station_schedule_program_get_themed_djs($node);
     $schedules = station_get_schedules();
     $times_by_schedule = station_schedule_program_get_themed_times($node);
@@ -925,9 +798,6 @@ function station_schedule_program_get_themed_djs($program_node) {
   $djs = array();
   if (!empty($field_station_program_djs_array)) {
     foreach ($field_station_program_djs_array['und'] as $entry) {
-      // TODO Convert "user_load" to "user_load_multiple" if "$entry" is other than a uid.
-      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-      // Example: array_shift(user_load_multiple(array(), $entry))
       $user = user_load($entry['uid']);
       $djs[] = theme('username', array('account' => $user));
     }
@@ -1002,7 +872,6 @@ function station_schedule_get_list() {
   global $base_url;
 
   $schedules = array();
-  //$result = db_query("SELECT n.nid, n.title, ss.increment, ss.streams, ss.unscheduled_message FROM {node} n INNER JOIN {station_schedule} ss ON n.nid = ss.nid WHERE n.type = :n.type AND n.status = :n.status", array(':n.type' => 'station_schedule', ':n.status' => '1'));
   $query = db_select('node', 'n');
   $query->innerJoin('station_schedule', 'ss', 'n.nid = ss.nid');
   $query->fields('n', array('nid', 'title'));
@@ -1051,6 +920,7 @@ function station_schedule_get_program_list() {
 
   return $schedules;
 }
+
 /**
  * Get the program playing at a certain time. If no time is provide, use the
  * current time.
@@ -1067,7 +937,6 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
   // Load the schedule item based on the time.
   $minute = station_minute_from_local_ts(station_local_ts($gmt_timestamp));
 
-  //$schedule_item = db_query('SELECT * FROM {station_schedule_item} s WHERE s.schedule_nid = :s.schedule_nid AND s.start <= :s.start AND s.finish > :s.finish', array(':s.schedule_nid' => $schedule_nid, ':s.start' => $minute, ':s.finish' => $minute))->fetch();
   $query = db_select('station_schedule_item', 's');
   $query->fields('s');
   $query->condition('s.schedule_nid', $schedule_nid);
@@ -1081,7 +950,6 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
     if ($node = node_load($schedule_item['program_nid'])) {
       // set this so that if the show is scheduled for multiple times the caller
       // can easily figure out which one.
-      $node->may_archive = $schedule_item['may_archive'];
       // put this in so they can use a pretty url
       $node->node_url = url('node/' . $node->nid, array('absolute' => TRUE));
       return $node;
@@ -1099,7 +967,6 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
  * @return schedule item object
  */
 function station_schedule_item_load($iid) {
-  //$result = db_query('SELECT * FROM {station_schedule_item} i WHERE i.iid = :i.iid', array(':i.iid' => $iid))->fetch();
   $query = db_select('station_schedule_item', 'i');
   $query->fields('i');
   $query->condition('i.iid', $iid);
@@ -1118,15 +985,6 @@ function station_schedule_item_load($iid) {
 function station_schedule_view($node, $view_mode) {
   drupal_add_css(drupal_get_path('module', 'station_schedule') . '/station_schedule.css');
   
-  // TODO: move to theme function(?)
-  //if ($page) {
-  //  $breadcrumb = drupal_get_breadcrumb();
-  //  $breadcrumb[] = l(t('Station'), 'station');
-  //  $breadcrumb[] = l(t('Schedules'), 'station/schedules');
-  //  drupal_set_breadcrumb($breadcrumb);
-  //}
-
-  //$node = node_prepare($node, $teaser);
   if ($view_mode == 'teaser') {
     $node->content['streams'] = array(
       '#title' => t('Webstreams'),
@@ -1207,7 +1065,6 @@ function station_schedule_write_m3u($node) {
   $dir = 'public://station';
   file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
   $status = file_prepare_directory($dir, FILE_MODIFY_PERMISSIONS);
-  //$station_path = file_prepare_directory($station_path, FILE_CREATE_DIRECTORY);
 
   // Remove any old streams files for this node.
   file_scan_directory('public://station', '/' . $node->nid . '-.*\.m3u$/', array('callback' => 'file_unmanaged_delete', 'recurse' => FALSE));
@@ -1228,9 +1085,6 @@ function station_schedule_file_download($uri) {
   }
   return NULL;
 }
-
-
-
 
 function expand_station_schedule_daytime_range($element) {
   if (is_array($element['#value'])) {
@@ -1283,9 +1137,6 @@ function station_schedule_daytime_range_validate($form, &$form_state) {
   }
   return $form;
 }
-
-
-
 
 /**
  * @todo Please document this function.

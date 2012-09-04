@@ -1,8 +1,8 @@
 <?php
+
 /**
  * @file
  * Helper functions for day and time handling.
- *
  */
 
 // There are 1440 minutes in a day (60minute * 24hours = 1day).

@@ -1,24 +1,14 @@
 <?php
+
 /**
  * @file
  * Install, update and uninstall functions for the station_playlist module.
- *
  */
 
 /**
  * Implements hook_install().
  */
 function station_playlist_install() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_install_schema('station_playlist')
-
-  // To deal with the possibility that we're being installed at the same time
-  // as CCK and the field modules we depend on, we need to manually enable the
-  // the modules to ensure they're available before we create our fields.
-  //module_enable(array('content', 'nodereference', 'date'));
-
-
-
   // Create all the fields we are adding to our content type.
   // http://api.drupal.org/api/function/field_create_field/7
   foreach (_station_playlist_installed_fields() as $field) {
@@ -29,7 +19,6 @@ function station_playlist_install() {
   // http://api.drupal.org/api/function/field_create_instance/7
   foreach (_station_playlist_installed_instances() as $instance) {
     $instance['entity_type'] = 'node';
-    //$instance['bundle'] = $station_playlist['type'];
     $instance['bundle'] = 'station_playlist';
     field_create_instance($instance);
   }
@@ -278,43 +267,12 @@ function _station_playlist_installed_instances() {
       'deleted' => '0',
     ),
   );
-
-//  switch ($GLOBALS['db_type']) {
-//    case 'mysql':
-//    case 'mysqli':
-//      db_query("
-//        CREATE TABLE  {station_playlist_track} (
-//          `nid` int(10) unsigned NOT NULL default '0',
-//          `weight` tinyint(4) unsigned NOT NULL default '0',
-//          `artist` varchar(255) NOT NULL default '',
-//          `album` varchar(255) NOT NULL default '',
-//          `title` varchar(255) NOT NULL default '',
-//          `label` varchar(255) NOT NULL default '',
-//          `link` varchar(255) NOT NULL default '',
-//          KEY `station_playlist_artist` (`artist`),
-//          KEY `station_playlist_nid_weight` (`nid`,`weight`),
-//          KEY `station_playlist_title` (`title`),
-//          KEY `station_playlist_album` (`album`),
-//          KEY `station_playlist_label` (`label`)
-//        ) //!40100 DEFAULT CHARACTER SET utf8 ;
-//      ");
-//      break;
-//  }
 }
 
 /**
  * Implements hook_uninstall().
  */
 function station_playlist_uninstall() {
-  //if (module_exists('content')) {
-    //module_load_include('inc', 'content', 'includes/content.crud');
-    //content_field_instance_delete('field_station_program', 'station_playlist');
-    //content_field_instance_delete('field_station_playlist_date', 'station_playlist');
-  //}
-
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_uninstall_schema('station_playlist')
-
   $field_instance_program = field_info_instance('node', 'field_station_program', 'station_playlist');
   $field_instance_date    = field_info_instance('node', 'field_station_playlist_date', 'station_playlist');
 
@@ -393,7 +351,6 @@ function station_playlist_schema() {
       'station_playlist_album' => array('album'),
       'station_playlist_label' => array('label'),
     ),
-    //    'primary key' => array('vid', 'weight'),
   );
 
   return $schema;

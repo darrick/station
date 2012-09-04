@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Install, update and uninstall functions for the station module.
@@ -8,6 +9,5 @@
  * Implements hook_uninstall().
  */
 function station_uninstall() {
-  variable_del('station_remote_archive_url');
   variable_del('station_remote_schedule_url');
 }

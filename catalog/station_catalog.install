@@ -1,18 +1,15 @@
 <?php
+
 /**
  * @file
  * Install, update and uninstall functions for the station_catalog module.
  *
  */
 
-
 /**
  * Implements hook_install().
  */
 function station_catalog_install() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_install_schema('station_catalog')
-
   // Create a vocabulary for the albums.
   _station_catalog_get_vid();
 
@@ -135,9 +132,6 @@ function station_catalog_install() {
  * Implements hook_uninstall().
  */
 function station_catalog_uninstall() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_uninstall_schema('station_catalog')
-
   field_delete_field('field_album_genre');
 
   if ($vid = variable_get('station_catalog_vocabulary', FALSE)) {
@@ -208,14 +202,6 @@ function station_catalog_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-   /*'description' => array(
-        'description' => 'A description of the album',
-        'type' => 'text',
-        'settings' => array(
-          'size' => 'normal',
-        ),
-        'not null' => TRUE,
-      ),*/
     ),
     'indexes' => array(
       'station_catalog_artist' => array('artist'),

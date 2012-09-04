@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  */
@@ -99,7 +100,6 @@ function station_schedule_item_add($schedule, $program_id = NULL, $start = 0, $f
   $schedule_item->program_nid = $program_id;
   $schedule_item->start = (int) $start;
   $schedule_item->finish = (int) $finish;
-  $schedule_item->may_archive = TRUE;
 
   return drupal_get_form('station_schedule_item_edit_form', $schedule, $schedule_item, $start, $finish);
 }
@@ -155,12 +155,6 @@ function station_schedule_item_edit_form($form, &$form_state, $schedule, $schedu
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program',
   );
-  $form['may_archive'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Can be saved in Station Archive'),
-    '#default_value' => $schedule_item->may_archive,
-    '#description' => t('Checking this indicates that the Station Archive module can save audio recordings of the program at this timeslot to the archive.'),
-  );
 
   $form['buttons']['submit'] = array(
     '#type' => 'submit',
@@ -200,7 +194,6 @@ function station_schedule_item_edit_remove_submit($form, &$form_state) {
 function station_schedule_item_edit_form_validate($form, &$form_state) {
   $start = $form_state['values']['range']['start'];
   $finish = $form_state['values']['range']['finish'];
-  //$result = db_query('SELECT count(*) AS count, min(s.start) AS start, max(s.finish) AS finish FROM {station_schedule_item} s WHERE s.schedule_nid = :s.schedule_nid AND s.iid <> :s.iid AND s.finish > :s.finish AND s.start < :s.start', array(':s.schedule_nid' => $form_state['values']['schedule_nid'], ':s.iid' => $form_state['values']['iid'], ':s.finish' => $start, ':s.start' => $finish));
   $query = db_select('station_schedule_item', 's');
   $query->fields('s', array('finish', 'start'));
   $query->condition('s.schedule_nid', $form_state['values']['schedule_nid']);
@@ -214,9 +207,6 @@ function station_schedule_item_edit_form_validate($form, &$form_state) {
     form_set_error('', t("The program overlaps another scheduled item at %time.", array('%time' => theme('station_dayhour_range', array('start' => $overlap->start, 'finish' => $overlap->finish)))));
   }
 
-  // check for a valid program title
-  // TODO node_load_multiple returns an array of nodes, rather than a single node
-  // It should be working though.
   if (!$prog = node_load_multiple(array(), array('title' => $form_state['values']['program_title'], 'type' => 'station_program'))) {
     form_set_error('program_title', t('You need to specify a valid program name.'));
   }
@@ -227,8 +217,6 @@ function station_schedule_item_edit_form_validate($form, &$form_state) {
  * @see http://drupal.org/node/1354
  */
 function station_schedule_item_edit_form_submit($form, &$form_state) {
-  // TODO node_load_multiple returns an array of nodes, rather than a single node
-  // Modification: just using the first node object with array_shift().
   $nodes = node_load_multiple(array(), array('type' => 'station_program', 'title' => $form_state['values']['program_title']));
   $program = array_shift($nodes);
   $schedule = node_load($form_state['values']['schedule_nid']);
@@ -239,7 +227,6 @@ function station_schedule_item_edit_form_submit($form, &$form_state) {
     'program_nid' => $program->nid,
     'start' => $form_state['values']['range']['start'],
     'finish' => $form_state['values']['range']['finish'],
-    'may_archive' => $form_state['values']['may_archive'],
   );
 
   if ($form_state['values']['iid']) {
@@ -295,8 +282,6 @@ function station_schedule_item_remove_form($form, &$form_state, $schedule, $sche
  */
 function station_schedule_item_remove_form_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("DELETE FROM {station_schedule_item} WHERE iid = %d", $form_state['values']['iid']) */
     db_delete('station_schedule_item')
       ->condition('iid', $form_state['values']['iid'])
       ->execute();

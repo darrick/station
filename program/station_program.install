@@ -1,20 +1,14 @@
 <?php
+
 /**
  * @file
  * Install, update and uninstall functions for the station_program module.
- *
  */
 
 /**
  * Implements hook_install().
  */
 function station_program_install() {
-  // TO_DO: check if needed to enables fiels and fields_sql_storage
-  // To deal with the possibility that we're being installed at the same time
-  // as CCK and the field modules we depend on, we need to manually enable the
-  // the modules to ensure they're available before we create our fields.
-  //module_enable(array('content', 'text', 'link'));
-
   // During installation, the t() function is unavailable, so we use get_t()
   // to store the name of the translation function.
   $t = get_t();
@@ -29,7 +23,6 @@ function station_program_install() {
     // In this case, we set base equal to 'node_content' so Drupal will handle
     // our node as if we had designed it in the UI.
     'base' => 'node_content',
-    //'base' => 'station_program',
     'description' => $t('A radio program that you can schedule.'),
     'has_title' => TRUE,
     'title_label' => $t('Title'),
@@ -50,17 +43,6 @@ function station_program_install() {
 
   // Save the content type
   $status = node_type_save($content_type);
-
-  //TODO: Check
-  // Load the instance definition for our content type's title and change
-  // it's description.
-  // http://api.drupal.org/api/function/field_info_instance/7
-  //$title_instance = field_info_instance('node', 'title', 'station_program');
-  //$title_instance['description'] = $t('The name of the program. You should avoid making making major changes to this without telling the programming director.');
-  
-  // Save our changes to the title field instance.
-  // http://api.drupal.org/api/function/field_update_instance/7
-  //field_update_instance($title_instance);
 
   // Load the instance definition for our content type's body and change
   // it's description.
@@ -160,7 +142,6 @@ function _station_program_installed_fields() {
     'station_program_genre' => array(
       'field_name' => 'station_program_genre',
       'type' => 'text',
-      //'#default_value' => !empty($node->genre) ? $node->genre : '',
       'settings' => array(
         'maxlength' => 200,
       )
@@ -168,10 +149,6 @@ function _station_program_installed_fields() {
     'station_program_url' => array(
       'field_name' => 'station_program_url',
       'type' => 'link_field',
-      //'#default_value' => !empty($node->url) ? $node->url : '',
-      //'settings' => array(
-        //'maxlength' =>  255,
-      //)
     ),
     'field_station_program_css_class' => array(
       'translatable' => '0',

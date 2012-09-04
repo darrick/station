@@ -47,8 +47,6 @@ class station_schedule_handler_argument_day extends views_handler_argument {
 
     // The idea is that we want all the items that end after the day begins or
     // start before the day ends.
-    //$formula = "$this->table_alias.finish > %d AND $this->table_alias.start < %d";
-    //$this->query->add_where(0, $formula, $start, $finish);
     $this->query->add_where(0, $this->table_alias . ".finish", $start, ">");
     $this->query->add_where(0, $this->table_alias . ".start", $finish, "<");
   }

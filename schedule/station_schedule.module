@@ -200,29 +200,11 @@ function station_schedule_theme() {
  */
 function station_schedule_permission() {
   return array(
-    'administer_station_schedule' => array(
+    'administer station schedule' => array(
       'title' => t('administer station schedule'),
-      'description' => t('TODO Add a description for \'administer station schedule\''),
     ),
-    'view_station_schedule_content' => array(
+    'view station schedule content' => array(
       'title' => t('view station schedule content'),
-      'description' => t('TODO Add a description for \'view station schedule content\''),
-    ),
-    'create_station_schedule_content' => array(
-      'title' => t('create station schedule content'),
-      'description' => t('TODO Add a description for \'create station schedule content\''),
-    ),
-    'edit_any_station_schedule_content' => array(
-      'title' => t('edit any station schedule content'),
-      'description' => t('TODO Add a description for \'edit any station schedule content\''),
-    ),
-    'edit_own_station_schedule_content' => array(
-      'title' => t('edit own station schedule content'),
-      'description' => t('TODO Add a description for \'edit own station schedule content\''),
-    ),
-    'delete_any_station_schedule_content' => array(
-      'title' => t('delete any station schedule content'),
-      'description' => t('TODO Add a description for \'delete any station schedule content\''),
     ),
   );
 }
@@ -248,29 +230,14 @@ function station_schedule_node_info() {
 function station_schedule_node_access($node, $op, $account) {
   $type = is_string($node) ? $node : $node->type;
 
-  if ($type == 'station_program') {
-    if (user_access('administer_station_schedule', $account)) {
+  if ($type == 'station_schedule') {
+    if (user_access('administer station schedule', $account)) {
       return NODE_ACCESS_ALLOW;
     }
 
     switch ($op) {
       case 'view':
-        if ($node->status && user_access('view_station_schedule_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-      case 'create':
-        if (user_access('create_station_schedule_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-      case 'update':
-        if (user_access('edit_own_station_schedule_content', $account) && ($account->uid == $node->uid)) {
-          return NODE_ACCESS_ALLOW;
-        }
-        if (user_access('edit_any_station_schedule_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-      case 'delete':
-        if (user_access('delete_any_station_schedule_content', $account)) {
+        if ($node->status && user_access('view station schedule content', $account)) {
           return NODE_ACCESS_ALLOW;
         }
     }
@@ -743,7 +710,7 @@ function station_schedule_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'station_program_node_form') {
     $node = $form['#node'];
     // @TODO: figure out how to handle the permissions here.
-    if (user_access('administer_station_schedule')) {
+    if (user_access('administer station schedule')) {
 
       $form['schedule'] = array(
         '#type' => 'fieldset',

@@ -28,33 +28,11 @@ function station_program_menu() {
  */
 function station_program_permission() {
   return array(
-    'administer_station_programs' => array(
+    'administer station programs' => array(
       'title' => t('administer station programs'),
-      'description' => t('TODO Add a description for \'administer station programs\''),
     ),
-    'view_station_program_content' => array(
+    'view station program content' => array(
       'title' => t('view station program content'),
-      'description' => t('TODO Add a description for \'view station program content\''),
-    ),
-    'create_station_program_content' => array(
-      'title' => t('create station program content'),
-      'description' => t('TODO Add a description for \'create station program content\''),
-    ),
-    'edit_any_station_program_content' => array(
-      'title' => t('edit any station_program content'),
-      'description' => t('TODO Add a description for \'edit any station program content\''),
-    ),
-    'edit_own_station_program_content' => array(
-      'title' => t('edit own station program content'),
-      'description' => t('TODO Add a description for \'edit own station program content\''),
-    ),
-    'delete_any_station_program_content' => array(
-      'title' => t('delete any station program content'),
-      'description' => t('TODO Add a description for \'delete any station program content\''),
-    ),
-    'delete_own_station_program_content' => array(
-      'title' => t('delete own station program content'),
-      'description' => t('TODO Add a description for \'delete own station program content\''),
     ),
   );
 }
@@ -66,23 +44,18 @@ function station_program_node_access($node, $op, $account) {
   $type = is_string($node) ? $node : $node->type;
 
   if ($type == 'station_program') {
-    if (user_access('administer_station_programs', $account)) {
+    if (user_access('administer station programs', $account)) {
       return NODE_ACCESS_ALLOW;
     }
 
     switch ($op) {
       case 'view':
-        if ($node->status && user_access('view_station_program_content', $account)) {
+        if ($node->status && user_access('view station program content', $account)) {
           return NODE_ACCESS_ALLOW;
         }
 
       case 'update':
-        if (user_access('edit_any_station_program_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-
-        // The node owner can edit the program.
-        if (user_access('edit_own_station_program_content', $account)) {
+        if (user_access('edit own station_program content', $account)) {
           // If the schedule is enabled, let DJs edit the program.
           if (module_exists('station_schedule')) {
             if (!empty($node->field_station_program_dj)) {
@@ -94,7 +67,6 @@ function station_program_node_access($node, $op, $account) {
             }
           }
         }
-        return NODE_ACCESS_DENY;
     }
   }
   return NODE_ACCESS_IGNORE;

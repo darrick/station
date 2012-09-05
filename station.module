@@ -111,7 +111,7 @@ function station_block_info() {
  * Implements hook_block_view().
  */
 function station_block_view($delta = '') {
-  if (user_access('view_station_schedule_content')) {
+  if (user_access('view station schedule content')) {
     $schedules = station_get_schedules();
     if (is_array($schedules) && array_key_exists($delta, $schedules)) {
       return array(

@@ -30,25 +30,11 @@ function station_catalog_node_info() {
  */
 function station_catalog_permission() {
   return array(
-    'administer_station_catalog' => array(
+    'administer station catalog' => array(
       'title' => t('administer station catalog'),
-      'description' => t('TODO Add a description for \'administer station catalog\''),
     ),
-    'view_station_album_content' => array(
+    'view station album content' => array(
       'title' => t('view station album content'),
-      'description' => t('TODO Add a description for \'view station album content\''),
-    ),
-    'create_station_album_content' => array(
-      'title' => t('create station album content'),
-      'description' => t('TODO Add a description for \'create station album content\''),
-    ),
-    'edit_any_station_album_content' => array(
-      'title' => t('edit any station album content'),
-      'description' => t('TODO Add a description for \'edit any station album content\''),
-    ),
-    'delete_any_station_album_content' => array(
-      'title' => t('delete any station album content'),
-      'description' => t('TODO Add a description for \'delete any station album content\''),
     ),
   );
 }
@@ -61,32 +47,18 @@ function station_catalog_album_node_access($node, $op, $account) {
 
   if ($type == 'station_album') {
     // Admins can do anything.
-    if (user_access('administer_station_catalog', $account)) {
+    if (user_access('administer station catalog', $account)) {
       return NODE_ACCESS_ALLOW;
     }
 
     switch ($op) {
       case 'view':
-        if ($node->status && user_access('view_station_album_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-
-      case 'create':
-        if (user_access('create_station_album_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-
-      case 'update':
-        if (user_access('edit_any_station_album_content', $account)) {
-          return NODE_ACCESS_ALLOW;
-        }
-
-      case 'delete':
-        if (user_access('delete_any_station_album_content', $account)) {
+        if ($node->status && user_access('view station album content', $account)) {
           return NODE_ACCESS_ALLOW;
         }
     }
   }
+  return NODE_ACCESS_IGNORE;
 }
 
 /**

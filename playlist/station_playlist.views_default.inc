@@ -263,7 +263,7 @@ function station_playlist_views_default_views() {
   $handler->display->display_options['arguments']['field_station_program_nid']['default_action'] = 'default';
   $handler->display->display_options['arguments']['field_station_program_nid']['exception']['title_enable'] = 1;
   $handler->display->display_options['arguments']['field_station_program_nid']['title_enable'] = 1;
-  $handler->display->display_options['arguments']['field_station_program_nid']['title'] = '%1 Playlists:';
+  $handler->display->display_options['arguments']['field_station_program_nid']['title'] = '%1 Past Playlists:';
   $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_type'] = 'node';
   $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_skip_url'] = 0;
   $handler->display->display_options['arguments']['field_station_program_nid']['summary']['number_of_records'] = '0';
@@ -476,7 +476,7 @@ function station_playlist_views_default_views() {
   $handler->display->display_options['arguments']['field_station_program_nid']['field'] = 'field_station_program_nid';
   $handler->display->display_options['arguments']['field_station_program_nid']['exception']['title_enable'] = 1;
   $handler->display->display_options['arguments']['field_station_program_nid']['title_enable'] = 1;
-  $handler->display->display_options['arguments']['field_station_program_nid']['title'] = '%1 Playlists:';
+  $handler->display->display_options['arguments']['field_station_program_nid']['title'] = '%1 Future Playlists:';
   $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_type'] = 'fixed';
   $handler->display->display_options['arguments']['field_station_program_nid']['default_argument_skip_url'] = 0;
   $handler->display->display_options['arguments']['field_station_program_nid']['summary']['number_of_records'] = '0';
@@ -494,6 +494,7 @@ function station_playlist_views_default_views() {
   $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Playlists';
   $handler->display->display_options['menu']['weight'] = '0';
+  $views[$view->name] = $view;
 
   return $views;
 }

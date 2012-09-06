@@ -170,6 +170,7 @@ function station_schedule_item_edit_form($form, &$form_state, $schedule, $schedu
   $form['buttons']['cancel'] = array(
     '#type' => 'submit',
     '#value' => t('Cancel'),
+    '#submit' => array('station_schedule_item_edit_cancel_submit'),
   );
 
   return $form;
@@ -179,7 +180,7 @@ function station_schedule_item_edit_form($form, &$form_state, $schedule, $schedu
  * Button submit function: handle the 'Remove' button on the item edit form.
  */
 function station_schedule_item_edit_remove_submit($form, &$form_state) {
-  $destination = '';
+  $destination = array();
   if (isset($_GET['destination'])) {
     $destination = drupal_get_destination();
     unset($_GET['destination']);
@@ -192,23 +193,25 @@ function station_schedule_item_edit_remove_submit($form, &$form_state) {
  * @see http://drupal.org/node/1354
  */
 function station_schedule_item_edit_form_validate($form, &$form_state) {
-  $start = $form_state['values']['range']['start'];
-  $finish = $form_state['values']['range']['finish'];
-  $query = db_select('station_schedule_item', 's');
-  $query->fields('s', array('finish', 'start'));
-  $query->condition('s.schedule_nid', $form_state['values']['schedule_nid']);
-  if ($form_state['values']['iid']) {
-    $query->condition('s.iid', $form_state['values']['iid'], '<>');
-  }
-  $query->condition('s.finish', $start, '>');
-  $query->condition('s.start', $finish, '<');
-  $result = $query->execute();
-  foreach ($result as $overlap) {
-    form_set_error('', t("The program overlaps another scheduled item at %time.", array('%time' => theme('station_dayhour_range', array('start' => $overlap->start, 'finish' => $overlap->finish)))));
-  }
+  if ($form_state['clicked_button']['#value'] != 'Cancel') {
+    $start = $form_state['values']['range']['start'];
+    $finish = $form_state['values']['range']['finish'];
+    $query = db_select('station_schedule_item', 's');
+    $query->fields('s', array('finish', 'start'));
+    $query->condition('s.schedule_nid', $form_state['values']['schedule_nid']);
+    if ($form_state['values']['iid']) {
+      $query->condition('s.iid', $form_state['values']['iid'], '<>');
+    }
+    $query->condition('s.finish', $start, '>');
+    $query->condition('s.start', $finish, '<');
+    $result = $query->execute();
+    foreach ($result as $overlap) {
+      form_set_error('', t("The program overlaps another scheduled item at %time.", array('%time' => theme('station_dayhour_range', array('start' => $overlap->start, 'finish' => $overlap->finish)))));
+    }
 
-  if (!$prog = node_load_multiple(array(), array('title' => $form_state['values']['program_title'], 'type' => 'station_program'))) {
-    form_set_error('program_title', t('You need to specify a valid program name.'));
+    if (!$prog = node_load_multiple(array(), array('title' => $form_state['values']['program_title'], 'type' => 'station_program'))) {
+      form_set_error('program_title', t('You need to specify a valid program name.'));
+    }
   }
 }
 
@@ -288,4 +291,11 @@ function station_schedule_item_remove_form_submit($form, &$form_state) {
     _station_send_notice('schedule', 'remove', array('schedule_nid' => $form_state['values']['schedule_nid'], 'program_nid' => $form_state['values']['program_nid'], 'iid' => $form_state['values']['iid']));
     $form_state['redirect'] = 'node/' . $form_state['values']['schedule_nid'] . '/schedule';
   }
+}
+
+/**
+ * Cancel editing or adding a schedule item.
+ */
+function station_schedule_item_edit_cancel_submit($form, &$form_state) {
+  $form_state['redirect'] = 'node/' . $form_state['values']['schedule_nid'] . '/schedule';
 }

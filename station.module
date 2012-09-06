@@ -431,11 +431,20 @@ function station_ored_list($array) {
 }
 
 /**
+ * Get the offset of the default timezone in seconds.
+ */
+function station_local_tz_offset() {
+  $timezone = variable_get('date_default_timezone', 'UTC');
+  $time = new DateTime('now', new DateTimeZone($timezone));
+  return $time->format('Z');
+}
+
+/**
  * Return a timezone corrected timestamp.
  */
 function station_local_ts($ts = FALSE) {
   $ts = ($ts === FALSE) ? REQUEST_TIME : $ts;
-  return ($ts - date('Z', $ts)) + variable_get('date_default_timezone', 0);
+  return ($ts - date('Z', $ts)) + station_local_tz_offset();
 }
 
 /**

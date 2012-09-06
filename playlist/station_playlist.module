@@ -578,7 +578,6 @@ function station_playlist_node_view($node, $view_mode = 'full') {
             $node->content[$content_key]['#weight'] = 10;
             $node->content[$content_key]['#title'] = $block['subject'];
             $node->content[$content_key]['#markup'] = $block['content'];
-            dsm($node);
           }
         }
         $view->destroy();

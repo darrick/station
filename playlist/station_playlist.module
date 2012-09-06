@@ -32,8 +32,8 @@ function station_playlist_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['station/ahah/playlist'] = array(
-    'page callback' => 'station_playlist_ahah',
+  $items['station/ajax/playlist'] = array(
+    'page callback' => 'station_playlist_ajax',
     'page arguments' => array(),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
@@ -301,7 +301,7 @@ function station_playlist_form(&$node, $form_state) {
       '#type' => 'submit',
       '#name' => 'remove_' . $weight,
       '#value' => t('Remove'),
-      '#submit' => array('station_playlist_form_ahah_track_submit_remove'),
+      '#submit' => array('station_playlist_form_ajax_track_submit_remove'),
       '#ajax' => array(
         'callback' => 'station_playlist_ajax_callback',
         'wrapper' => 'station-playlist-tracks-wrapper',
@@ -312,12 +312,12 @@ function station_playlist_form(&$node, $form_state) {
   }
 
   // We name our button 'add_more' to avoid conflicts with other modules using
-  // AHAH-enabled buttons with the id 'more'.
+  // AJAX-enabled buttons with the id 'more'.
   $form['tracks_wrapper']['add_more'] = array(
     '#type' => 'submit',
     '#value' => t('Add more'),
     '#weight' => 1,
-    '#submit' => array('station_playlist_form_ahah_track_submit_add_more'),
+    '#submit' => array('station_playlist_form_ajax_track_submit_add_more'),
     '#ajax' => array(
       'callback' => 'station_playlist_ajax_callback',
       'wrapper' => 'station-playlist-tracks-wrapper',
@@ -333,7 +333,7 @@ function station_playlist_form(&$node, $form_state) {
 /**
  * A do nothing submit function to prevent the form from saving.
  */
-function station_playlist_form_ahah_track_submit_remove($form, &$form_state) {
+function station_playlist_form_ajax_track_submit_remove($form, &$form_state) {
   // Check if a track should be removed.
   if (isset($form_state['clicked_button']['#parents'][2]) && $form_state['clicked_button']['#parents'][2] == 'remove') {
     $delta = $form_state['clicked_button']['#parents'][1];
@@ -343,7 +343,7 @@ function station_playlist_form_ahah_track_submit_remove($form, &$form_state) {
   node_form_submit_build_node($form, $form_state);  
 }
 
-function station_playlist_form_ahah_track_submit_add_more($form, &$form_state) {
+function station_playlist_form_ajax_track_submit_add_more($form, &$form_state) {
   $form_state['num_empty_tracks']++;
   $form_state['rebuild'] = TRUE;
 }
@@ -440,7 +440,7 @@ function station_playlist_ajax_callback($form, &$form_state) {
   return $form['tracks_wrapper'];
 }
 
-function station_playlist_ahah() {
+function station_playlist_ajax() {
   // The form is generated in an include file which we need to include manually.
   include_once DRUPAL_ROOT . '/' . 'modules/node/node.pages.inc';
 
@@ -575,8 +575,10 @@ function station_playlist_node_view($node, $view_mode = 'full') {
           $block = $view->execute_display($display_id);
           if (isset($block)) {
             $node->content[$content_key]['#type'] = 'item';
+            $node->content[$content_key]['#weight'] = 10;
             $node->content[$content_key]['#title'] = $block['subject'];
-            $node->content[$content_key]['#value'] = $block['content'];
+            $node->content[$content_key]['#markup'] = $block['content'];
+            dsm($node);
           }
         }
         $view->destroy();

@@ -140,7 +140,6 @@ function station_page() {
 
 /**
  * AJAX form handler.
- * TODO: rewrite, it is used by the playlist module and gets called on /station/ahah/playlist page.
  */
 function station_ajax_form_handler() {
   $form_state = array(

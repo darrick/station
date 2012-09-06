@@ -96,7 +96,7 @@ function station_theme() {
 function station_block_info() {
   $schedules = station_get_schedules();
   $blocks = array();
-  if (!empty($schedule)) {
+  if (!empty($schedules)) {
     foreach ($schedules as $schedule) {
       $blocks[$schedule['nid']] = array(
         'info' => t('Station: Current Program of Schedule ' . $schedule['title']),

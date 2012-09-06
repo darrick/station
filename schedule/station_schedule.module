@@ -683,7 +683,7 @@ function station_schedule_node_view($node, $view_mode, $langcode) {
         $node->content['station_schedule_times']['#weight'] = '5';
         $node->content['station_schedule_times'][$schedule_nid] = array(
           '#type' => 'item',
-          '#title' => t('Listen on <a href="!link">@title</a> at', array('@title' => $schedules[$schedule_nid]['title'], '!link' => url('node/' . $schedule_nid))),
+          '#title' => t('Listen on <a href="!link">@title</a> at:', array('@title' => $schedules[$schedule_nid]['title'], '!link' => url('node/' . $schedule_nid))),
           '#markup' => $times ? theme('item_list', array('items' => $times)) : t('This program is currently unscheduled.'),
         );
       }

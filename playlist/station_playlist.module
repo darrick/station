@@ -86,7 +86,7 @@ function station_playlist_permission() {
  *
  * This is implemented so that an edit link is displayed for users who have
  * the rights to edit a node.
- */
+ 
 function station_playlist_link($type, $object, $teaser = FALSE) {
   if ($type == 'node') {
     switch ($object->type) {
@@ -132,6 +132,7 @@ function station_playlist_link($type, $object, $teaser = FALSE) {
   }
   return array();
 }
+*/
 
 /**
  * Implements hook_node_access().

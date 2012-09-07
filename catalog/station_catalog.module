@@ -179,7 +179,6 @@ function station_catalog_album_validate($node, $form, &$form_state) {
     elseif ($node->album['number']) {
       // look for duplicate numbers
       if ($node->nid) {
-        //$query = db_query('SELECT sc.nid, n.title FROM {station_catalog} sc INNER JOIN {node} n ON sc.nid = n.nid WHERE sc.number = :sc.number AND sc.nid <> :sc.nid', array(':sc.number' => $node->album['number'], ':sc.nid' => $node->nid));
         $query = db_select('station_catalog', 'sc');
         $query->innerJoin('node', 'n', 'sc.nid = n.nid');
         $query->fields('sc', array('nid'));
@@ -189,7 +188,6 @@ function station_catalog_album_validate($node, $form, &$form_state) {
         $result = $query->execute();
       }
       else {
-        //$query = db_query("SELECT sc.nid, n.title FROM {station_catalog} sc INNER JOIN {node} n ON sc.nid = n.nid WHERE sc.number = :sc.number", array(':sc.number' => $node->album['number']));
         $query = db_select('station_catalog', 'sc');
         $query->innerJoin('node', 'n', 'sc.nid = n.nid');
         $query->fields('sc', array('nid'));
@@ -216,6 +214,28 @@ function station_catalog_album_node_form_submit($form, &$form_state) {
   // Compute the title.
   $form_state['values']['title'] = $form_state['values']['album']['artist'] . ' - ' . $form_state['values']['album']['album'];
   $form_state['values']['album']['number'] = ($form_state['values']['album']['number'] != '') ? $form_state['values']['album']['number'] : station_catalog_album_next_number();
+
+  // Check if a node is created and get the data from MusicBrainz.
+  if (empty($form['nid']['#value']) && $mb_info = _station_catalog_musicbrainz_album($form_state['values']['album']['artist'], $form_state['values']['album']['album'])) {
+    $fields = array(
+      'artist' => t('Artist'),
+      'album' => t('Album'),
+      'year' => t('Year'),
+      'mb_release_id' => t('Music Brainz ID'),
+      'asin' => t('ASIN'),
+      'label' => t('Label'),
+    );
+    $adjusted = array();
+    foreach ($fields as $field => $name) {
+      if (empty($form_state['values']['album'][$field])) {
+        $adjusted[] = $name;
+        $form_state['values']['album'][$field] = $mb_info[$field];
+      }
+    }
+    if ($adjusted) {
+      drupal_set_message(t('Values for @fields fields were loaded from the MusicBrainz data.', array('@fields' => station_anded_list($adjusted))));
+    }
+  }
 }
 
 /**
@@ -258,7 +278,7 @@ function station_catalog_album_update($node) {
       'number' => $node->album['number'],
       'artist' => $node->album['artist'],
       'album' => $node->album['album'],
-      'year' => $node->album['year'],
+      'year' => (int) $node->album['year'],
       'label' => $node->album['label'],
       'mb_release_id' => $node->album['mb_release_id'],
       'asin' => $node->album['asin'],
@@ -399,8 +419,8 @@ function _station_catalog_musicbrainz_album($artist, $title) {
       // year portion of the ate.
       $ret['year'] = '';
       $event = 'release-event-list';
-      $date = $release->$event->event['date']->asXML();
-      if(!empty($date)) {
+      if (!empty($release->$event->event['date'])) {
+        $date = $release->$event->event['date']->asXML();
         preg_match('/"([0-9]*)/', $date, $matches);
         $ret['year'] = (string) $matches[1];
       }

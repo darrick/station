@@ -15,213 +15,103 @@ function station_playlist_views_default_views() {
   $view->name = 'station_playlist_tracks';
   $view->description = 'Listing of tracks on a playlist node.';
   $view->tag = 'station_playlist';
-  $view->view_php = '';
   $view->base_table = 'node';
-  $view->is_cacheable = FALSE;
-  $view->api_version = 2;
+  $view->human_name = '';
+  $view->core = 0;
+  $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
-  $handler->override_option('fields', array(
-    'artist' => array(
-      'label' => 'Artist',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
-      'exclude' => 0,
-      'id' => 'artist',
-      'table' => 'station_playlist_track',
-      'field' => 'artist',
-      'relationship' => 'none',
-    ),
-    'title' => array(
-      'label' => 'Title',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
-      'exclude' => 0,
-      'id' => 'title',
-      'table' => 'station_playlist_track',
-      'field' => 'title',
-      'relationship' => 'none',
-    ),
-    'album' => array(
-      'label' => 'Album',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
-      'exclude' => 0,
-      'id' => 'album',
-      'table' => 'station_playlist_track',
-      'field' => 'album',
-      'relationship' => 'none',
-    ),
-    'label' => array(
-      'label' => 'Label',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
-      'exclude' => 0,
-      'id' => 'label',
-      'table' => 'station_playlist_track',
-      'field' => 'label',
-      'relationship' => 'none',
-    ),
-    'link' => array(
-      'label' => 'Link',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
-      'exclude' => 0,
-      'id' => 'link',
-      'table' => 'station_playlist_track',
-      'field' => 'link',
-      'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('sorts', array(
-    'weight' => array(
-      'order' => 'ASC',
-      'id' => 'weight',
-      'table' => 'station_playlist_track',
-      'field' => 'weight',
-      'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('arguments', array(
-    'nid' => array(
-      'default_action' => 'summary asc',
-      'style_plugin' => 'default_summary',
-      'style_options' => array(
-        'count' => 1,
-        'override' => 0,
-        'items_per_page' => '25',
-      ),
-      'wildcard' => 'all',
-      'wildcard_substitution' => 'All',
-      'title' => '',
-      'default_argument_type' => 'node',
-      'default_argument' => '',
-      'validate_type' => 'node',
-      'validate_fail' => 'not found',
-      'break_phrase' => 0,
-      'not' => 0,
-      'id' => 'nid',
-      'table' => 'node',
-      'field' => 'nid',
-      'validate_user_argument_type' => 'uid',
-      'validate_user_roles' => array(
-        '2' => 0,
-      ),
-      'relationship' => 'none',
-      'default_options_div_prefix' => '',
-      'default_argument_user' => 0,
-      'default_argument_fixed' => '',
-      'default_argument_php' => '',
-      'validate_argument_node_type' => array(
-        'station_playlist' => 'station_playlist',
-        'station_program' => 0,
-        'station_schedule' => 0,
-        'page' => 0,
-        'story' => 0,
-      ),
-      'validate_argument_node_access' => 1,
-      'validate_argument_nid_type' => 'nid',
-      'validate_argument_vocabulary' => array(),
-      'validate_argument_type' => 'tid',
-      'validate_argument_transform' => 0,
-      'validate_user_restrict_roles' => 0,
-      'validate_argument_php' => '',
-    ),
-  ));
-  $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'station_playlist' => 'station_playlist',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('access', array(
-    'type' => 'perm',
-    'perm' => 'view station playlist content',
-  ));
-  $handler->override_option('items_per_page', 0);
-  $handler->override_option('style_plugin', 'table');
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['access']['perm'] = 'view station playlist content';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['style_plugin'] = 'table';
+  /* Field: Station Playlist Track: Artist */
+  $handler->display->display_options['fields']['artist']['id'] = 'artist';
+  $handler->display->display_options['fields']['artist']['table'] = 'station_playlist_track';
+  $handler->display->display_options['fields']['artist']['field'] = 'artist';
+  $handler->display->display_options['fields']['artist']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['artist']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['artist']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['artist']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['artist']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['artist']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['artist']['alter']['html'] = 0;
+  /* Field: Station Playlist Track: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'station_playlist_track';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['title']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['title']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['title']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['title']['alter']['html'] = 0;
+  /* Field: Station Playlist Track: Album */
+  $handler->display->display_options['fields']['album']['id'] = 'album';
+  $handler->display->display_options['fields']['album']['table'] = 'station_playlist_track';
+  $handler->display->display_options['fields']['album']['field'] = 'album';
+  $handler->display->display_options['fields']['album']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['album']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['album']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['album']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['album']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['album']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['album']['alter']['html'] = 0;
+  /* Field: Station Playlist Track: Label */
+  $handler->display->display_options['fields']['label']['id'] = 'label';
+  $handler->display->display_options['fields']['label']['table'] = 'station_playlist_track';
+  $handler->display->display_options['fields']['label']['field'] = 'label';
+  $handler->display->display_options['fields']['label']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['label']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['label']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['label']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['label']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['label']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['label']['alter']['html'] = 0;
+  /* Field: Station Playlist Track: Link */
+  $handler->display->display_options['fields']['link']['id'] = 'link';
+  $handler->display->display_options['fields']['link']['table'] = 'station_playlist_track';
+  $handler->display->display_options['fields']['link']['field'] = 'link';
+  $handler->display->display_options['fields']['link']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['link']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['link']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['link']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['link']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['link']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['link']['alter']['html'] = 0;
+  /* Sort criterion: Station Playlist Track: Weight */
+  $handler->display->display_options['sorts']['weight']['id'] = 'weight';
+  $handler->display->display_options['sorts']['weight']['table'] = 'station_playlist_track';
+  $handler->display->display_options['sorts']['weight']['field'] = 'weight';
+  /* Contextual filter: Content: Nid */
+  $handler->display->display_options['arguments']['nid']['id'] = 'nid';
+  $handler->display->display_options['arguments']['nid']['table'] = 'node';
+  $handler->display->display_options['arguments']['nid']['field'] = 'nid';
+  $handler->display->display_options['arguments']['nid']['default_action'] = 'summary';
+  $handler->display->display_options['arguments']['nid']['exception']['title_enable'] = 1;
+  $handler->display->display_options['arguments']['nid']['default_argument_type'] = 'node';
+  $handler->display->display_options['arguments']['nid']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['nid']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['nid']['specify_validation'] = 1;
+  $handler->display->display_options['arguments']['nid']['validate']['type'] = 'node';
+  $handler->display->display_options['arguments']['nid']['break_phrase'] = 0;
+  $handler->display->display_options['arguments']['nid']['not'] = 0;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'station_playlist' => 'station_playlist',
+  );
+  $handler->display->display_options['filters']['type']['group'] = '0';
+  $handler->display->display_options['filters']['type']['expose']['operator'] = FALSE;
   $views[$view->name] = $view;
 
   /*

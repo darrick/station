@@ -83,13 +83,14 @@ function station_catalog_album_prepare($node) {
         'year' => t('Year'),
         'mb_release_id' => t('Music Brainz ID'),
         'asin' => t('ASIN'),
+        'label' => t('Label'),
       );
       $adjusted = array();
       foreach ($fields as $field => $name) {
-        if (empty($node->album[$field])) {
+        //if (empty($node->album[$field])) {
           $adjusted[] = $name;
           $node->album[$field] = $mb_info[$field];
-        }
+        //}
       }
       if ($adjusted) {
         drupal_set_message(t('Values for @fields fields were loaded from the MusicBrainz data.', array('@fields' => station_anded_list($adjusted))));
@@ -134,7 +135,7 @@ function station_catalog_album_form($node) {
     '#type' => 'textfield',
     '#title' => t('Year'),
     '#default_value' => isset($node->album['year']) ? $node->album['year'] : '',
-    '#required' => TRUE,
+    '#required' => FALSE,
     '#description' => t("The year the album was released."),
   );
   $form['album']['label'] = array(
@@ -375,33 +376,37 @@ function _station_catalog_musicbrainz_album($artist, $title) {
     //$doc = DOMDocument::loadXML($response->data);
     $doc = new DOMDocument;
     $doc->loadXML($response->data);
-
     $xpath = new DOMXPath($doc);
     // Can't use the default namespace, must explicitly set one...
     $xpath->registerNameSpace('mb', 'http://musicbrainz.org/ns/mmd-1.0#');
     #dvm($doc->saveXML());
     // Only return exact matches.
     $result = $xpath->query('//mb:release-list/mb:release[@ext:score="100"]');
+
     if ($result && $result->length) {
-      foreach ($result as $item) {
-        $release = simplexml_import_dom($result->item(0));
-        #        dvm($release);
-      }
+      //foreach ($result as $item) {
+        //$release = simplexml_import_dom($result->item(0));
+      //}
       $release = simplexml_import_dom($result->item(0));
+      #dsm($release->asXML());
       $ret['mb_release_id'] = (string) $release['id'];
       $ret['artist'] = (string) $release->artist->name;
       $ret['album'] = (string) $release->title;
+      // ASIN: Amazon Standard Identification Number
       $ret['asin'] = (string) $release->asin;
       // Release year is a bit of a pain, the tag name isn't a valid PHP
       // identifier and we need to use a regular expression to match the
       // year portion of the ate.
+      $ret['year'] = '';
       $event = 'release-event-list';
-      preg_match('/.*US (\d{4}).*/', $release->$event->event['date'], $matches);
-      $ret['year'] = (string) $matches[1];
-
+      $date = $release->$event->event['date']->asXML();
+      if(!empty($date)) {
+        preg_match('/"([0-9]*)/', $date, $matches);
+        $ret['year'] = (string) $matches[1];
+      }
       // Now that we've got the release id, we need to make another call to get the label.
-      #      $label = _station_catalog_musicbrainz_label($ret['mb_release_id']);
-      $ret['label'] = '';
+      #$label = _station_catalog_musicbrainz_label($ret['mb_release_id']);
+      $ret['label'] = (string) $release->$event->event->label->name;
     }
   }
   return $ret;

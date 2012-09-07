@@ -180,6 +180,7 @@ function station_catalog_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
+        'default' => '',
       ),
       'label' => array(
         'description' => 'Name of the label that released the album.',

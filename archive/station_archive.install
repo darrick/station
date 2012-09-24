@@ -1,0 +1,418 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the station_archive module.
+ *
+ */
+
+/**
+ * Implements hook_install().
+ */
+function station_archive_install() {
+  $t = get_t();
+
+  // Create a station archive vocabulary.
+  // Check to see if a stationarchive vocabulary exists
+  $vid = db_query("SELECT vid FROM {taxonomy_vocabulary} WHERE module = :module", array(':module' => 'station_archive'))->fetchField();
+  if (!$vid) {
+    $vocab = new stdClass();
+    $vocab->name = 'Station Archive';
+    $vocab->machine_name = 'station_archive';
+    $vocab->description = $t("This vocabulary is used by the Station Archive module to track the audio nodes it has added.");
+    $vocab->hierarchy = 1;
+    $vocab->module = 'station_archive';
+    taxonomy_vocabulary_save($vocab);
+    $vid = $vocab->vid;
+  }
+  variable_set('station_archive_vid', $vid);
+
+  $station_audio = array(
+    'type' => 'station_archive',
+    'name' => $t('Archive Audio'),
+    // 'base' tells Drupal the base string for hook functions.
+    // This is often the module name; if base is set to 'mymodule', Drupal
+    // would call mymodule_insert() or similar for node hooks.
+    // In this case, we set base equal to 'node_content' so Drupal will handle
+    // our node as if we had designed it in the UI.
+    'base' => 'node_content',
+    'description' => $t('This is a Station Archive audio node type.'),
+    'title_label' => $t('Title'),
+    // 'custom' attribute set to TRUE defines that the content type will
+    // be deletable from the UI.
+    'custom' => TRUE,
+    'module' => 'station_program',
+  );
+
+  $content_type = node_type_set_defaults($station_audio);
+  node_add_body_field($content_type, $t('Description'));
+  node_type_save($content_type);
+
+  // Create all the fields we are adding to our content type.
+  // http://api.drupal.org/api/function/field_create_field/7
+  foreach (_station_archive_installed_fields() as $field) {
+    field_create_field($field);
+  }
+
+  // Create all the instances for our fields.
+  // http://api.drupal.org/api/function/field_create_instance/7
+  foreach (_station_archive_installed_instances() as $instance) {
+    $instance['entity_type'] = 'node';
+    $instance['bundle'] = $station_audio['type'];
+    field_create_instance($instance);
+  }  
+}
+
+/**
+ * Implements hook_uninstall().
+ */ 
+function station_archive_uninstall() {
+  // Gather all the station_audio content that might have been created while this
+  // module was enabled.  Simple selects still use db_query().
+  // http://api.drupal.org/api/function/db_query/7
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => 'station_archive'));
+  $nids = array();
+  foreach ($result as $row) {
+    $nids[] = $row->nid;
+  }
+
+  // Delete all the nodes at once
+  // http://api.drupal.org/api/function/node_delete_multiple/7
+  node_delete_multiple($nids);
+
+  // Loop over each of the fields defined by this module and delete
+  // all instances of the field, their data, and the field itself.
+  // http://api.drupal.org/api/function/field_delete_field/7
+  foreach (array_keys(_station_archive_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+
+  // Loop over any remaining field instances attached to the station_audio
+  // content type (such as the body field) and delete them individually.
+  // http://api.drupal.org/api/function/field_delete_field/7
+  $instances = field_info_instances('node', 'station_archive');
+  foreach ($instances as $instance_name => $instance) {
+    field_delete_instance($instance);
+  }
+
+  // Delete our content type
+  // http://api.drupal.org/api/function/node_type_delete/7
+  node_type_delete('station_archive');
+
+  // Purge all field infromation
+  // http://api.drupal.org/api/function/field_purge_batch/7
+  field_purge_batch(1000);
+}
+
+/**
+ * Implements hook_schema().
+ */
+function station_archive_schema() {
+  $schema['station_archive_item'] = array(
+    'description' => 'Information on an archive audio node.',
+    'fields' => array(
+      'audio_nid' => array(
+        'description' => "The audio {node}.nid.",
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'program_nid' => array(
+        'description' => "The program {node}.nid.",
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'aired' => array(
+        'description' => 'The Unix timestamp when the audio aired.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'imported' => array(
+        'description' => 'The Unix timestamp when the audio was imported.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'permanent' => array(
+        'description' => "Is this part of the permanent archive? If so it will not be deleted.",
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'size' => 'tiny',
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'station_archive_cleanup' => array('permanent', 'imported'),
+    ),
+    'primary key' => array('audio_nid', 'program_nid'),
+  );
+
+  $schema['station_archive_program'] = array(
+    'description' => "Duplication of the program node title incase they're on another site.",
+    'fields' => array(
+      'program_nid' => array(
+        'description' => "The program {node}.nid.",
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'title' => array(
+        'description' => 'The title of this node, always treated as non-markup plain text.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('program_nid'),
+  );
+  return $schema;
+}
+
+/**
+ * Returns a structured array defining the fields created by this content type.
+ */
+function _station_archive_installed_fields() {
+  return array(
+    'station_archive_audio' => array(
+      'translatable' => '0',
+      'entity_types' => array(),
+      'settings' => array(
+        'display_field' => 0,
+        'display_default' => 0,
+        'uri_scheme' => 'public',
+      ),
+      'storage' => array(
+        'type' => 'field_sql_storage',
+        'settings' => array(),
+        'module' => 'field_sql_storage',
+        'active' => '1',
+        'details' => array(
+          'sql' => array(
+            'FIELD_LOAD_CURRENT' => array(
+              'field_data_field_station_archive_audio' => array(
+                'fid' => 'field_station_archive_audio_fid',
+                'display' => 'field_station_archive_audio_display',
+                'description' => 'field_station_archive_audio_description',
+              ),
+            ),
+            'FIELD_LOAD_REVISION' => array(
+              'field_revision_field_audio2' => array(
+                'fid' => 'field_station_archive_audio_fid',
+                'display' => 'field_station_archive_audio_display',
+                'description' => 'field_station_archive_audio_description',
+              ),
+            ),
+          ),
+        ),
+      ),
+      'foreign keys' => array(
+        'fid' => array(
+          'table' => 'file_managed',
+          'columns' => array(
+            'fid' => 'fid',
+          ),
+        ),
+      ),
+      'indexes' => array(
+        'fid' => array(
+          'fid',
+        ),
+      ),
+      'field_name' => 'field_station_archive_audio',
+      'type' => 'file',
+      'module' => 'file',
+      'active' => '1',
+      'locked' => '0',
+      'cardinality' => '1',
+      'deleted' => '0',
+      'columns' => array(
+        'fid' => array(
+          'description' => 'The {file_managed}.fid being referenced in this field.',
+          'type' => 'int',
+          'not null' => FALSE,
+          'unsigned' => TRUE,
+        ),
+        'display' => array(
+          'description' => 'Flag to control whether this file should be displayed when viewing content.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 1,
+        ),
+        'description' => array(
+          'description' => 'A description of the file.',
+          'type' => 'text',
+          'not null' => FALSE,
+        ),
+      ),
+      'bundles' => array(
+        'node' => array(
+          'article',
+        ),
+      ),
+    ),
+    'station_archive_audio_age' => array(
+      'translatable' => '0',
+      'entity_types' => array(),
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => 'station_archive',
+            'parent' => '0',
+          ),
+        ),
+      ),
+      'storage' => array(
+        'type' => 'field_sql_storage',
+        'settings' => array(),
+        'module' => 'field_sql_storage',
+        'active' => '1',
+        'details' => array(
+          'sql' => array(
+            'FIELD_LOAD_CURRENT' => array(
+              'field_data_field_station_archive_audio_age' => array(
+                'tid' => 'field_station_archive_audio_age_tid',
+              ),
+            ),
+            'FIELD_LOAD_REVISION' => array(
+              'field_revision_field_station_archive_audio_age' => array(
+                'tid' => 'field_station_archive_audio_age_tid',
+              ),
+            ),
+          ),
+        ),
+      ),
+      'foreign keys' => array(
+        'tid' => array(
+          'table' => 'taxonomy_term_data',
+          'columns' => array(
+            'tid' => 'tid',
+          ),
+        ),
+      ),
+      'indexes' => array(
+        'tid' => array(
+          'tid',
+        ),
+      ),
+      'field_name' => 'field_station_archive_audio_age',
+      'type' => 'taxonomy_term_reference',
+      'module' => 'taxonomy',
+      'active' => '1',
+      'locked' => '0',
+      'cardinality' => '-1',
+      'deleted' => '0',
+      'columns' => array(
+        'tid' => array(
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => FALSE,
+        ),
+      ),
+      'bundles' => array(
+        'node' => array(
+          'station_archive',
+        ),
+      ),
+    ),  
+  );
+}
+
+/**
+ * Returns a structured array defining the instances for this content type.
+ */
+function _station_archive_installed_instances() {
+  return array(
+    'station_archive_audio' => array(
+      'label' => 'Archive Audio',
+      'widget' => array(
+        'weight' => 0,
+        'type' => 'audiofield_widget',
+        'module' => 'audiofield',
+        'active' => 0,
+        'settings' => array(
+          'progress_indicator' => 'throbber',
+        ),
+      ),
+      'settings' => array(
+        'file_directory' => '',
+        'file_extensions' => 'mp3',
+        'max_filesize' => '',
+        'description_field' => 0,
+        'user_register_form' => FALSE,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'type' => 'audiofield_embedded',
+          'settings' => array(),
+          'module' => 'audiofield',
+          'weight' => 11,
+        ),
+        'teaser' => array(
+          'type' => 'hidden',
+          'label' => 'above',
+          'settings' => array(),
+          'weight' => 0,
+        ),
+      ),
+      'required' => 0,
+      'description' => '',
+      'field_name' => 'field_station_archive_audio',
+      'entity_type' => 'node',
+      'bundle' => 'station_archive',
+      'deleted' => '0',
+    ),
+    'station_archive_audio_age' => array(
+      'label' => 'Station Archive Age',
+      'widget' => array(
+        'weight' => '1',
+        'type' => 'options_select',
+        'module' => 'options',
+        'active' => 1,
+        'settings' => array(),
+      ),
+      'settings' => array(
+        'user_register_form' => FALSE,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'type' => 'taxonomy_term_reference_link',
+          'settings' => array(),
+          'module' => 'taxonomy',
+          'weight' => 12,
+        ),
+        'teaser' => array(
+          'type' => 'hidden',
+          'label' => 'above',
+          'settings' => array(),
+          'weight' => 0,
+        ),
+        'example_node_list' => array(
+          'type' => 'hidden',
+          'label' => 'above',
+          'settings' => array(),
+          'weight' => 0,
+        ),
+      ),
+      'required' => 0,
+      'description' => "Do not add nodes to this vocabulary unless you want the station archive module to delete them when they're older than the maximum archive age.",
+      'default_value' => NULL,
+      'field_name' => 'field_station_archive_audio_age',
+      'entity_type' => 'node',
+      'bundle' => 'station_archive',
+      'deleted' => '0',
+    )
+  );  
+}

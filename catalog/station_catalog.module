@@ -432,6 +432,7 @@ function _station_catalog_musicbrainz_album($artist, $title) {
   return $ret;
 }
 
+/*
 function _station_catalog_musicbrainz_label($release_id) {
   $args = array(
     'type' => 'xml',
@@ -448,6 +449,7 @@ function _station_catalog_musicbrainz_label($release_id) {
   }
   return $ret;
 }
+*/
 
 /**
  * Implements hook_view_api().

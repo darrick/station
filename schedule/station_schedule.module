@@ -879,9 +879,13 @@ function station_schedule_get_program_list() {
 
   if (!isset($schedules)) {
     $schedules = array();
-    $result = db_query("SELECT n.nid, n.title FROM {node} n WHERE n.type = :n.type", array(':n.type' => 'station_program'));
-    foreach ($result as $o) {
-      $schedules[$o['nid']] = $o;
+    //$result = db_query("SELECT n.nid, n.title FROM {node} n WHERE n.type = :n.type", array(':n.type' => 'station_program'));
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid', 'title'));
+    $query->condition('n.type', 'station_program');
+    $result = $query->execute();
+    foreach ($result as $schedule) {
+      $schedules[$schedule['nid']] = $schedule;
     }
   }
 

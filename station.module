@@ -7,7 +7,7 @@ require_once dirname(__FILE__) . '/dayhour.inc';
  */
 function station_help($path, $arg) {
   switch ($path) {
-    case 'admin/config/station':
+    case 'admin/config/station/core':
       return t('Configure the core station settings. These settings are used by all of the station modules.');
       break;
     case 'admin/help#station';

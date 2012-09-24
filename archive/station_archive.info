@@ -1,0 +1,15 @@
+name = Station Archive
+description = Provides an archive of the station's webstream.
+core = 7.x
+package = Station
+dependencies[] = station
+dependencies[] = audiofield
+dependencies[] = taxonomy
+dependencies[] = token
+dependencies[] = views
+
+files[] = views/station_archive.views.inc
+files[] = views/station_archive.views_default.inc
+
+configure = admin/config/station/archive
+

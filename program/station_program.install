@@ -288,7 +288,7 @@ function _station_program_installed_instances() {
         ),
       ),
       'required' => 0,
-      'description' => 'Add a ccs class that will be outputted on the schedule view. Useful for adding setting colors or fonts per program on the schedule view. Only numbers, letters, underscores and dashes allowed.',
+      'description' => 'Add a ccs class that will be outputted on the schedule view. Useful for setting colors or fonts per program on the schedule view. Only numbers, letters, underscores and dashes allowed.',
       'default_value' => NULL,
       'field_name' => 'field_station_program_css_class',
       'entity_type' => 'node',

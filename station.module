@@ -173,6 +173,16 @@ function station_ajax_form_handler() {
 }
 
 /**
+ * Determine if we have a station archive module running locally or access to a
+ * remote one.
+ *  
+ * @return boolean
+ */
+function station_has_archive() {
+  return (module_exists('station_archive') || variable_get('station_remote_archive_url', FALSE));
+}
+
+/**
  * Determine if we have a station schedule module running locally or access to a
  * remote one.
  *
@@ -180,6 +190,21 @@ function station_ajax_form_handler() {
  */
 function station_has_schedule() {
   return (module_exists('station_schedule') || variable_get('station_remote_schedule_url', FALSE));
+}
+
+/**
+ * If there's an archive, return the URL.
+ *
+ * @return FALSE or string URL.
+ */
+function station_get_archive_url() {
+  if (module_exists('station_archive')) {
+    return 'station/archives/';
+  }
+  elseif ($url = variable_get('station_remote_archive_url', FALSE)) {
+    return $url .'station/archives/';
+  }
+  return FALSE;
 }
 
 /**

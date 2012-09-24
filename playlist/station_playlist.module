@@ -569,7 +569,9 @@ function station_playlist_node_view($node, $view_mode = 'full') {
               'href' => 'station/playlists/'. $node->nid,
         );
       }
-      $node->content['links']['station_program_playlist_view'] = $links;
+      if (isset($links)) {
+        $node->content['links']['station_program_playlist_view'] = $links;
+      }
   }
 }
 

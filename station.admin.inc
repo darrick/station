@@ -23,8 +23,24 @@ function station_admin_settings($form, &$form_state) {
   $form['station_remote'] = array(
     '#type' => 'fieldset',
     '#title' => t('Sub-module Integration'),
-    '#description' => t('The Station module is designed to allow different modules to be run on different servers.'),
+    '#description' => t('The Station module is designed to allow different modules to be run on different servers. So the archive could be on a dedicated machine while the schedule runs on your primary webserver.'),
   );
+
+  if (!module_exists('station_archive')) {
+    $form['station_remote']['station_remote_archive_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Station Archive remote URL'),
+      '#default_value' => variable_get('station_remote_archive_url', ''),
+      '#description' => t("The archive module is not enabled on this machine. If you have it installed up on a different Drupal server, enter the URL here. If this is blank no archive links will b provided. Please include the trailing slash: i.e. http://example.com/"),
+    );
+  }
+  else {
+    $form['station_remote']['archive_status'] = array(
+      '#type' => 'item',
+      '#title' => t('Station Archive module is enabled'),
+      '#value' => t("The Station Archive module is enabled on this machine. This can be used by the Station Schedule module to provide users links to a program's archived audio."),
+    );
+  }
 
   if (!module_exists('station_schedule')) {
     $form['station_remote']['station_remote_schedule_url'] = array(
@@ -50,14 +66,14 @@ function station_admin_settings($form, &$form_state) {
       '#type' => 'textfield',
       '#title' => t('Station Schedule remote minute adjustment'),
       '#default_value' => variable_get('station_remote_schedule_offset', 0),
-      '#description' => t("If the clocks on your two servers aren't accurately synchronized the schedule end up with the wrong names for programs. This number of minutes (positive or negative) will be added to the time before checking the schedule."),
+      '#description' => t("If the clocks on your two servers aren't accurately synchronized the archive will end up with the wrong names for programs. This number of minutes (positive or negative) will be added to the time before checking the schedule."),
     );
   }
   else {
     $form['station_remote']['schedule_status'] = array(
       '#type' => 'item',
       '#title' => t('Station Schedule module is enabled'),
-      '#value' => t('The Station Schedule module is enabled on this machine. This information can be used by the Now Playing block.'),
+      '#value' => t('The Station Schedule module is enabled on this machine. This information can be used by the Now Playing block and Station Archive module.'),
     );
   }
 

@@ -10,6 +10,18 @@ function station_schedule_help($path, $arg) {
 
     case 'admin/config/station/schedule':
       return t("These settings allow you to configure the station's schedule.");
+
+    case 'node/%/view/%':
+      $output = '';
+      if (station_has_archive()) {
+        $output .= t('The !listen_img listen link will take you to the list of archived copies of a show. The !rss_img link will take you to an RSS feed of the archived copies suitable for podcasting.',
+          array(
+            '!listen_img' => theme('image', array('path' => drupal_get_path('module', 'station_schedule') . '/images/listen_tiny.gif', 'width' => 'listen')),
+            '!rss_img' => theme('image', array('path' => drupal_get_path('module', 'station_schedule') . '/images/rss_tiny.gif', 'width' => 'podcast')),
+          )
+        );
+      }
+      return $output;
   }
 }
 
@@ -884,7 +896,7 @@ function station_schedule_get_program_list() {
     $query->fields('n', array('nid', 'title'));
     $query->condition('n.type', 'station_program');
     $result = $query->execute();
-    foreach ($result as $schedule) {
+    foreach ($result->fetchAssoc() as $schedule) {
       $schedules[$schedule['nid']] = $schedule;
     }
   }
@@ -921,6 +933,7 @@ function station_schedule_program_get_at($gmt_timestamp, $schedule_nid) {
     if ($node = node_load($schedule_item['program_nid'])) {
       // set this so that if the show is scheduled for multiple times the caller
       // can easily figure out which one.
+      $node->may_archive = $schedule_item->may_archive;
       // put this in so they can use a pretty url
       $node->node_url = url('node/' . $node->nid, array('absolute' => TRUE));
       return $node;

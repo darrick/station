@@ -100,6 +100,7 @@ function station_schedule_item_add($schedule, $program_id = NULL, $start = 0, $f
   $schedule_item->program_nid = $program_id;
   $schedule_item->start = (int) $start;
   $schedule_item->finish = (int) $finish;
+  $schedule_item->may_archive = TRUE;
 
   return drupal_get_form('station_schedule_item_edit_form', $schedule, $schedule_item, $start, $finish);
 }
@@ -154,6 +155,12 @@ function station_schedule_item_edit_form($form, &$form_state, $schedule, $schedu
     '#default_value' => $program_title,
     '#maxlength' => 128,
     '#autocomplete_path' => 'station/autocomplete/program',
+  );
+  $form['may_archive'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Can be saved in Station Archive'),
+    '#default_value' => $schedule_item->may_archive,
+    '#description' => t('Checking this indicates that the Station Archive module can save save audio recordings of the program at this timeslot to the archive.'),
   );
 
   $form['buttons']['submit'] = array(
@@ -230,6 +237,7 @@ function station_schedule_item_edit_form_submit($form, &$form_state) {
     'program_nid' => $program->nid,
     'start' => $form_state['values']['range']['start'],
     'finish' => $form_state['values']['range']['finish'],
+    'may_archive' => $form_state['values']['may_archive'],
   );
 
   if ($form_state['values']['iid']) {

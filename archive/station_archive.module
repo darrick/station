@@ -601,21 +601,6 @@ function create_audio_node($filepath, $title_format = NULL, $body = NULL, $tags 
   $audio_file->status = 1;
   $audio_file = file_copy($audio_file, 'public://archive');
   $newNode->field_station_archive_audio[LANGUAGE_NONE][0] = (array)$audio_file;
-/*
-  for ($i = 0; $i < 5; $i++) {
-    $j = $i + 1;
-    $file_path = drupal_get_path('module', 'node_example') . '/image' . $j . '.jpg';
-    $file = (object)array(
-      "uid" => 1,
-      "uri" => $file_path,
-      "filemime" => file_get_mimetype($file_path),
-      "status" => 1
-    );
-
-    $file = file_copy($file, 'public://');
-    $newNode->node_example_image['und'][$i] = (array)$file;
-  }
-*/
   return $newNode;
 }
 

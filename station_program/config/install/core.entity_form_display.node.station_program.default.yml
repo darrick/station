@@ -3,6 +3,7 @@ status: true
 dependencies:
   config:
     - field.field.node.station_program.body
+    - field.field.node.station_program.station_program_djs
     - node.type.station_program
   module:
     - path
@@ -25,6 +26,14 @@ content:
     weight: 10
     settings: {  }
     third_party_settings: {  }
+  station_program_djs:
+    weight: 32
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
   path:
     type: path
     weight: 30

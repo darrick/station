@@ -11,6 +11,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityViewBuilderInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -137,12 +138,15 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
         ],
       ],
     ];
-    if ($program instanceof EntityOwnerInterface) {
-      // @todo Switch to a multivalue entityreference.
-      $owner = $program->getOwner();
-      $djs = $owner->label();
+    $djs = [];
+    if ($program instanceof FieldableEntityInterface && $program->hasField('station_program_djs')) {
+      foreach ($program->get('station_program_djs') as $dj) {
+        $djs[] = $dj->entity->label();
+      }
+    }
+    if ($djs) {
       $output['children']['dj'] = [
-        '#markup' => Html::escape($djs),
+        '#markup' => Html::escape(implode(', ', $djs)),
         '#prefix' => '<span class="station-sch-djs">',
         '#suffix' => '</span></a>',
       ];

@@ -15,6 +15,7 @@ use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\station_schedule\DatetimeHelper;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * @todo.
@@ -136,14 +137,12 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
         ],
       ],
     ];
-    if (!empty($program->field_station_program_dj)) {
-      $djs = [];
-      foreach ($program->field_station_program_dj as $entry) {
-        $user = user_load($entry);
-        $djs[] .= $user->name;
-      }
+    if ($program instanceof EntityOwnerInterface) {
+      // @todo Switch to a multivalue entityreference.
+      $owner = $program->getOwner();
+      $djs = $owner->label();
       $output['children']['dj'] = [
-        '#markup' => Html::escape(implode(', ', $djs)),
+        '#markup' => Html::escape($djs),
         '#prefix' => '<span class="station-sch-djs">',
         '#suffix' => '</span></a>',
       ];

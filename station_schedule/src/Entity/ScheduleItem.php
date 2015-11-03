@@ -122,13 +122,13 @@ class ScheduleItem extends ContentEntityBase implements ScheduleItemInterface {
       ])
       ->setDisplayConfigurable('form', TRUE);
 
-    // @todo Convert this to point to a program entity.
     $fields['program'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('DJ'))
-      ->setDescription(t('The username of the DJ.'))
+      ->setLabel(t('Program'))
+      ->setDescription(t('The program being scheduled.'))
       ->setRevisionable(TRUE)
-      ->setSetting('target_type', 'user')
-      ->setDefaultValueCallback('Drupal\node\Entity\Node::getCurrentUserId')
+      ->setRequired(TRUE)
+      ->setSetting('target_type', 'node')
+      ->setSetting('handler_settings', ['target_bundles' => ['station_program' => 'station_program']])
       ->setTranslatable(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',

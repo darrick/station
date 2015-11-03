@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.station_program.body
+    - node.type.station_program
+  module:
+    - text
+    - user
+id: node.station_program.default
+targetEntityType: node
+bundle: station_program
+mode: default
+content:
+  body:
+    weight: 101
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+  links:
+    weight: 100
+hidden: {  }

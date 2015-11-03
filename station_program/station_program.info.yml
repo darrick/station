@@ -6,4 +6,10 @@ version: 8.x-1.x
 core: 8.x
 dependencies:
   - node
+  - path
   - station
+  - text
+  - user
+features:
+  required:
+    - node.type.station_program

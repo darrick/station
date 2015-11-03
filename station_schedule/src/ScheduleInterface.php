@@ -19,15 +19,13 @@ interface ScheduleInterface extends ContentEntityInterface {
   public function getUnscheduledMessage();
 
   /**
-   * @return \Drupal\station_schedule\ScheduleItemInterface[][]
+   * @return \Drupal\station_schedule\ScheduleItemInterface[]
    */
   public function getScheduledItems();
 
   /**
-   * @param \Drupal\station_schedule\ScheduleItemInterface[][] $scheduled_items
-   *
-   * @return $this
+   * @return \Drupal\station_schedule\ScheduleItemInterface[][]
    */
-  public function setScheduledItems(array $scheduled_items);
+  public function getScheduledItemsByDay();
 
 }

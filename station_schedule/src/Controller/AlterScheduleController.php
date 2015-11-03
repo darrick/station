@@ -30,7 +30,7 @@ class AlterScheduleController {
     $row = [];
     $minutes_per_day = 60 * 24;
     $day_names = DateHelper::weekDays();
-    foreach ($station_schedule->getScheduledItems() as $day => $items) {
+    foreach ($station_schedule->getScheduledItemsByDay() as $day => $items) {
       $header[$day] = $day_names[$day];
       $row[$day] = ['data' => []];
 

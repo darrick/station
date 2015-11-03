@@ -45,7 +45,7 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
     $start_hour = $entity->getStartHour();
     $end_hour = $entity->getEndHour();
     $day_names = DateHelper::weekDays();
-    foreach ($entity->getScheduledItems() as $day => $items) {
+    foreach ($entity->getScheduledItemsByDay() as $day => $items) {
       $header[$day + 1]['data'] = $day_names[$day];
       $row[$day + 1]['data'] = [];
 

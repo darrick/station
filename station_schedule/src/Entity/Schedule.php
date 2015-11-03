@@ -57,9 +57,16 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
   /**
    * Runtime only.
    *
+   * @var \Drupal\station_schedule\ScheduleItemInterface[]
+   */
+  protected $scheduledItems;
+
+  /**
+   * Runtime only.
+   *
    * @var \Drupal\station_schedule\ScheduleItemInterface[][]
    */
-  protected $scheduledItems = [];
+  protected $scheduledItemsByDay;
 
   /**
    * {@inheritdoc}
@@ -192,42 +199,34 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
    * {@inheritdoc}
    */
   public function getScheduledItems() {
+    if (!isset($this->scheduledItems)) {
+      $this->scheduledItems = $this->scheduleItemStorage()->loadByProperties(['schedule' => $this->id()]);
+    }
     return $this->scheduledItems;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setScheduledItems(array $scheduled_items) {
-    $this->scheduledItems = $scheduled_items;
-    return $this;
-  }
+  public function getScheduledItemsByDay() {
+    if (!isset($this->scheduledItemsByDay)) {
+      // Gather all variables used inside the loop.
+      $day_names = DateHelper::weekDaysOrdered(DateHelper::weekDays(TRUE));
+      $minutes_per_day = 60 * 24;
+      $start_minutes = $this->getStartHour() * 60;
+      $end_minutes = $this->getEndHour() * 60;
+      $schedule_items = $this->getScheduledItems();
 
-  /**
-   * {@inheritdoc}
-   *
-   * @param \Drupal\station_schedule\ScheduleInterface[] $entities
-   */
-  public static function postLoad(EntityStorageInterface $storage, array &$entities) {
-    $day_names = DateHelper::weekDaysOrdered(DateHelper::weekDays(TRUE));
-
-    /** @var \Drupal\Core\Entity\EntityStorageInterface $schedule_item_storage */
-    $schedule_item_storage = \Drupal::service('entity_type.manager')->getStorage('station_schedule_item');
-    $minutes_per_day = 60 * 24;
-    foreach ($entities as $entity) {
-      /** @var \Drupal\station_schedule\ScheduleItemInterface[] $schedule_items */
-      $schedule_items = $schedule_item_storage->loadByProperties(['schedule' => $entity->id()]);
-
-      $schedule = [];
+      $this->scheduledItemsByDay = [];
       foreach ($day_names as $day => $name) {
-        $schedule[$day] = [];
+        $this->scheduledItemsByDay[$day] = [];
 
-        // Find shows that start before the end of the day anf finish after the
+        // Find shows that start before the end of the day and finish after the
         // beginning of the day.
-        $start = $day * $minutes_per_day + ($entity->getStartHour() * 60);
-        $finish = $day * $minutes_per_day + ($entity->getEndHour() * 60);
-        $ids = $schedule_item_storage->getQuery()
-          ->condition('schedule', $entity->id())
+        $start = $day * $minutes_per_day + $start_minutes;
+        $finish = $day * $minutes_per_day + $end_minutes;
+        $ids = $this->scheduleItemStorage()->getQuery()
+          ->condition('schedule', $this->id())
           ->condition('start', $finish, '<')
           ->condition('finish', $start, '>')
           ->sort('start')
@@ -243,11 +242,28 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
           if ($scheduled_item->getFinish() > $finish) {
             $scheduled_item->get('finish')->setValue($finish);
           }
-          $schedule[$day][] = $scheduled_item;
+          $this->scheduledItemsByDay[$day][] = $scheduled_item;
         }
       }
-      $entity->setScheduledItems($schedule);
     }
+    return $this->scheduledItemsByDay;
+  }
+
+  /**
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected function scheduleItemStorage() {
+    return \Drupal::service('entity_type.manager')->getStorage('station_schedule_item');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __sleep() {
+    // Clear out runtime properties.
+    $this->scheduledItems = NULL;
+    $this->scheduledItemsByDay = NULL;
+    return parent::__sleep();
   }
 
 }

@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.station_program.body
+    - field.field.node.station_program.station_program_description
     - field.field.node.station_program.station_program_djs
     - node.type.station_program
   module:
@@ -13,7 +13,7 @@ targetEntityType: node
 bundle: station_program
 mode: default
 content:
-  body:
+  station_program_description:
     weight: 31
     settings:
       rows: 9

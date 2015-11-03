@@ -21,7 +21,6 @@ use Drupal\station_schedule\ScheduleInterface;
  *   id = "station_schedule",
  *   label = @Translation("Schedule"),
  *   base_table = "station_schedule",
- *   data_table = "station_schedule_field_data",
  *   admin_permission = "administer station schedule",
  *   field_ui_base_route = "entity.station_schedule.collection",
  *   entity_keys = {
@@ -33,6 +32,7 @@ use Drupal\station_schedule\ScheduleInterface;
  *   handlers = {
  *     "list_builder" = "\Drupal\station_schedule\Entity\ScheduleListBuilder",
  *     "view_builder" = "\Drupal\station_schedule\Entity\ScheduleViewBuilder",
+ *     "views_data" = "\Drupal\station_schedule\Entity\ScheduleViewsData",
  *     "route_provider" = {
  *       "html" = "\Drupal\station_schedule\Entity\ScheduleRouteProvider",
  *     },

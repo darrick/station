@@ -11,5 +11,6 @@ dependencies:
   - text
   - user
 features:
+  bundle: station
   required:
     - node.type.station_program

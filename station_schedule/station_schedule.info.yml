@@ -7,3 +7,7 @@ core: 8.x
 dependencies:
   - station
   - station_program
+features:
+  bundle: station
+  required:
+    - views.view.schedules

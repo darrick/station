@@ -62,4 +62,19 @@ class ScheduleListBuilder extends EntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+    if ($entity->access('update') && $entity->hasLinkTemplate('schedule')) {
+      $operations['alter-schedule'] = array(
+        'title' => $this->t('Alter schedule'),
+        'weight' => 15,
+        'url' => $entity->urlInfo('schedule'),
+      );
+    }
+    return $operations;
+  }
+
 }

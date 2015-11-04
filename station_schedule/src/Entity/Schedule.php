@@ -13,7 +13,9 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\station_schedule\ScheduleInterface;
 use Drupal\station_schedule\TypedData\DaysEmptyComputed;
+use Drupal\station_schedule\TypedData\HoursPerWeekComputed;
 use Drupal\station_schedule\TypedData\ItemCountComputed;
+use Drupal\station_schedule\TypedData\UnfilledTimeComputed;
 
 /**
  * Defines the station schedule entity class.
@@ -176,6 +178,18 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
       ->setDescription(t('Number of days on the schedule with no items'))
       ->setComputed(TRUE)
       ->setClass(DaysEmptyComputed::class);
+
+    $fields['hours_per_week'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Hours per week'))
+      ->setDescription(t('The number of hours per week'))
+      ->setComputed(TRUE)
+      ->setClass(HoursPerWeekComputed::class);
+
+    $fields['unfilled_time'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Unfilled time'))
+      ->setDescription(t('Amount of time left unfilled on the schedule'))
+      ->setComputed(TRUE)
+      ->setClass(UnfilledTimeComputed::class);
 
     return $fields;
   }

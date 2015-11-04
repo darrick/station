@@ -55,18 +55,9 @@ class ScheduleListBuilder extends EntityListBuilder {
 
     $row['days_empty'] = $entity->days_empty->getValue();
 
-    $hours_per_week = ($entity->getEndHour() - $entity->getStartHour()) * 7;
-    $duration = 0;
-    $scheduled_items_by_day = $entity->getScheduledItemsByDay();
-    foreach ($scheduled_items_by_day as $schedule_items) {
-      /** @var \Drupal\station_schedule\ScheduleItemInterface[] $schedule_items */
-      foreach ($schedule_items as $schedule_item) {
-        $duration += $schedule_item->getFinish() - $schedule_item->getStart();
-      }
-    }
-    $filled_hours = $duration / 60;
-    $unfilled_hours = $hours_per_week - $filled_hours;
-    $row['unfilled_time'] = $this->t('@hours hours / @percentage%', ['@hours' => $unfilled_hours, '@percentage' => round($unfilled_hours * 100 / $hours_per_week)]);
+    $unfilled_hours = $entity->unfilled_time->getValue();
+    $unfilled_percentage = round($unfilled_hours * 100 / $entity->hours_per_week->getValue());
+    $row['unfilled_time'] = $this->t('@hours hours / @percentage%', ['@hours' => $unfilled_hours, '@percentage' => $unfilled_percentage]);
 
     return $row + parent::buildRow($entity);
   }

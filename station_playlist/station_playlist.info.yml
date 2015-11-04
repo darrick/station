@@ -21,3 +21,7 @@ features:
     - field.field.node.station_playlist.station_playlist_track
     - field_collection.field_collection.station_playlist_track
     - field.storage.node.station_playlist_track
+    - field.storage.field_collection_item.station_playlist_track_album
+    - field.storage.field_collection_item.station_playlist_track_artist
+    - field.storage.field_collection_item.station_playlist_track_label
+    - field.storage.field_collection_item.station_playlist_track_title

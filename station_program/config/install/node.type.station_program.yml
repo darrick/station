@@ -1,5 +1,6 @@
 langcode: en
 status: true
+dependencies: {  }
 name: Program
 type: station_program
 description: 'A radio program that you can schedule.'

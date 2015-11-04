@@ -13,27 +13,11 @@ targetEntityType: node
 bundle: station_program
 mode: default
 content:
-  station_program_description:
-    weight: 31
-    settings:
-      rows: 9
-      summary_rows: 3
-      placeholder: ''
-    third_party_settings: {  }
-    type: text_textarea_with_summary
   created:
     type: datetime_timestamp
     weight: 10
     settings: {  }
     third_party_settings: {  }
-  station_program_djs:
-    weight: 32
-    settings:
-      match_operator: CONTAINS
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-    type: entity_reference_autocomplete
   path:
     type: path
     weight: 30
@@ -45,6 +29,22 @@ content:
       display_label: true
     weight: 15
     third_party_settings: {  }
+  station_program_description:
+    weight: 0
+    settings:
+      rows: 9
+      summary_rows: 3
+      placeholder: ''
+    third_party_settings: {  }
+    type: text_textarea_with_summary
+  station_program_djs:
+    weight: 1
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
   sticky:
     type: boolean_checkbox
     settings:

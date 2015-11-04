@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.station_playlist.station_playlist_track
+    - node.type.station_playlist
+  module:
+    - field_collection
+    - user
+id: node.station_playlist.default
+targetEntityType: node
+bundle: station_playlist
+mode: default
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+  station_playlist_track:
+    weight: 101
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: field_collection_list
+hidden: {  }

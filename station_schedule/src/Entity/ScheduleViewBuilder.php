@@ -16,7 +16,6 @@ use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\station_schedule\DatetimeHelper;
-use Drupal\user\EntityOwnerInterface;
 
 /**
  * @todo.
@@ -29,13 +28,13 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
    * {@inheritdoc}
    */
   public function view(EntityInterface $entity, $view_mode = 'full', $langcode = NULL) {
+    /** @var \Drupal\station_schedule\ScheduleInterface $entity */
     $header[0] = ['data' => $this->t('Time')];
     $row = [];
 
     // First column is hours.
     $row[0] = ['id' => 'station-sch-hours', 'data' => []];
     // Load the settings.
-    /** @var \Drupal\station_schedule\ScheduleInterface $entity */
     $start_hour = $entity->getStartHour();
     $end_hour = $entity->getEndHour();
     for ($hour = $start_hour; $hour < $end_hour; $hour++) {

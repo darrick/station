@@ -33,7 +33,7 @@ class ScheduleListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header = [
       'title' => $this->t('Title'),
-      'item_count' => $this->t('Scheduled items'),
+      'item_count' => $this->t('Scheduled item count'),
       'days_empty' => $this->t('Days empty'),
       'unfilled_time' => $this->t('Unfilled time'),
     ] + parent::buildHeader();
@@ -51,7 +51,7 @@ class ScheduleListBuilder extends EntityListBuilder {
       '#url' => $entity->urlInfo(),
     ];
 
-    $row['item_count'] = count($entity->getScheduledItems());
+    $row['item_count'] = $entity->item_count->getValue();
 
     $days_in_week = 7;
     $scheduled_items_by_day = $entity->getScheduledItemsByDay();

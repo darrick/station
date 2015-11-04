@@ -9,9 +9,9 @@ namespace Drupal\station_schedule\Entity;
 
 use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\station_schedule\ItemCountComputed;
 use Drupal\station_schedule\ScheduleInterface;
 
 /**
@@ -163,6 +163,12 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
         'type' => 'string_textfield',
       ])
       ->setDisplayConfigurable('form', TRUE);
+
+    $fields['item_count'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Scheduled item count'))
+      ->setDescription(t('Number of items on the schedule'))
+      ->setComputed(TRUE)
+      ->setClass(ItemCountComputed::class);
 
     return $fields;
   }

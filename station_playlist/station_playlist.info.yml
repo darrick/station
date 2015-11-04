@@ -9,6 +9,7 @@ dependencies:
   - node
   - path
   - station
+  - station_program
   - user
 features:
   bundle: station
@@ -20,6 +21,7 @@ features:
     - core.entity_view_display.node.station_playlist.teaser
     - field.field.node.station_playlist.station_playlist_track
     - field_collection.field_collection.station_playlist_track
+    - field.storage.node.station_playlist_program
     - field.storage.node.station_playlist_track
     - field.storage.field_collection_item.station_playlist_track_album
     - field.storage.field_collection_item.station_playlist_track_artist

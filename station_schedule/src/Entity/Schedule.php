@@ -11,6 +11,7 @@ use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\station_schedule\DaysEmptyComputed;
 use Drupal\station_schedule\ItemCountComputed;
 use Drupal\station_schedule\ScheduleInterface;
 
@@ -169,6 +170,12 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
       ->setDescription(t('Number of items on the schedule'))
       ->setComputed(TRUE)
       ->setClass(ItemCountComputed::class);
+
+    $fields['days_empty'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Days empty'))
+      ->setDescription(t('Number of days on the schedule with no items'))
+      ->setComputed(TRUE)
+      ->setClass(DaysEmptyComputed::class);
 
     return $fields;
   }

@@ -53,12 +53,11 @@ class ScheduleListBuilder extends EntityListBuilder {
 
     $row['item_count'] = $entity->item_count->getValue();
 
-    $days_in_week = 7;
-    $scheduled_items_by_day = $entity->getScheduledItemsByDay();
-    $row['days_empty'] = $days_in_week - count(array_filter($scheduled_items_by_day));
+    $row['days_empty'] = $entity->days_empty->getValue();
 
-    $hours_per_week = ($entity->getEndHour() - $entity->getStartHour()) * $days_in_week;
+    $hours_per_week = ($entity->getEndHour() - $entity->getStartHour()) * 7;
     $duration = 0;
+    $scheduled_items_by_day = $entity->getScheduledItemsByDay();
     foreach ($scheduled_items_by_day as $schedule_items) {
       /** @var \Drupal\station_schedule\ScheduleItemInterface[] $schedule_items */
       foreach ($schedule_items as $schedule_item) {

@@ -11,9 +11,9 @@ use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\station_schedule\DaysEmptyComputed;
-use Drupal\station_schedule\ItemCountComputed;
 use Drupal\station_schedule\ScheduleInterface;
+use Drupal\station_schedule\TypedData\DaysEmptyComputed;
+use Drupal\station_schedule\TypedData\ItemCountComputed;
 
 /**
  * Defines the station schedule entity class.

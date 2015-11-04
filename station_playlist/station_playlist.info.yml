@@ -1,0 +1,12 @@
+name: 'Station Playlist'
+type: module
+description: 'Provides a Station playlist entity.'
+package: Station
+version: 8.x-1.x
+core: 8.x
+dependencies:
+  - field_collection
+  - node
+  - station
+features:
+  bundle: station

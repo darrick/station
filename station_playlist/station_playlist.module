@@ -23,8 +23,7 @@ function station_playlist_node_links_alter(array &$links, NodeInterface $entity,
         if ($entity->access('update')) {
           $links_to_add['station_playlist_add'] = [
             'title' => t('Add new playlist'),
-            // @todo Create a dedicated route to prefill the program.
-            'url' => Url::fromRoute('node.add', ['node_type' => 'station_playlist']),
+            'url' => Url::fromRoute('station_program.node.add', ['node_type' => 'station_playlist', 'station_program' => $entity->id()]),
           ];
         }
         break;

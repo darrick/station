@@ -42,7 +42,7 @@ class StationPlaylistUITest extends WebTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testCRUD() {
+  public function testCreate() {
     $this->drupalGet('node/add');
     $this->clickLink('Playlist');
 
@@ -67,6 +67,20 @@ class StationPlaylistUITest extends WebTestBase {
 
     $this->assertLink('A Program');
     $this->assertLink('View program');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testCreateFromProgram() {
+    $this->drupalGet($this->programNode->urlInfo());
+    $this->clickLink('Add new playlist');
+    $title = 'A Playlist';
+    $edit = [
+      'title[0][value]' => $title,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save and publish');
+    $this->assertRaw(new FormattableMarkup('@type %title has been created.', ['@type' => 'Playlist', '%title' => $title]));
   }
 
 }

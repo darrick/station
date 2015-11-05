@@ -18,8 +18,7 @@ function station_playlist_node_links_alter(array &$links, NodeInterface $entity,
       case 'station_program':
         $links_to_add['station_playlist_view'] = [
           'title' => t('View all playlists'),
-          // @todo Create a real route for this.
-          'url' => Url::fromRoute('<front>'),
+          'url' => Url::fromRoute('station_playlists_by_program', ['entity' => $entity->id()]),
         ];
         if ($entity->access('update')) {
           $links_to_add['station_playlist_add'] = [

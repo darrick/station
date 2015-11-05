@@ -1,0 +1,11 @@
+station_playlists_by_program:
+  path: '/station/playlists/{entity}'
+  defaults:
+    _controller: '\Drupal\station_playlist\Controller\StationPlaylistController::playlistsByProgram'
+    _title_callback: '\Drupal\station_playlist\Controller\StationPlaylistController::title'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      entity:
+        type: 'entity:node'

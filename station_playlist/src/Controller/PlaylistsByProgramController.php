@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\station_playlist\Controller\StationPlaylistController.
+ * Contains \Drupal\station_playlist\Controller\PlaylistsByProgramController.
  */
 
 namespace Drupal\station_playlist\Controller;
@@ -17,7 +17,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * @todo.
  */
-class StationPlaylistController implements ContainerInjectionInterface {
+class PlaylistsByProgramController implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
 
@@ -27,7 +27,7 @@ class StationPlaylistController implements ContainerInjectionInterface {
   protected $playlistStorage;
 
   /**
-   * StationPlaylistController constructor.
+   * PlaylistsByProgramController constructor.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $playlist_storage
    */
@@ -45,14 +45,16 @@ class StationPlaylistController implements ContainerInjectionInterface {
   }
 
   /**
+   * @todo.
    */
   public function title(EntityInterface $entity) {
     return $this->t('@title Playlists', ['@title' => $entity->label()]);
   }
 
   /**
+   * @todo.
    */
-  public function playlistsByProgram(EntityInterface $entity) {
+  public function render(EntityInterface $entity) {
     if ($entity->bundle() !== 'station_program') {
       throw new NotFoundHttpException();
     }
@@ -71,6 +73,7 @@ class StationPlaylistController implements ContainerInjectionInterface {
   }
 
   /**
+   * @todo.
    */
   protected function getPlaylists(EntityInterface $entity) {
     $ids = $this->playlistStorage->getQuery()

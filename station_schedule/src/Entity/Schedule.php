@@ -12,10 +12,6 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\station_schedule\ScheduleInterface;
-use Drupal\station_schedule\TypedData\DaysEmptyComputed;
-use Drupal\station_schedule\TypedData\HoursPerWeekComputed;
-use Drupal\station_schedule\TypedData\ItemCountComputed;
-use Drupal\station_schedule\TypedData\UnfilledTimeComputed;
 
 /**
  * Defines the station schedule entity class.
@@ -35,7 +31,6 @@ use Drupal\station_schedule\TypedData\UnfilledTimeComputed;
  *   handlers = {
  *     "list_builder" = "\Drupal\station_schedule\Entity\ScheduleListBuilder",
  *     "view_builder" = "\Drupal\station_schedule\Entity\ScheduleViewBuilder",
- *     "views_data" = "\Drupal\station_schedule\Entity\ScheduleViewsData",
  *     "route_provider" = {
  *       "html" = "\Drupal\station_schedule\Entity\ScheduleRouteProvider",
  *     },
@@ -166,30 +161,6 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
         'type' => 'string_textfield',
       ])
       ->setDisplayConfigurable('form', TRUE);
-
-    $fields['item_count'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Scheduled item count'))
-      ->setDescription(t('Number of items on the schedule'))
-      ->setComputed(TRUE)
-      ->setClass(ItemCountComputed::class);
-
-    $fields['days_empty'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Days empty'))
-      ->setDescription(t('Number of days on the schedule with no items'))
-      ->setComputed(TRUE)
-      ->setClass(DaysEmptyComputed::class);
-
-    $fields['hours_per_week'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Hours per week'))
-      ->setDescription(t('The number of hours per week'))
-      ->setComputed(TRUE)
-      ->setClass(HoursPerWeekComputed::class);
-
-    $fields['unfilled_time'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Unfilled time'))
-      ->setDescription(t('Amount of time left unfilled on the schedule'))
-      ->setComputed(TRUE)
-      ->setClass(UnfilledTimeComputed::class);
 
     return $fields;
   }

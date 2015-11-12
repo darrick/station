@@ -33,9 +33,6 @@ class ScheduleListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header = [
       'title' => $this->t('Title'),
-      'item_count' => $this->t('Scheduled item count'),
-      'days_empty' => $this->t('Days empty'),
-      'unfilled_time' => $this->t('Unfilled time'),
     ] + parent::buildHeader();
     return $header;
   }
@@ -50,14 +47,6 @@ class ScheduleListBuilder extends EntityListBuilder {
       '#title' => $entity->label(),
       '#url' => $entity->urlInfo(),
     ];
-
-    $row['item_count'] = $entity->item_count->getValue();
-
-    $row['days_empty'] = $entity->days_empty->getValue();
-
-    $unfilled_hours = $entity->unfilled_time->getValue();
-    $unfilled_percentage = round($unfilled_hours * 100 / $entity->hours_per_week->getValue());
-    $row['unfilled_time'] = $this->t('@hours hours / @percentage%', ['@hours' => $unfilled_hours, '@percentage' => $unfilled_percentage]);
 
     return $row + parent::buildRow($entity);
   }

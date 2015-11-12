@@ -155,6 +155,7 @@ class Schedule extends ContentEntityBase implements ScheduleInterface {
     $fields['unscheduled_message'] = BaseFieldDefinition::create('string')
       ->setLabel(t("'No scheduled item' message"))
       ->setDescription('Message to display during unscheduled periods.')
+      ->setDefaultValue("We're on autopilot.")
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', [

@@ -3,3 +3,4 @@ station_schedule.add:
   title: 'Add schedule'
   appears_on:
     - entity.station_schedule.collection
+    - station_schedule.settings

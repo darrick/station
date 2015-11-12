@@ -22,3 +22,8 @@ entity.station_schedule.collection:
   route_name: entity.station_schedule.collection
   title: List
   base_route: entity.station_schedule.collection
+station_schedule.settings:
+  route_name: station_schedule.settings
+  base_route: entity.station_schedule.collection
+  title: 'Settings'
+  weight: 0.5

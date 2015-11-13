@@ -9,6 +9,7 @@ namespace Drupal\station_schedule\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\station_schedule\ScheduleItemInterface;
 
@@ -25,6 +26,7 @@ use Drupal\station_schedule\ScheduleItemInterface;
  *     "route_provider" = {
  *       "html" = "\Drupal\station_schedule\Entity\ScheduleItemRouteProvider",
  *     },
+ *     "view_builder" = "\Drupal\station_schedule\Entity\ScheduleItemViewBuilder",
  *     "form" = {
  *       "add" = "\Drupal\station_schedule\Entity\Form\ScheduleItemAddForm",
  *       "edit" = "\Drupal\station_schedule\Entity\Form\ScheduleItemEditForm",
@@ -44,6 +46,13 @@ use Drupal\station_schedule\ScheduleItemInterface;
  * )
  */
 class ScheduleItem extends ContentEntityBase implements ScheduleItemInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    return $this->getProgram()->label();
+  }
 
   /**
    * {@inheritdoc}
@@ -71,6 +80,20 @@ class ScheduleItem extends ContentEntityBase implements ScheduleItemInterface {
    */
   public function getProgram() {
     return $this->get('program')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDjs() {
+    $program = $this->getProgram();
+    $djs = [];
+    if ($program instanceof FieldableEntityInterface && $program->hasField('station_program_djs')) {
+      foreach ($program->get('station_program_djs') as $dj_item) {
+        $djs[] = $dj_item->entity;
+      }
+    }
+    return $djs;
   }
 
   /**

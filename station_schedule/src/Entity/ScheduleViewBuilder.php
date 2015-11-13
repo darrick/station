@@ -12,11 +12,11 @@ use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityViewBuilderInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\station_schedule\DatetimeHelper;
+use Drupal\station_schedule\ScheduleItemInterface;
 
 /**
  * @todo.
@@ -65,8 +65,7 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
         $last_finish = $finish;
 
         // Display the schedule item.
-        $program = $item->getProgram();
-        $row[$day + 1]['data'][] = $this->buildScheduledItem($start, $finish, $program);
+        $row[$day + 1]['data'][] = $this->buildScheduledItem($start, $finish, $item);
       }
       // Display a block for any remaining time during the day.
       if ($last_finish < $day_finish) {
@@ -91,7 +90,7 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
   }
 
   /**
-   * @todo.
+   * @return int
    */
   protected function getCurrentDateNumeral() {
     return (new DrupalDateTime())->format('w');
@@ -113,8 +112,9 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
     return $output;
   }
 
-  protected function buildScheduledItem($start, $finish, EntityInterface $program) {
+  protected function buildScheduledItem($start, $finish, ScheduleItemInterface $item) {
     $height = (($finish - $start) / 24) . 'em';
+    $program = $item->getProgram();
     $link = $program->toUrl()->toString();
     $time = DatetimeHelper::hourRange($start, $finish);
 
@@ -136,12 +136,9 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
         ],
       ],
     ];
-    $djs = [];
-    if ($program instanceof FieldableEntityInterface && $program->hasField('station_program_djs')) {
-      foreach ($program->get('station_program_djs') as $dj) {
-        $djs[] = $dj->entity->label();
-      }
-    }
+    $djs = array_map(function (EntityInterface $dj) {
+      return $dj->toLink();
+    }, $item->getDjs());
     if ($djs) {
       $output['children']['dj'] = [
         '#markup' => Html::escape(implode(', ', $djs)),

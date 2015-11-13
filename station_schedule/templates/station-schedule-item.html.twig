@@ -1,0 +1,15 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a station schedule item.
+ */
+#}
+{% if program_link %}
+  <h2 class="show-title">{{ program_link }}</h2>
+{% endif %}
+{% if time %}
+  <div class="show-time">{{ time }}</div>
+{% endif %}
+{% if djs %}
+  <h3 class="show-dj">{{ djs }}</h3>
+{% endif %}

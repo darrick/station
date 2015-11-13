@@ -34,4 +34,9 @@ interface ScheduleItemInterface extends ContentEntityInterface {
    */
   public function getProgram();
 
+  /**
+   * @return \Drupal\Core\Entity\EntityInterface[]
+   */
+  public function getDjs();
+
 }

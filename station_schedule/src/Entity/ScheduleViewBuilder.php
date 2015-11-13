@@ -115,7 +115,7 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
 
   protected function buildScheduledItem($start, $finish, EntityInterface $program) {
     $height = (($finish - $start) / 24) . 'em';
-    $link = $program->url();
+    $link = $program->toUrl()->toString();
     $time = DatetimeHelper::hourRange($start, $finish);
 
     $output = [

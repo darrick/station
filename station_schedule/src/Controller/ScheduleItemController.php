@@ -16,7 +16,7 @@ use Drupal\station_schedule\ScheduleInterface;
 class ScheduleItemController extends ControllerBase {
 
   public function addScheduleItem(ScheduleInterface $station_schedule, $start, $finish) {
-    $entity = $this->entityManager()->getStorage('station_schedule_item')->create([
+    $entity = $this->entityTypeManager()->getStorage('station_schedule_item')->create([
       'schedule' => $station_schedule->id(),
       'start' => $start,
       'finish' => $finish,

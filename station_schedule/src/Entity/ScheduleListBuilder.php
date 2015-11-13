@@ -45,7 +45,7 @@ class ScheduleListBuilder extends EntityListBuilder {
     $row['title']['data'] = [
       '#type' => 'link',
       '#title' => $entity->label(),
-      '#url' => $entity->urlInfo(),
+      '#url' => $entity->toUrl(),
     ];
 
     return $row + parent::buildRow($entity);
@@ -60,7 +60,7 @@ class ScheduleListBuilder extends EntityListBuilder {
       $operations['alter-schedule'] = array(
         'title' => $this->t('Alter schedule'),
         'weight' => 15,
-        'url' => $entity->urlInfo('schedule'),
+        'url' => $entity->toUrl('schedule'),
       );
     }
     return $operations;

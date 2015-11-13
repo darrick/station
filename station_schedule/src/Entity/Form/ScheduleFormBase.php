@@ -21,7 +21,7 @@ class ScheduleFormBase extends ContentEntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $status = parent::save($form, $form_state);
     if ($status) {
-      $form_state->setRedirectUrl($this->getEntity()->urlInfo());
+      $form_state->setRedirectUrl($this->getEntity()->toUrl());
     }
   }
 

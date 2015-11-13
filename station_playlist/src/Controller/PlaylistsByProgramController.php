@@ -63,7 +63,7 @@ class PlaylistsByProgramController implements ContainerInjectionInterface {
     foreach ($this->getPlaylists($entity) as $playlist) {
       $items[] = [
         'title' => $playlist->label(),
-        'url' => $playlist->urlInfo(),
+        'url' => $playlist->toUrl(),
       ];
     }
     return [

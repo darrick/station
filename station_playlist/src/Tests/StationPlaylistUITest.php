@@ -73,7 +73,7 @@ class StationPlaylistUITest extends WebTestBase {
    * {@inheritdoc}
    */
   public function testCreateFromProgram() {
-    $this->drupalGet($this->programNode->urlInfo());
+    $this->drupalGet($this->programNode->toUrl());
     $this->clickLink('Add new playlist');
     $title = 'A Playlist';
     $edit = [

@@ -115,7 +115,7 @@ class AlterScheduleController {
     $start = $schedule_item->getStart();
     $finish = $schedule_item->getFinish();
     $height = ($finish - $start);
-    $link = $schedule_item->url('edit-form');
+    $link = $schedule_item->toUrl('edit-form')->toString();
     $output = [
       '#type' => 'container',
       '#attributes' => ['class' => ['station-sch-box', 'station-sch-scheduled']],

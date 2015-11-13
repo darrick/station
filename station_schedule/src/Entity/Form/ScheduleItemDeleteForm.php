@@ -18,14 +18,14 @@ class ScheduleItemDeleteForm extends ContentEntityDeleteForm {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->getEntity()->urlInfo('edit-form');
+    return $this->getEntity()->toUrl('edit-form');
   }
 
   /**
    * {@inheritdoc}
    */
   protected function getRedirectUrl() {
-    return $this->getEntity()->getSchedule()->urlInfo('schedule');
+    return $this->getEntity()->getSchedule()->toUrl('schedule');
   }
 
   /**

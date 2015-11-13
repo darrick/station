@@ -9,6 +9,7 @@ namespace Drupal\station_schedule\Entity;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Datetime\DateHelper;
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityViewBuilderInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -93,9 +94,7 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
    * @todo.
    */
   protected function getCurrentDateNumeral() {
-    $ts = time();
-    $return = ($ts - date('Z', $ts)) + \Drupal::configFactory()->get('system.date')->get('timezone.default') ?: 0;
-    return date('w', $return);
+    return (new DrupalDateTime())->format('w');
   }
 
   protected function buildScheduleHour($hour) {

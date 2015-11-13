@@ -1,0 +1,4 @@
+services:
+  station_schedule.schedule.repository:
+    class: Drupal\station_schedule\ScheduleRepository
+    arguments: ['@entity_type.manager', '@config.factory']

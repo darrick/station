@@ -7,6 +7,8 @@
 
 namespace Drupal\station_schedule;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+
 /**
  * @todo.
  */
@@ -53,6 +55,15 @@ class DatetimeHelper {
       'minutes' => $minutes,
       'a' => $a,
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function deriveMinutesFromTime($timestamp = 'now') {
+    $date_time = new DrupalDateTime($timestamp);
+    list($day, $hour, $minute) = explode(' ', $date_time->format('w G i'));
+    return (($day * 24) + $hour) * 60 + $minute;
   }
 
   /**

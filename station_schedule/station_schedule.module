@@ -16,6 +16,9 @@ function station_schedule_theme($existing, $type, $theme, $path) {
     'station_schedule_item' => [
       'render element' => 'elements',
     ],
+    'station_schedule_item_empty' => [
+      'variables' => ['time' => NULL, 'program' => '', 'djs' => '', 'genre' => ''],
+    ],
   ];
 }
 
@@ -30,7 +33,7 @@ function template_preprocess_station_schedule_item(&$variables) {
 
   $variables['time'] = DatetimeHelper::hourRange($entity->getStart(), $entity->getFinish());
 
-  $variables['program_link'] = $entity->getProgram()->toLink();
+  $variables['program'] = $entity->getProgram()->toLink();
 
   $variables['djs'] = [
     '#theme' => 'item_list',

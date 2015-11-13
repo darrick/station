@@ -77,8 +77,7 @@ class ScheduleSettingsForm extends ConfigFormBase {
         '#type' => 'select',
         '#title' => $this->t('Current schedule'),
         '#options' => $schedules,
-        '#default_value' => $this->config('station_schedule.settings')
-          ->get('current_schedule'),
+        '#default_value' => $this->config('station_schedule.settings')->get('current_schedule'),
       ];
     }
     else {

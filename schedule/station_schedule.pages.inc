@@ -65,7 +65,7 @@ function theme_station_schedule_item($variables) {
       // Example: array_shift(user_load_multiple(array(), $entry))
       // It should be working.
       $user = user_load($entry['uid']);
-      $djs[] .= $user->name;
+      $djs[] .= format_username($user);
     }
     $output .= '<span class="station-sch-djs">' . check_plain(implode(', ', $djs)) . '</span>';
   }

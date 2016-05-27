@@ -1,6 +1,27 @@
 <?php
 
 /**
+ * Implements hook_node_info().
+ */
+function station_program_node_info() {
+  return array(
+    'station_program' => array(
+      'name' => t('Program'),
+      'base' => 'node_content',
+      'has_title' => TRUE,  
+      'title_label' => t('Title'),
+      'description' => t('A radio program that you can schedule.'),
+    ),
+    'station_archive' => array(
+      'name' => t('Audio'),
+      'base' => 'node_content',
+      'has_title' => TRUE,  
+      'title_label' => t('Title'),
+      'description' => t('A audio file.'),
+    ),
+  );
+}
+/**
  * Implements hook_help().
  */
 function station_program_help($path, $arg) {

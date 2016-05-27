@@ -381,13 +381,52 @@ function _station_catalog_get_vid() {
   return $vid;
 }
 
+function _station_catalog_musicbrainz_artist($artist) {
+  $args = array(
+    "artist:$artist",
+  );
+
+  $query = array(
+    'query' => implode(' AND ', $args),
+  );
+  $url = url('http://192.168.1.211:5000/ws/2/artist/', array('query' => $query));
+
+  $ret = array();
+
+  $response = drupal_http_request($url);
+  if ($response->code == 200) {
+    $doc = new DOMDocument;
+    $doc->loadXML($response->data);
+    $xpath = new DOMXPath($doc);
+
+    // Can't use the default namespace, must explicitly set one...
+    $xpath->registerNameSpace('mb', 'http://musicbrainz.org/ns/mmd-2.0#');
+    $result = $xpath->query('//mb:artist-list/mb:artist[@ext:score="100"]/mb:name');
+
+    $ret = array();
+    if ($result && $result->length) {
+      foreach ($result as $index => $item) {
+        $ret[$item->nodeValue] = $item->nodeValue;
+      }
+
+    }
+  }
+  return $ret;
+}
+
 function _station_catalog_musicbrainz_album($artist, $title) {
   $args = array(
-    'type' => 'xml',
-    'artist' => $artist,
-    'title' => $title,
+    'status:official',
+    'country:US',
+    "release:$title",
+    "artist:$artist",
   );
-  $url = url('http://musicbrainz.org/ws/1/release/', array('query' => $args));
+
+  $query = array(
+    'query' => implode(' AND ', $args),
+  );
+  //$url = url('http://192.168.1.211:5000/ws/1/release/', array('query' => $args));
+  $url = url('http://192.168.1.211:5000/ws/2/release/', array('query' => $query));
 
   $ret = array();
 
@@ -398,35 +437,35 @@ function _station_catalog_musicbrainz_album($artist, $title) {
     $doc->loadXML($response->data);
     $xpath = new DOMXPath($doc);
     // Can't use the default namespace, must explicitly set one...
-    $xpath->registerNameSpace('mb', 'http://musicbrainz.org/ns/mmd-1.0#');
+    $xpath->registerNameSpace('mb', 'http://musicbrainz.org/ns/mmd-2.0#');
+    // Register PHP functions (no restrictions)
+    $xpath->registerPHPFunctions();
     #dvm($doc->saveXML());
     // Only return exact matches.
-    $result = $xpath->query('//mb:release-list/mb:release[@ext:score="100"]');
+    $result = $xpath->query('//mb:release-list/mb:release[@ext:score="100"][mb:date]');
+    //$result = $xpath->query('//mb:release-list/mb:release[@ext:score="100"][not(php:functionString("date_create", mb:date) > php:functionString("date_create", preceding-sibling::mb:date)) AND NOT(php:functionString("date_create", mb:date) < php:functionString("date_create", following-sibling::mb:date))]');
 
     if ($result && $result->length) {
-      //foreach ($result as $item) {
-        //$release = simplexml_import_dom($result->item(0));
-      //}
-      $release = simplexml_import_dom($result->item(0));
-      #dsm($release->asXML());
+      $release_date = NULL;
+      foreach ($result as $index => $item) {
+        $item = simplexml_import_dom($item);
+        $item_date = date_create((string) $item->date);
+        if (empty($release_date) or $item_date < $release_date) {
+          $release_date = $item_date;
+          $release = $item;
+        }
+      }
       $ret['mb_release_id'] = (string) $release['id'];
-      $ret['artist'] = (string) $release->artist->name;
+      $ret['artist'] = (string) $release->{'artist-credit'}->{'name-credit'}->artist->name;
       $ret['album'] = (string) $release->title;
       // ASIN: Amazon Standard Identification Number
       $ret['asin'] = (string) $release->asin;
       // Release year is a bit of a pain, the tag name isn't a valid PHP
       // identifier and we need to use a regular expression to match the
       // year portion of the ate.
-      $ret['year'] = '';
-      $event = 'release-event-list';
-      if (!empty($release->$event->event['date'])) {
-        $date = $release->$event->event['date']->asXML();
-        preg_match('/"([0-9]*)/', $date, $matches);
-        $ret['year'] = (string) $matches[1];
-      }
+      $ret['year'] = (string) $release->date;
       // Now that we've got the release id, we need to make another call to get the label.
-      #$label = _station_catalog_musicbrainz_label($ret['mb_release_id']);
-      $ret['label'] = (string) $release->$event->event->label->name;
+      $ret['label'] = (string) $release->{'label-info-list'}->{'label-info'}->label->name;
     }
   }
   return $ret;

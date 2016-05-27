@@ -32,6 +32,13 @@ function station_playlist_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['station/autocomplete/playlist_mb'] = array(
+    'title' => 'Playlist Autocomplete',
+    'page callback' => 'station_playlist_autocomplete_mb',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['station/ajax/playlist'] = array(
     'page callback' => 'station_playlist_ajax',
     'page arguments' => array(),
@@ -142,6 +149,8 @@ function station_playlist_get_empty_track() {
       'album' => '',
       'title' => '',
       'label' => '',
+      'start' => '',
+      'duration' => '',
       'link' => '',
       'weight' => 9999,
     );
@@ -227,12 +236,30 @@ function station_playlist_form(&$node, $form_state) {
       '#default_value' => isset($track['label']) ? $track['label'] : '',
       '#autocomplete_path' => 'station/autocomplete/playlist/label',
     );
+    $form['tracks_wrapper']['tracks'][$weight]['start'] = array(
+      '#type' => 'masked_input',
+      '#size' => 8,
+      '#maxlength' => 8,
+      '#default_value' => isset($track['start']) ? $track['start'] : '',
+      '#mask' => '99:99:99',
+    );
+    $form['tracks_wrapper']['tracks'][$weight]['duration'] = array(
+      '#type' => 'masked_input',
+      '#size' => 8,
+      '#maxlength' => 8,
+      '#default_value' => isset($track['duration']) ? $track['duration'] : '',
+      '#mask' => '99:99:99',
+    );
+    masked_input_attach_to($form['tracks_wrapper']['tracks'][$weight]['duration']);
+    masked_input_attach_to($form['tracks_wrapper']['tracks'][$weight]['start']);
+    /*
     $form['tracks_wrapper']['tracks'][$weight]['link'] = array(
       '#type' => 'textfield',
       '#size' => 20,
       '#maxlength' => 255,
       '#default_value' => isset($track['link']) ? $track['link'] : '',
     );
+     */
     $form['tracks_wrapper']['tracks'][$weight]['weight'] = array(
       '#type' => 'weight',
       '#default_value' => $weight,
@@ -311,7 +338,7 @@ function theme_station_playlist_track_form($variables) {
 
   // To have the drag and drop not totally wack out the formatting we need
   // the first column in the table with no form element.
-  $header = array('', t('Artist'), t('Title'), t('Album'), t('Label'), t('Link'), t('Weight'), '');
+  $header = array('', t('Artist'), t('Title'), t('Album'), t('Label'), t('Start'), t('Duration'), t('Weight'), '');
 
   $rows = array();
   foreach (element_children($form['tracks']) as $key) {
@@ -322,7 +349,9 @@ function theme_station_playlist_track_form($variables) {
       drupal_render($form['tracks'][$key]['title']),
       drupal_render($form['tracks'][$key]['album']),
       drupal_render($form['tracks'][$key]['label']),
-      drupal_render($form['tracks'][$key]['link']),
+      drupal_render($form['tracks'][$key]['start']),
+      drupal_render($form['tracks'][$key]['duration']),
+  //    drupal_render($form['tracks'][$key]['link']),
       drupal_render($form['tracks'][$key]['weight']),
       drupal_render($form['tracks'][$key]['remove']),
     );
@@ -488,12 +517,14 @@ function station_playlist_update($node) {
  */
 function station_playlist_view($node, $view_mode) {
   if ($view_mode == 'full') {
+    /*
     $program_nid = $node->field_station_program[$node->language][0]['nid'];
     $breadcrumb = drupal_get_breadcrumb();
     $breadcrumb[] = l(t('Station'), 'station');
     $breadcrumb[] = l(t('Programs'), 'station/programs');
     $breadcrumb[] = l(_nodereference_titles($program_nid), 'node/' . $program_nid);
     drupal_set_breadcrumb($breadcrumb);
+     */
   }
 
   if (($view_mode != 'teaser') && isset($node->nid)) {
@@ -575,6 +606,30 @@ function station_playlist_node_view($node, $view_mode = 'full') {
   }
 }
 
+/**
+ * Retrieve a list of autocomplete suggestions for playlist items.
+ *
+ * @param $field
+ *   The name of the field to match: 'artist', 'album', 'label'
+ * @param $string
+ *   The value to search for.
+ */
+function station_playlist_autocomplete_mb($field = '', $string = '') {
+  $matches = array();
+  if (in_array($field, array('artist', 'album', 'label'))) {
+  }
+
+  if ($field == 'artist') {
+    $matches = _station_catalog_musicbrainz_artist($string);
+  }
+
+  if ($field == 'album') {
+    $matches = _station_catalog_musicbrainz_album($artist, $title, $string);
+  }
+
+  print drupal_json_encode($matches);
+  exit();
+}
 /**
  * Retrieve a list of autocomplete suggestions for playlist items.
  *

@@ -72,7 +72,7 @@ function station_archive_permission() {
  * Implements hook_node_update().
  */
 function station_archive_node_update($node) {
-  if ($node->type == 'audio') {
+  if ($node->type == 'station_archive') {
     if (isset($node->station_archive) && user_access('administer station archive')) {
       // Remove any existing records.
       db_delete('station_archive_item')
@@ -97,7 +97,7 @@ function station_archive_node_update($node) {
  * Implements hook_node_delete().
  */
 function station_archive_node_delete($node) {
-  if ($node->type == 'audio') {
+  if ($node->type == 'station_archive') {
     // remove our tracking records when the audio node is deleted. we only
     // assume that audio node are on this machine, the program nodes could
     // be on a remote server.
@@ -140,14 +140,15 @@ function station_archive_node_view($node, $view_mode, $langcode) {
   if ($node->type == 'station_archive') {
     // If it's in the archives, set the menu appropriately
     if ($view_mode != 'teaser' && isset($node->station_archive)) {
+      /*
       $breadcrumb = array(
         l(t('Home'), NULL),
         l(t('Station'), 'station'),
         l(t('Archives'), 'station/archives'),
-        l($node->station_archive['program_title'], 'station/archives/' . $node->station_archive['program_nid']),
+        l($node->station_archive['title'], 'station/archives/' . $node->station_archive['program_nid']),
       );
       drupal_set_breadcrumb($breadcrumb);
-
+       */
       // Provide information to admins on the import and deletion dates.
       if (user_access('administer station archive')) {
         $node->content['station_archive'] = array(
@@ -249,7 +250,13 @@ function station_archive_node_form_custom_validate(&$form, &$form_state) {
     $gmt_timestamp = isset($form_state['values']['station_archive']['aired']) ? $form_state['values']['station_archive']['aired'] : REQUEST_TIME;
     // get a timestamp that's correct for the timezone
     $local_timestamp = station_local_ts($gmt_timestamp);
-    $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
+    //$prettydate = date('ga \o\n M jS, Y', $local_timestamp);
+    if (date('i', $local_timestamp)) {
+      $date_format = 'g:ia \o\n M jS, Y';
+    } else {
+      $date_format = 'ga \o\n M jS, Y';
+    }
+    $prettydate = date($date_format, $local_timestamp);
 
     // connect to the station module and find program info based on timestamp
     $schedule = station_default_schedule();
@@ -315,14 +322,14 @@ function station_archive_node_info_form($node) {
     $form['station_archive']['aired'] = array(
       '#type' => 'item',
       '#title' => t('Air date'),
-      '#value' => format_date($node->station_archive['aired'], 'long'),
+      '#markup' => format_date($node->station_archive['aired'], 'long'),
       '#description' => t("The date the program first aired."),
       '#weight' => -1,
     );
     $form['station_archive']['imported'] = array(
       '#type' => 'item',
       '#title' => t('Imported on'),
-      '#value' => format_date($node->station_archive['imported'], 'long'),
+      '#markup' => format_date($node->station_archive['imported'], 'long'),
       '#description' => t('This is the date the audio was actually imported to the archive.'),
       '#weight' => 0,
     );
@@ -341,7 +348,7 @@ function station_archive_node_info_form($node) {
         $form['station_archive']['deletion'] = array(
           '#type' => 'item',
           '#title' => t('Deletion scheduled for'),
-          '#value' => format_date($delete, 'long'),
+          '#markup' => format_date($delete, 'long'),
           '#description' => t("The administrator has specified that archived recordings will be removed after being posted for %interval.", array('%interval' => format_interval($max_age))),
           '#weight' => 1,
         );
@@ -398,7 +405,7 @@ function _station_archive_delete_old_nodes() {
   $result = $query->execute();
   //while ($node = db_fetch_object($result)) {
   foreach ($result as $node) {
-    watchdog('stationarchive', 'Removing %title from the archive.', array('%title' => $node->title), WATCHDOG_NOTICE);
+    //watchdog('stationarchive', 'Removing %title from the archive.', array('%title' => $node->title), WATCHDOG_NOTICE);
     node_delete($node->nid);
   }
 }
@@ -415,11 +422,11 @@ function _station_archive_import_files() {
       // a slow machine
       drupal_set_time_limit(0);
 
-      $cuefile = dirname($file->filename) . '/' . $file->name . '.cue';
+      $cuefile = $dirpath . '/' . $file->name . '.cue';
       // if there's a .cue file, it's still being downloaded, we'll get it on
       // the next cron call.
       if (!file_exists($cuefile)) {
-        watchdog('stationarchive', 'Attempting to import %filename into the archive.', array('%filename' => $file->filename), WATCHDOG_NOTICE);
+        //watchdog('stationarchive', 'Attempting to import %filename into the archive as %cuefile does not exist.', array('%filename' => $file->filename, '%cuefile' => $cuefile), WATCHDOG_NOTICE);
         $status = _station_archive_add_file($file);
         // if there was a problem stop the import
         if (!$status) {
@@ -489,22 +496,28 @@ function _station_archive_add_file($file) {
   $file_format = $basename[1];
   // get a timestamp that's correct for the timezone
   $local_timestamp = station_local_ts($gmt_timestamp);
-  $prettydate = date('ga \o\n M jS, Y', $local_timestamp);
+  //$prettydate = date('ga \o\n M jS, Y', $local_timestamp);
+  if (date('i', $local_timestamp)) {
+    $date_format = 'g:ia \o\n M jS, Y';
+  } else {
+    $date_format = 'ga \o\n M jS, Y';
+  }
+  $prettydate = date($date_format, $local_timestamp);
 
   // connect to the station module and find program info based on timestamp
   $schedule = station_default_schedule();
   $program = station_get_program_at($gmt_timestamp, $schedule['nid']);
   if ($program === FALSE) {
     // couldn't get the program info, configuation error?
-    watchdog('stationarchive', "Couldn't load the program metadata. We'll retry the import on the next cron run.", array(), WATCHDOG_WARNING);
+    //watchdog('stationarchive', "Couldn't load the program metadata. We'll retry the import on the next cron run.", array(), WATCHDOG_WARNING);
     return FALSE;
   }
   elseif ($program == NULL) {
     // nothing is scheduled...
     // ...check if they've elected to delete unscheduled programs, do so.
     if (variable_get('station_archive_delete_unscheduled', 0)) {
-      file_delete($file);
-      watchdog('stationarchive', 'Deleted audio that was recorded during unscheduled time. Filename %filename', array('%filename' => $file->filename), WATCHDOG_NOTICE);
+      //file_delete($file);
+      //watchdog('stationarchive', 'Deleted audio that was recorded during unscheduled time. Filename %filename', array('%filename' => $file->filename), WATCHDOG_NOTICE);
       return TRUE;
     }
     // if we've got no program use the default metadata
@@ -514,8 +527,9 @@ function _station_archive_add_file($file) {
   elseif (!$program->may_archive) {
     // The program scheduled at this time is marked as non-archivable. We'll
     // delete the file and log it.
-    file_delete($file);
-    watchdog('stationarchive', 'Deleted %program-title, it was marked as non-archivable.', array('%program-title' => $program->title), WATCHDOG_NOTICE);
+    //file_delete($file);
+    //watchdog('stationarchive', 'Deleted %program-title, it was marked as non-archivable.', array('%program-title' => $program->title), WATCHDOG_NOTICE);
+    //watchdog('stationarchive', print_r($program,TRUE));
     return TRUE;
   }
   else {
@@ -524,13 +538,13 @@ function _station_archive_add_file($file) {
     $program_title = $program->title;
     $djs = array();
     if (!empty($program->field_station_program_dj)) {
-      foreach (field_get_items('node', $program, 'field_station_program_dj', $form->language) as $entry) {
+      foreach (field_get_items('node', $program, 'field_station_program_dj', 'und') as $entry) {
       //foreach ($program->field_station_program_dj as $entry) {
         $user = user_load($entry);
         $djs[] = $user->name;
       }
     }
-    $genre = field_get_items('node', $program, 'station_program_genre', $form->language);
+    $genre = field_get_items('node', $program, 'station_program_genre', 'und');
     //$audio_tags['title'] = $program->title;
     $audio_tags['artist'] = station_anded_list($djs);
     $audio_tags['genre'] = isset($genre[0]['value']) ? $genre[0]['value'] : '';
@@ -538,7 +552,7 @@ function _station_archive_add_file($file) {
   }
   $audio_tags['title'] = $program_title;
   $audio_tags['year'] = date('Y', $local_timestamp);
-  $audio_tags['comment'] = t('Recorded at @date', array('@date' => $prettydate));
+  $audio_tags['comment'] = t('@date', array('@date' => $prettydate));
 
   // find/create the proper taxonomic terms based on day and hour
   $taxonomy = _station_archive_get_taxonomy($local_timestamp);
@@ -555,19 +569,22 @@ function _station_archive_add_file($file) {
     'imported' => REQUEST_TIME,
     'permanent' => 0,
   );
-  $node->audio_file['downloadable'] = 1;
+  $node->uid = $program->uid;
   $node->created = $gmt_timestamp;
   // don't bother to check for promotion if there's no metadata
   $node->promote = (int) ($program && variable_get('station_archive_promote_scheduled', 1));
   // keep the timestamp as the filename so we can re-import again if needed but
   // store a more readable filename for the user.
-  $node->audio_file['file_name'] = str_replace(' ', '_', $audio_tags['title'] . " ($prettydate).$file_format");
+  $node->field_station_archive_audio[LANGUAGE_NONE][0]['description'] = str_replace(' ', '_', $audio_tags['title'] . " ($prettydate).$file_format");
+  $node->field_station_archive_audio[LANGUAGE_NONE][0]['uid'] = $program->uid;
 
   // ... and save it
   $node = node_submit($node);
   node_save($node);
 
-  watchdog('stationarchive', 'Added %title to the archive.', array('%title' => $program_title), WATCHDOG_NOTICE, l(t('view'), 'node/' . $node->nid));
+  $record = array_merge($node->station_archive, array('audio_nid' => $node->nid));
+  drupal_write_record('station_archive_item', $record);
+  //watchdog('stationarchive', 'Added %title to the archive.', array('%title' => $program_title), WATCHDOG_NOTICE, l(t('view'), 'node/' . $node->nid));
 
   return TRUE;
 }
@@ -583,7 +600,7 @@ function create_audio_node($filepath, $title_format = NULL, $body = NULL, $tags 
   $newNode->created = strtotime("now");
   $newNode->changed = strtotime("now");
   $newNode->status = 1;
-  $newNode->comment = 0;
+  $newNode->comment = 1;
   $newNode->promote = 0;
   $newNode->moderate = 0;
   $newNode->sticky = 0;
@@ -591,7 +608,7 @@ function create_audio_node($filepath, $title_format = NULL, $body = NULL, $tags 
 
   node_object_prepare($newNode);
 
-  $newNode->title = $tags['title'] . (isset($tags['artist']) ? (" by " . $tags['artist']) : "");
+  $newNode->title = $tags['title'] . (isset($tags['comment']) ? (" for " . $tags['comment']) : "");
   $newNode->field_station_archive_audio_age[LANGUAGE_NONE] = $taxonomy; 
   $audio_file = new stdClass;
   $audio_file->uid = 1;
@@ -599,7 +616,7 @@ function create_audio_node($filepath, $title_format = NULL, $body = NULL, $tags 
   $audio_file->filemime = file_get_mimetype($filepath);
   $audio_file->display = 1;
   $audio_file->status = 1;
-  $audio_file = file_copy($audio_file, 'public://archive');
+  $audio_file = file_move($audio_file, 'public://audio');
   $newNode->field_station_archive_audio[LANGUAGE_NONE][0] = (array)$audio_file;
   return $newNode;
 }
@@ -807,3 +824,27 @@ function station_archive_taxonomy_vocabulary_delete($vocavulary) {
     variable_del('station_archive_vid');
   }
 }
+
+/**
+ * Implements hook_views_api().
+ */
+function station_archive_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'station_archive') . '/views',
+  );
+}
+
+function station_archive_views_pre_render(&$view) {
+  if( $view->name == 'station_archive' ){
+    /*
+    $breadcrumb = array(
+      l(t('Home'), NULL),
+      l(t('Station'), 'station'),
+      l(t('Archives'), 'station/archives'),
+    );
+    drupal_set_breadcrumb($breadcrumb);
+     */
+  }
+}
+

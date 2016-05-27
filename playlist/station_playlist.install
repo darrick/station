@@ -344,6 +344,16 @@ function station_playlist_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'start' => array(
+        'description' => 'Start time track was played.',
+        'type' => 'text',
+        'default' => '',
+      ),
+      'duration' => array(
+        'description' => 'Duration of track played.',
+        'type' => 'text',
+        'default' => '',
+      ),
     ),
     'indexes' => array(
       'station_playlist_artist' => array('artist'),

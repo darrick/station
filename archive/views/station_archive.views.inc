@@ -51,7 +51,7 @@ function station_archive_views_data() {
       'sortable' => TRUE,
     ),
     'argument' => array(
-      'handler' => 'views_handler_argument_numeric',
+      'handler' => 'views_handler_argument_node_nid',
     ),
     'relationship' => array(
       'title' => t('Program'),

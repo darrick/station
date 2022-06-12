@@ -12,6 +12,13 @@ use Drupal\station_schedule\Entity\Schedule;
 class ScheduleRepository implements ScheduleRepositoryInterface {
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $scheduleItemStorage;
+
+  /**
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
@@ -19,6 +26,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface {
   /**
    * ScheduleRepository constructor.
    *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory) {
@@ -33,6 +41,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface {
     if ($current_schedule_id = $this->getCurrentScheduleId()) {
       return Schedule::load($current_schedule_id);
     }
+    return NULL;
   }
 
   /**
@@ -57,6 +66,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface {
     if ($ids) {
       return $this->scheduleItemStorage->load(reset($ids));
     }
+    return NULL;
   }
 
   /**
@@ -73,6 +83,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface {
     if ($ids) {
       return $this->scheduleItemStorage->load(reset($ids));
     }
+    return NULL;
   }
 
 }

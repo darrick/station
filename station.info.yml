@@ -4,3 +4,4 @@ description: 'Core of station module for running an internet radio station.'
 package: Station
 version: 8.x-1.x
 core: 8.x
+core_version_requirement: ^8 || ^9

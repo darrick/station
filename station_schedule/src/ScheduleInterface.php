@@ -13,9 +13,13 @@ use Drupal\Core\Entity\ContentEntityInterface;
  * @todo.
  */
 interface ScheduleInterface extends ContentEntityInterface {
+
   public function getStartHour();
+
   public function getEndHour();
+
   public function getIncrement();
+
   public function getUnscheduledMessage();
 
   /**

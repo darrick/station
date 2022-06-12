@@ -8,14 +8,14 @@
 namespace Drupal\station_schedule\Tests;
 
 use Drupal\node\Entity\Node;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests the UI for station schedules
  *
  * @group station_schedule
  */
-class StationScheduleUITest extends WebTestBase {
+class StationScheduleUITest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
@@ -48,7 +48,7 @@ class StationScheduleUITest extends WebTestBase {
       'title[0][value]' => 'A title',
       'unscheduled_message[0][value]' => "We're on autopilot",
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save');
+    $this->submitForm($edit, 'Save');
   }
 
 }

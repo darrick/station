@@ -8,7 +8,7 @@
 namespace Drupal\station_schedule\ContextProvider;
 
 use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Plugin\Context\ContextProviderInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\station_schedule\ScheduleRepositoryInterface;
@@ -39,8 +39,8 @@ class ScheduledItemContext implements ContextProviderInterface {
    */
   public function getRuntimeContexts(array $unqualified_context_ids) {
     return [
-      'current_schedule_item' => new Context(new ContextDefinition('entity:station_schedule_item', $this->t('Current schedule item')), $this->scheduleRepository->getCurrentScheduleItem()),
-      'next_schedule_item' => new Context(new ContextDefinition('entity:station_schedule_item', $this->t('Next schedule item')), $this->scheduleRepository->getNextScheduleItem()),
+      'current_schedule_item' => new Context(new EntityContextDefinition('entity:station_schedule_item', $this->t('Current schedule item')), $this->scheduleRepository->getCurrentScheduleItem()),
+      'next_schedule_item' => new Context(new EntityContextDefinition('entity:station_schedule_item', $this->t('Next schedule item')), $this->scheduleRepository->getNextScheduleItem()),
     ];
   }
 
@@ -50,8 +50,8 @@ class ScheduledItemContext implements ContextProviderInterface {
   public function getAvailableContexts() {
     xdebug_break();
     return [
-      'current_schedule_item' => new Context(new ContextDefinition('entity:station_schedule_item', $this->t('Current schedule item'))),
-      'next_schedule_item' => new Context(new ContextDefinition('entity:station_schedule_item', $this->t('Next schedule item'))),
+      'current_schedule_item' => new Context(new EntityContextDefinition('entity:station_schedule_item', $this->t('Current schedule item'))),
+      'next_schedule_item' => new Context(new EntityContextDefinition('entity:station_schedule_item', $this->t('Next schedule item'))),
     ];
   }
 

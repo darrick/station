@@ -48,6 +48,7 @@ class ScheduledItemContext implements ContextProviderInterface {
    * {@inheritdoc}
    */
   public function getAvailableContexts() {
+    xdebug_break();
     return [
       'current_schedule_item' => new Context(new ContextDefinition('entity:station_schedule_item', $this->t('Current schedule item'))),
       'next_schedule_item' => new Context(new ContextDefinition('entity:station_schedule_item', $this->t('Next schedule item'))),

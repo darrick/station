@@ -32,6 +32,11 @@ class ScheduledItemBlock extends BlockBase implements ContainerFactoryPluginInte
   protected $scheduleRepository;
 
   /**
+   * @var \Drupal\Core\Entity\EntityViewBuilderInterface
+   */
+  protected $scheduleItemViewBuilder;
+
+  /**
    * ScheduledItemBlock constructor.
    *
    * @param array $configuration

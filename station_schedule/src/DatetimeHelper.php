@@ -63,7 +63,7 @@ class DatetimeHelper {
   public static function deriveMinutesFromTime($timestamp = 'now') {
     $date_time = new DrupalDateTime($timestamp);
     list($day, $hour, $minute) = explode(' ', $date_time->format('w G i'));
-    return (($day * 24) + $hour) * 60 + $minute;
+    return ((intval($day) * 24) + intval($hour)) * 60 + intval($minute);
   }
 
   /**
@@ -81,8 +81,10 @@ class DatetimeHelper {
     $start = static::deriveTimeFromMinutes($start);
     $finish = static::deriveTimeFromMinutes($finish);
     $format_params = [
-      '@stime' => $start['time'], '@sampm' => $start['a'],
-      '@ftime' => $finish['time'], '@fampm' => $finish['a'],
+      '@stime' => $start['time'],
+      '@sampm' => $start['a'],
+      '@ftime' => $finish['time'],
+      '@fampm' => $finish['a'],
     ];
 
     if ($start['a'] == $finish['a']) {

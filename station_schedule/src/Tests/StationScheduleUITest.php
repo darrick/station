@@ -4,23 +4,27 @@
  * @file
  * Contains \Drupal\station_schedule\Tests\StationScheduleUITest.
  */
-
-namespace Drupal\station_schedule\Tests;
+namespace Drupal\Tests\station_schedule\Functional;
 
 use Drupal\node\Entity\Node;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests the UI for station schedules
  *
  * @group station_schedule
  */
-class StationScheduleUITest extends WebTestBase {
+class StationScheduleUITest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['station_schedule', 'station_playlist'];
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['station_schedule'];
 
   /**
    * @var \Drupal\node\NodeInterface
@@ -30,7 +34,7 @@ class StationScheduleUITest extends WebTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalLogin($this->rootUser);
@@ -48,7 +52,7 @@ class StationScheduleUITest extends WebTestBase {
       'title[0][value]' => 'A title',
       'unscheduled_message[0][value]' => "We're on autopilot",
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save');
+    $this->submitForm($edit, 'Save');
   }
 
 }

@@ -4,8 +4,7 @@
  * @file
  * Contains \Drupal\station_schedule\Tests\StationScheduleUITest.
  */
-
-namespace Drupal\station_schedule\Tests;
+namespace Drupal\Tests\station_schedule\Functional;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
@@ -20,7 +19,12 @@ class StationScheduleUITest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['station_schedule', 'station_playlist'];
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['station_schedule'];
 
   /**
    * @var \Drupal\node\NodeInterface
@@ -30,7 +34,7 @@ class StationScheduleUITest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalLogin($this->rootUser);

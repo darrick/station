@@ -1,5 +1,5 @@
 schedule:
-  version: VERSION
+  version: 1.x
   js:
     js/station_schedule.js: {}
   css:

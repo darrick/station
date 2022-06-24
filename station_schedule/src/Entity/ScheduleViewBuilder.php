@@ -137,7 +137,7 @@ class ScheduleViewBuilder implements EntityViewBuilderInterface {
       ],
     ];
     $djs = array_map(function (EntityInterface $dj) {
-      return $dj->toLink();
+      return $dj->label();
     }, $item->getDjs());
     if ($djs) {
       $output['children']['dj'] = [

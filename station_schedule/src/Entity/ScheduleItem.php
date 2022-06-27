@@ -14,19 +14,19 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\station_schedule\ScheduleItemInterface;
 
 /**
- * @todo.
+ * Defines the station schedule_item entity class.
  *
  * @ContentEntityType(
  *   id = "station_schedule_item",
  *   label = @Translation("Schedule item"),
  *   base_table = "station_schedule_item",
- *   data_table = "station_schedule_item_field_data",
  *   admin_permission = "administer station schedule",
  *   handlers = {
  *     "route_provider" = {
  *       "html" = "\Drupal\station_schedule\Entity\ScheduleItemRouteProvider",
  *     },
  *     "view_builder" = "\Drupal\station_schedule\Entity\ScheduleItemViewBuilder",
+ *     "views_data" = "\Drupal\station_schedule\Entity\ScheduleItemViewsData",
  *     "form" = {
  *       "add" = "\Drupal\station_schedule\Entity\Form\ScheduleItemAddForm",
  *       "edit" = "\Drupal\station_schedule\Entity\Form\ScheduleItemEditForm",
@@ -41,7 +41,6 @@ use Drupal\station_schedule\ScheduleItemInterface;
  *   entity_keys = {
  *     "id" = "id",
  *     "uuid" = "uuid",
- *     "uid" = "uid",
  *   },
  * )
  */

@@ -26,11 +26,11 @@ use Drupal\station_schedule\ScheduleInterface;
  *     "id" = "id",
  *     "label" = "title",
  *     "uuid" = "uuid",
- *     "uid" = "uid",
  *   },
  *   handlers = {
  *     "list_builder" = "\Drupal\station_schedule\Entity\ScheduleListBuilder",
  *     "view_builder" = "\Drupal\station_schedule\Entity\ScheduleViewBuilder",
+ *     "views_data" = "\Drupal\station_schedule\Entity\ScheduleViewsData",
  *     "route_provider" = {
  *       "html" = "\Drupal\station_schedule\Entity\ScheduleRouteProvider",
  *     },

@@ -8,6 +8,7 @@
 namespace Drupal\station_schedule\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityViewBuilderInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\station_schedule\ScheduleRepositoryInterface;
@@ -18,9 +19,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @Block(
  *   id = "station_schedule_item",
- *   admin_label = @Translation("Scheduled item"),
- *   context = {
- *     "schedule item" = @ContextDefinition("entity:station_schedule_item", required = FALSE)
+ *   admin_label = @Translation("Station Schedule Item"),
+ *   context_definitions = {
+ *     "station_schedule_item" = @ContextDefinition("entity:station_schedule_item", required = TRUE)
  *   }
  * )
  */
@@ -67,8 +68,20 @@ class ScheduledItemBlock extends BlockBase implements ContainerFactoryPluginInte
   /**
    * {@inheritdoc}
    */
+  public function blockValidate($form, FormStateInterface $form_state) {
+
+    if (!$this->scheduleRepository->getCurrentSchedule()) {
+      $form_state->setError($form, $this->t('There is no current schedule set.  Configure one on the on the <a href=":link">Station Settings</a> page.', [':link' => \Drupal\Core\Url::fromRoute('station_schedule.settings')->toString()]));
+    }
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function build() {
-    if ($item = $this->getContextValue('schedule item')) {
+    if ($item = $this->getContextValue('station_schedule_item')) {
       return $this->scheduleItemViewBuilder->view($item);
     }
     else {

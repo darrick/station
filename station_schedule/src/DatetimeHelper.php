@@ -14,7 +14,22 @@ use Drupal\Core\Datetime\DrupalDateTime;
  */
 class DatetimeHelper {
 
-  /**
+ /**
+   * Round minutes to the nearest interval of a DateTime object.
+   *
+   * @param \DateTime $dateTime
+   * @param int $minuteInterval
+   * @return \DateTime
+   */
+  public static function roundToNearestMinuteInterval(\DateTime $dateTime, $minuteInterval = 30) {
+    return $dateTime->setTime(
+      $dateTime->format('H'),
+      ceil($dateTime->format('i') / $minuteInterval) * $minuteInterval,
+      0
+    );
+  }
+
+ /**
    * Computes time information for a minute in the week.
    *
    * @param int $minutes

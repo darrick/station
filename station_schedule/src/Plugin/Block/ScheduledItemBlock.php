@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityViewBuilderInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\station_schedule\ScheduleRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\station_schedule\DatetimeHelper;
 
 /**
  * @todo.
@@ -75,6 +76,14 @@ class ScheduledItemBlock extends BlockBase implements ContainerFactoryPluginInte
     }
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge() {
+    $stale_time = DatetimeHelper::roundToNearestMinuteInterval(new \DateTime());
+    return $stale_time->format('U') - time();
   }
 
   /**

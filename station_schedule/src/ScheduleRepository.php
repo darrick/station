@@ -80,6 +80,16 @@ class ScheduleRepository implements ScheduleRepositoryInterface {
       ->range(0, 1)
       ->sort('start')
       ->execute();
+    
+    if (!$ids) {
+      $ids = $this->scheduleItemStorage->getQuery()
+        ->condition('schedule', $this->getCurrentScheduleId())
+        ->condition('start', 0, '>=')
+        ->range(0, 1)
+        ->sort('start')
+        ->execute();
+    }
+
     if ($ids) {
       return $this->scheduleItemStorage->load(reset($ids));
     }
